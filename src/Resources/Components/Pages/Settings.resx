@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="Header" xml:space="preserve">
+        <value>Settings</value>
+    </data>
+    <data name="Theme" xml:space="preserve">
+        <value>Theme</value>
+    </data>
+        <data name="Color" xml:space="preserve">
+        <value>Color</value>
+    </data>
+    <data name="Language" xml:space="preserve">
+        <value>Language</value>
+    </data>       
+    <data name="LanguageAnnotation" xml:space="preserve">
+        <value>changes will take effect after restart program</value>
+    </data>        
+</root>

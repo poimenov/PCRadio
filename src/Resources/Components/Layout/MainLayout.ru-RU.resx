@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="Documentation" xml:space="preserve">
+        <value>Документация и примеры</value>
+    </data>
+    <data name="About" xml:space="preserve">
+        <value>O Блейзоре</value>
+    </data>
+</root>

@@ -1,0 +1,34 @@
+@using PCRadio.DataAccess.Models
+
+@if (_selectedStation != null)
+{
+    <PCRadio.Components.Controls.Player Station="@_selectedStation" />
+}
+
+@if (Stations == null || !Stations.Any())
+{
+    <div class="empty-message">No stations</div>
+}
+else
+{
+    <FluentListbox Items="@Stations" @bind-SelectedOption="@_selectedStation" OptionValue="@(x=>x?.Id.ToString())"
+    Class="station-list">
+    <OptionTemplate>
+        <FluentCard Class="station-card">
+            <img class="logo" src="@context?.Logo" alt="@context?.Name" loading="lazy" />
+            <div style="width: 180px !important;">
+                <div style="font-weight: bold; height: 20px !important;overflow: hidden;">@context?.Name</div>
+                <div style="height: 60px !important;overflow: hidden;">
+                    @context?.Description
+                </div>
+            </div>
+        </FluentCard>
+    </OptionTemplate>
+</FluentListbox>
+}
+
+@code {
+    [Parameter]
+    public IEnumerable<Station>? Stations { get; set; }
+    private Station _selectedStation { get; set; } = default!;
+}

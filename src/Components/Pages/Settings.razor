@@ -1,0 +1,83 @@
+@page "/settings"
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using Microsoft.FluentUI.AspNetCore.Components.Extensions
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
+@inject IOptions<AppSettings> options
+@inject IStringLocalizer<Settings> localizer
+
+<h1>@localizer["Header"]</h1>
+
+<FluentDesignTheme @bind-Mode="@Mode" @bind-OfficeColor="@OfficeColor" StorageName="theme" />
+
+<div style="min-height: 250px;">
+    <FluentGrid>
+        <FluentGridItem>
+            <FluentSelect Label="@localizer["Theme"]" Width="250px" Items="@(Enum.GetValues<DesignThemeModes>())"
+                @bind-SelectedOption="@Mode" />
+        </FluentGridItem>
+
+        <FluentGridItem>
+            <FluentSelect Label="@localizer["Color"]"
+                Items="@(Enum.GetValues<OfficeColor>().Select(i => (OfficeColor?)i))" Height="200px" Width="250px"
+                @bind-SelectedOption="@OfficeColor">
+                <OptionTemplate>
+                    <FluentStack>
+                        <FluentIcon Value="@(new Size20.RectangleLandscape())" Color="Color.Custom"
+                            CustomColor="@(@context.ToAttributeValue() != "default" ? context.ToAttributeValue() : "#036ac4" )" />
+                        <FluentLabel>@context</FluentLabel>
+                    </FluentStack>
+                </OptionTemplate>
+            </FluentSelect>
+        </FluentGridItem>
+
+        <FluentGridItem>
+            <FluentStack Orientation="Orientation.Vertical">
+                <FluentSelect Label="@localizer["Language"]" Items="@(AppCultures.Cultures)" Width="250px"
+                    @bind-SelectedOption="@Language">
+                    <OptionTemplate>@context!.NativeName
+                    </OptionTemplate>
+                </FluentSelect>
+                (@localizer["LanguageAnnotation"])
+            </FluentStack>
+
+        </FluentGridItem>
+
+    </FluentGrid>
+</div>
+
+@code
+{
+    private System.Globalization.CultureInfo? _language;
+    public System.Globalization.CultureInfo? Language
+    {
+        get => _language;
+        set
+        {
+            _language = value;
+            if (value != null)
+            {
+                options.Value.DefaultLanguage = value.ToString();
+                options.Value.Save();
+            }
+        }
+    }
+
+    public DesignThemeModes Mode { get; set; }
+    public OfficeColor? OfficeColor { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(options.Value.DefaultLanguage) &&
+        AppCultures.Cultures.Select(x => x.ToString()).Contains(options.Value.DefaultLanguage))
+        {
+            Language = AppCultures.Cultures.First(x => x.TextInfo.CultureName == options.Value.DefaultLanguage);
+        }
+        else
+        {
+            Language = AppCultures.DefaultCulture;
+        }
+
+    }
+
+}

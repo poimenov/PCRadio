@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="Header" xml:space="preserve">
+        <value>Настройки</value>
+    </data>
+    <data name="Theme" xml:space="preserve">
+        <value>Тема</value>
+    </data>
+    <data name="Color" xml:space="preserve">
+        <value>Цвет</value>
+    </data>
+    <data name="Language" xml:space="preserve">
+        <value>Язык</value>
+    </data>    
+    <data name="LanguageAnnotation" xml:space="preserve">
+        <value>изменения вступят вступят силу после перезапуска программы</value>
+    </data>     
+</root>

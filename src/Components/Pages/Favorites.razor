@@ -1,0 +1,21 @@
+@page "/favorites"
+@attribute [StreamRendering]
+@using Microsoft.Extensions.Localization
+@using PCRadio.DataAccess.Interfaces
+@using PCRadio.DataAccess.Models
+@inject IStringLocalizer<Favorites> localizer
+@inject IStations stations
+
+<FluentLayout>
+    <h1>@localizer["Header"]</h1>
+    <PCRadio.Components.Controls.StationList Stations="@_stations" />
+</FluentLayout>
+@code
+{
+    private IEnumerable<Station>? _stations { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _stations = stations.GetFavorites();
+    }
+}

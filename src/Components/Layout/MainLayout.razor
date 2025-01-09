@@ -1,0 +1,36 @@
+﻿@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using PCRadio.Services.Interfaces
+@inherits LayoutComponentBase
+@inject ILinkOpeningService linkOpeningService
+@inject IStringLocalizer<MainLayout> localizer
+<FluentLayout>
+    <FluentHeader>
+        @AppSettings.APPLICATION_NAME
+    </FluentHeader>
+    <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
+        <NavMenu />
+        <FluentBodyContent Class="body-content">
+            <div class="content">
+                @Body
+            </div>
+        </FluentBodyContent>
+    </FluentStack>
+    <FluentFooter>
+        <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="https://www.fluentui-blazor.net"
+            OnClick="@(()=>OpenLink("https://www.fluentui-blazor.net"))">@localizer["Documentation"]</FluentAnchor>
+        <FluentSpacer />
+        <FluentAnchor Href="#" Appearance="Appearance.Hypertext"
+            title="https://learn.microsoft.com/en-us/aspnet/core/blazor"
+            OnClick="@(()=>OpenLink("https://learn.microsoft.com/en-us/aspnet/core/blazor"))">@localizer["About"]
+        </FluentAnchor>
+    </FluentFooter>
+</FluentLayout>
+
+@code
+{
+    void OpenLink(string url)
+    {
+        linkOpeningService.OpenUrl(url);
+    }
+}

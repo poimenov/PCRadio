@@ -1,0 +1,49 @@
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using PCRadio.DataAccess.Models
+@inject IJSRuntime JSRuntime
+
+<div class="player">
+    <img class="logo" src="@Station.Logo" alt="@Station.Name" loading="lazy" />
+    <div>
+        <div style="font-weight: bold;">@Station.Name</div>
+        <div title="@Station.Description">
+            @Station.Description
+        </div>
+    </div>
+    <FluentButton IconStart="@(_isPlaying?new Size24.Pause():new Size24.Play())" Color="Color.Accent"
+        Style="margin-right: 24px;padding-top: 40px;" OnClick="@Play" />
+    <audio id="audio" src="@($"{Station.Stream}-med")" controls style="display: none;" />
+    <script>
+        function playAudio(isPlaying) {
+            var player = document.getElementById("audio");
+            if (isPlaying) {
+                player.play();
+            } else {
+                player.pause();
+            }
+        }
+    </script>
+</div>
+
+@code {
+    private Station _station = default!;
+    private bool _isPlaying { get; set; }
+
+    [Parameter]
+    public Station Station
+    {
+        get => _station;
+        set
+        {
+            _station = value;
+            _isPlaying = false;
+            JSRuntime.InvokeVoidAsync("playAudio", false);
+        }
+    }
+
+    private async void Play()
+    {
+        _isPlaying = !_isPlaying;
+        await JSRuntime.InvokeVoidAsync("playAudio", _isPlaying);
+    }
+}

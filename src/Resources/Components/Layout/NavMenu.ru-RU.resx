@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="Home" xml:space="preserve">
+        <value>Домашняя</value>
+    </data>
+    <data name="Favorites" xml:space="preserve">
+        <value>Избранное</value>
+    </data>
+    <data name="Genres" xml:space="preserve">
+        <value>Жанры</value>
+    </data>      
+    <data name="Settings" xml:space="preserve">
+        <value>Настройки</value>
+    </data>
+</root>

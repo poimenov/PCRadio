@@ -1,0 +1,18 @@
+@page "/genre/{Id:int}"
+@attribute [StreamRendering]
+@using Microsoft.Extensions.Localization
+@using PCRadio.DataAccess.Interfaces
+@using PCRadio.DataAccess.Models
+@inject IStringLocalizer<Genre> localizer
+@inject IStations stations
+@inject IGenres genres
+
+<FluentLayout>
+    <h1>@genres.GetById(Id)?.Name</h1>
+    <PCRadio.Components.Controls.StationList Stations="@stations.GetByGenre(Id)" />
+</FluentLayout>
+@code
+{
+    [Parameter]
+    public int Id { get; set; }
+}

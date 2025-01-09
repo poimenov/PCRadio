@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="Documentation" xml:space="preserve">
+        <value>Documentation and demos</value>
+    </data>
+    <data name="About" xml:space="preserve">
+        <value>About Blazor</value>
+    </data>
+</root>

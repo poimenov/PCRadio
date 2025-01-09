@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="Home" xml:space="preserve">
+        <value>Home page</value>
+    </data>
+    <data name="Favorites" xml:space="preserve">
+        <value>Favorites</value>
+    </data>
+    <data name="Genres" xml:space="preserve">
+        <value>Genres</value>
+    </data>    
+    <data name="Settings" xml:space="preserve">
+        <value>Settings</value>
+    </data>
+</root>

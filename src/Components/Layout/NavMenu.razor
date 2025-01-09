@@ -1,0 +1,40 @@
+﻿@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using Microsoft.Extensions.Localization
+@using PCRadio.DataAccess.Interfaces
+@inject IGenres genres
+
+@inject IStringLocalizer<NavMenu> Localizer
+<div class="body-content" style="overflow-y: auto;overflow-x: hidden;width: 300px !important;">
+    <div class="navmenu">
+        <input type="checkbox" title="Menu expand/collapse toggle" id="navmenu-toggle" class="navmenu-icon" />
+        <label for="navmenu-toggle" class="navmenu-icon">
+            <FluentIcon Value="@(new Size20.Navigation())" Color="Color.Fill" />
+        </label>
+        <nav class="sitenav" aria-labelledby="main-menu">
+            <FluentNavMenu Id="main-menu" Collapsible="true" Width="200" Title="Navigation menu"
+                @bind-Expanded="expanded" CustomToggle="true">
+                <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Size20.Home())" IconColor="Color.Accent">
+                    @Localizer["Home"]
+                </FluentNavLink>
+                <FluentNavLink Href="favorites" Icon="@(new Size20.Star())" IconColor="Color.Accent">
+                    @Localizer["Favorites"]
+                </FluentNavLink>
+                <FluentNavGroup Icon="@(new Size20.MusicNote2())" IconColor="Color.Accent" Title="@Localizer["Genres"]">
+                    @foreach (var genre in genres.GetAll())
+                    {
+                        <FluentNavLink Href="@($"genre/{genre.Id}")" Icon="@(new Size20.MusicNote1())"
+                            IconColor="Color.Accent" Tooltip="@genre.Name">
+                            @genre.Name
+                        </FluentNavLink>
+                    }
+                </FluentNavGroup>
+                <FluentNavLink Href="settings" Icon="@(new Size20.Settings())" IconColor="Color.Accent">
+                    @Localizer["Settings"]
+                </FluentNavLink>
+            </FluentNavMenu>
+        </nav>
+    </div>
+</div>
+@code {
+    private bool expanded = true;
+}
