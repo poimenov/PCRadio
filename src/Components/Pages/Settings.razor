@@ -19,7 +19,7 @@
 
         <FluentGridItem>
             <FluentSelect Label="@localizer["Color"]"
-                Items="@(Enum.GetValues<OfficeColor>().Select(i => (OfficeColor?)i))" Height="200px" Width="250px"
+                Items="@(Enum.GetValues<OfficeColor>().Select(i => (OfficeColor?)i))" Width="250px"
                 @bind-SelectedOption="@OfficeColor">
                 <OptionTemplate>
                     <FluentStack>
@@ -38,9 +38,17 @@
                     <OptionTemplate>@context!.NativeName
                     </OptionTemplate>
                 </FluentSelect>
-                (@localizer["LanguageAnnotation"])
+                <div style="width: 250px;">(@localizer["LanguageAnnotation"])</div>
             </FluentStack>
+        </FluentGridItem>
 
+        <FluentGridItem>
+            <FluentSelect Label="@localizer["Quality"]" Items="@(Enum.GetValues<Quality>())" Width="250px"
+                @bind-SelectedOption="@Quality">
+                <OptionTemplate>
+                    @localizer[context.ToString()]
+                </OptionTemplate>
+            </FluentSelect>
         </FluentGridItem>
 
     </FluentGrid>
@@ -65,6 +73,15 @@
 
     public DesignThemeModes Mode { get; set; }
     public OfficeColor? OfficeColor { get; set; }
+    public Quality Quality
+    {
+        get => options.Value.Quality;
+        set
+        {
+            options.Value.Quality = value;
+            options.Value.Save();
+        }
+    }
 
     protected override void OnInitialized()
     {
@@ -77,6 +94,8 @@
         {
             Language = AppCultures.DefaultCulture;
         }
+
+        Quality = options.Value.Quality;
 
     }
 

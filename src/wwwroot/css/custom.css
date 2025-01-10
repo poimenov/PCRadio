@@ -44,7 +44,7 @@ fluent-listbox.station-list:focus-within {
 }
 
 .player {
-    height: 100px !important;
+    min-height: 100px;
     margin-bottom: 5px;
     display: grid;
     grid-template-columns: 90px 1fr 50px;

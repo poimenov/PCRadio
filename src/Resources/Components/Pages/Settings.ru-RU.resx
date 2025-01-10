@@ -11,7 +11,19 @@
     </data>
     <data name="Language" xml:space="preserve">
         <value>Язык</value>
-    </data>    
+    </data>
+    <data name="Quality" xml:space="preserve">
+        <value>Качество потока</value>
+    </data> 
+    <data name="Low" xml:space="preserve">
+        <value>Экономия</value>
+    </data>
+    <data name="Medium" xml:space="preserve">
+        <value>Среднее</value>
+    </data>
+    <data name="High" xml:space="preserve">
+        <value>Высокое</value>
+    </data>                   
     <data name="LanguageAnnotation" xml:space="preserve">
         <value>изменения вступят вступят силу после перезапуска программы</value>
     </data>     

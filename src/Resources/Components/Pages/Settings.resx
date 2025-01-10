@@ -6,12 +6,24 @@
     <data name="Theme" xml:space="preserve">
         <value>Theme</value>
     </data>
-        <data name="Color" xml:space="preserve">
+    <data name="Color" xml:space="preserve">
         <value>Color</value>
     </data>
     <data name="Language" xml:space="preserve">
         <value>Language</value>
-    </data>       
+    </data> 
+    <data name="Quality" xml:space="preserve">
+        <value>Stream quality</value>
+    </data> 
+    <data name="Low" xml:space="preserve">
+        <value>Low</value>
+    </data>
+    <data name="Medium" xml:space="preserve">
+        <value>Medium</value>
+    </data>
+    <data name="High" xml:space="preserve">
+        <value>High</value>
+    </data>          
     <data name="LanguageAnnotation" xml:space="preserve">
         <value>changes will take effect after restart program</value>
     </data>        
