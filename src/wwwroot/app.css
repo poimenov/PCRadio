@@ -154,7 +154,7 @@ code {
     }
 
     #main-menu > div:first-child:is(.expander) {
-        display: none;
+        display: none;        
     }
 
     .navmenu {
@@ -166,13 +166,13 @@ code {
         appearance: none;
     }
 
-        #navmenu-toggle ~ nav {
-            display: none;
-        }
+    #navmenu-toggle ~ nav {
+        display: none; 
+    }
 
-        #navmenu-toggle:checked ~ nav {
-            display: block;
-        }
+    #navmenu-toggle:checked ~ nav {
+        display: block;
+    }    
 
     .navmenu-icon {
         cursor: pointer;

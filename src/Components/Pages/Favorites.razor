@@ -7,15 +7,17 @@
 @inject IStations stations
 
 <FluentLayout>
-    <h1>@localizer["Header"]</h1>
-    <PCRadio.Components.Controls.StationList Stations="@_stations" />
+    <h1>@localizer["Header"] (@Count)</h1>
+    <PCRadio.Components.Controls.StationList Count="@Count" PageSize="@PAGE_SIZE"
+        Stations="@stations.GetFavorites(0,PAGE_SIZE).ToList()"
+        GetStations="@((skip, take) => stations.GetFavorites(skip, take))" />
 </FluentLayout>
+
 @code
 {
     private IEnumerable<Station>? _stations { get; set; }
 
-    protected override void OnInitialized()
-    {
-        _stations = stations.GetFavorites();
-    }
+    private const int PAGE_SIZE = 50;
+    private int Count => stations.GetFavoritesCount();
+
 }

@@ -1,8 +1,9 @@
 @using PCRadio.DataAccess.Models
+@using System.Diagnostics
 
-@if (_selectedStation != null)
+@if (SelectedStation != null)
 {
-    <PCRadio.Components.Controls.Player Station="@_selectedStation" />
+    <PCRadio.Components.Controls.Player Station="@SelectedStation" />
 }
 
 @if (Stations == null || !Stations.Any())
@@ -11,7 +12,7 @@
 }
 else
 {
-    <FluentListbox Items="@Stations" @bind-SelectedOption="@_selectedStation" OptionValue="@(x=>x?.Id.ToString())"
+    <FluentListbox Items="@Stations" @bind-SelectedOption="@SelectedStation" OptionValue="@(x=>x?.Id.ToString())"
     Class="station-list">
     <OptionTemplate>
         <FluentCard Class="station-card">
@@ -25,10 +26,42 @@ else
         </FluentCard>
     </OptionTemplate>
 </FluentListbox>
+    <div style="text-align: right;padding-right: 24px;">
+        <FluentAnchor Style="@((GetNextEnabled)?"":"display:none;")" Href="#" OnClick="@(()=>GetNext())">Next @PageSize
+        </FluentAnchor>
+    </div>
+
 }
 
 @code {
     [Parameter]
-    public IEnumerable<Station>? Stations { get; set; }
-    private Station _selectedStation { get; set; } = default!;
+    public int PageSize { get; set; }
+    [Parameter]
+    public int Count { get; set; }
+    [Parameter]
+    public List<Station>? Stations { get; set; }
+    private Func<int, int, IEnumerable<Station>> _getStations = default!;
+    [Parameter]
+    public Func<int, int, IEnumerable<Station>> GetStations
+    {
+        get => _getStations;
+        set
+        {
+            SelectedStation = null;
+            _getStations = value;
+        }
+    }
+
+    private Station? SelectedStation { get; set; }
+
+    private bool GetNextEnabled => Stations?.Count < Count;
+
+    private void GetNext()
+    {
+        if (GetNextEnabled)
+        {
+            Stations!.AddRange(GetStations(Stations.Count, PageSize).ToList());
+        }
+    }
+
 }

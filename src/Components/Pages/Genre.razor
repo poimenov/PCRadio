@@ -8,11 +8,15 @@
 @inject IGenres genres
 
 <FluentLayout>
-    <h1>@genres.GetById(Id)?.Name</h1>
-    <PCRadio.Components.Controls.StationList Stations="@stations.GetByGenre(Id)" />
+    <h1>@genres.GetById(Id)?.Name (@Count)</h1>
+    <PCRadio.Components.Controls.StationList Count="@Count" PageSize="@PAGE_SIZE"
+        Stations="@stations.GetByGenre(Id,0,PAGE_SIZE).ToList()"
+        GetStations="@((skip, take) => stations.GetByGenre(Id, skip, take))" />
 </FluentLayout>
 @code
 {
     [Parameter]
     public int Id { get; set; }
+    private const int PAGE_SIZE = 50;
+    private int Count => stations.GetByGenreCount(Id);
 }

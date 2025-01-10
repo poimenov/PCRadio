@@ -6,51 +6,99 @@ namespace PCRadio.DataAccess;
 
 public class Stations : IStations
 {
-    public IEnumerable<Station> GetByCity(int cityId)
+    public IEnumerable<Station> GetByCity(int id, int skip, int take)
     {
         using (var db = new Database())
         {
-            return db.Stations.Where(s => s.StationCities!.Select(sc => sc.CityId).Contains(cityId)).ToList();
+            return db.Stations.Where(s => s.StationCities!.Select(sc => sc.CityId).Contains(id)).Skip(skip).Take(take).ToList();
         }
     }
 
-    public IEnumerable<Station> GetByCountry(int countryId)
+    public int GetByCityCount(int id)
     {
         using (var db = new Database())
         {
-            return db.Stations.Where(s => s.CountryId == countryId).ToList();
+            return db.Stations.Where(s => s.StationCities!.Select(sc => sc.CityId).Contains(id)).Count();
         }
     }
 
-    public IEnumerable<Station> GetByGenre(int genreId)
+    public IEnumerable<Station> GetByCountry(int id, int skip, int take)
     {
         using (var db = new Database())
         {
-            return db.Stations.Where(s => s.StationGenres!.Select(sg => sg.GenreId).Contains(genreId)).Skip(0).Take(50).ToList();
+            return db.Stations.Where(s => s.CountryId == id).Skip(skip).Take(take).ToList();
         }
     }
 
-    public IEnumerable<Station> GetBySubGenre(int subGenreId)
+    public int GetByCountryCount(int id)
     {
         using (var db = new Database())
         {
-            return db.Stations.Where(s => s.StationSubGenres!.Select(sg => sg.SubGenreId).Contains(subGenreId)).ToList();
+            return db.Stations.Where(s => s.CountryId == id).Count();
         }
     }
 
-    public IEnumerable<Station> GetFavorites()
+    public IEnumerable<Station> GetByGenre(int id, int skip, int take)
     {
         using (var db = new Database())
         {
-            return db.Stations.Where(s => s.IsFavorite).ToList();
+            return db.Stations.Where(s => s.StationGenres!.Select(sg => sg.GenreId).Contains(id)).Skip(skip).Take(take).ToList();
         }
     }
 
-    public IEnumerable<Station> GetRecommended()
+    public int GetByGenreCount(int id)
     {
         using (var db = new Database())
         {
-            return db.Stations.Where(s => s.Recomended).ToList();
+            return db.Stations.Where(s => s.StationGenres!.Select(sg => sg.GenreId).Contains(id)).Count();
+        }
+    }
+
+    public IEnumerable<Station> GetBySubGenre(int id, int skip, int take)
+    {
+        using (var db = new Database())
+        {
+            return db.Stations.Where(s => s.StationSubGenres!.Select(ss => ss.SubGenreId).Contains(id)).Skip(skip).Take(take).ToList();
+        }
+    }
+
+    public int GetBySubGenreCount(int id)
+    {
+        using (var db = new Database())
+        {
+            return db.Stations.Where(s => s.StationSubGenres!.Select(ss => ss.SubGenreId).Contains(id)).Count();
+        }
+    }
+
+    public IEnumerable<Station> GetFavorites(int skip, int take)
+    {
+        using (var db = new Database())
+        {
+            return db.Stations.Where(s => s.IsFavorite).Skip(skip).Take(take).ToList();
+        }
+    }
+
+    public int GetFavoritesCount()
+    {
+        using (var db = new Database())
+        {
+            return db.Stations.Where(s => s.IsFavorite).Count();
+        }
+    }
+
+    public IEnumerable<Station> GetRecommended(int skip, int take)
+    {
+        using (var db = new Database())
+        {
+            return db.Stations.Where(s => s.Recomended).Skip(skip).Take(take).ToList();
+        }
+    }
+
+    public int GetRecommendedCount()
+    {
+        using (var db = new Database())
+        {
+            return db.Stations.Where(s => s.Recomended).Count();
         }
     }
 
