@@ -1,9 +1,12 @@
 @using PCRadio.DataAccess.Models
 @using System.Diagnostics
+@using PCRadio.Extensions
+@using regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using filled = Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 
 @if (SelectedStation != null)
 {
-    <PCRadio.Components.Controls.Player Station="@SelectedStation" />
+    <PCRadio.Components.Controls.Player Station="@SelectedStation" OnStationChanged="@OnStationChanged" />
 }
 
 @if (Stations == null || !Stations.Any())
@@ -17,22 +20,34 @@ else
     <OptionTemplate>
         <FluentCard Class="station-card">
             <img class="logo" src="@context?.Logo" alt="@context?.Name" loading="lazy" />
-            <div style="width: 180px !important;">
-                <div style="font-weight: bold; height: 20px !important;overflow: hidden;">@context?.Name</div>
-                <div style="height: 60px !important;overflow: hidden;">
-                    @context?.Description
+                <div style="width: 180px !important;">
+                    <div style="font-weight: bold; height: 20px !important;overflow: hidden;">
+                        @context?.GetCountryIcon() @context?.Name
+                    </div>
+                    <div style="height: 60px !important;overflow: hidden;">
+            @if (context != null)
+                {
+                    if (context.IsFavorite)
+                    {
+                        <FluentIcon Value="@(new filled.Size16.Heart())" Color="Color.Accent" Class="favorite-icon" />
+                    }
+                    else
+                    {
+                        <FluentIcon Value="@(new regular.Size16.Heart())" Color="Color.Accent" Class="favorite-icon" />
+                    }
+                }                        
+                        @context?.Description
+                    </div>
                 </div>
-            </div>
-        </FluentCard>
-    </OptionTemplate>
-</FluentListbox>
+            </FluentCard>
+        </OptionTemplate>
+    </FluentListbox>
     <div style="text-align: right;padding-right: 24px;">
-        <FluentAnchor Style="@((GetNextEnabled)?"":"display:none;")" Href="#" OnClick="@(()=>GetNext())">Next @PageSize
+        <FluentAnchor Style="@(GetNextEnabled ? "" : "display:none;")" Href="#" OnClick="@(()=>GetNext())">Next @PageSize
         </FluentAnchor>
     </div>
 
 }
-
 @code {
     [Parameter]
     public int PageSize { get; set; }
@@ -62,6 +77,11 @@ else
         {
             Stations!.AddRange(GetStations(Stations.Count, PageSize).ToList());
         }
+    }
+
+    private void OnStationChanged(Station station)
+    {
+        SelectedStation = station;
     }
 
 }

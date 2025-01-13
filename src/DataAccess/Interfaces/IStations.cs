@@ -10,7 +10,7 @@ public interface IStations
     IEnumerable<Station> GetBySubGenre(int id, int skip, int take);
     IEnumerable<Station> GetByCountry(int id, int skip, int take);
     IEnumerable<Station> GetByCity(int id, int skip, int take);
-    void SetFavorite(int stationId);
+    void SetFavorite(int stationId, bool isFavorite);
     int GetByGenreCount(int id);
     int GetBySubGenreCount(int id);
     int GetByCountryCount(int id);

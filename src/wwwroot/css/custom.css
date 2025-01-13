@@ -61,3 +61,13 @@ fluent-listbox.station-list:focus-within {
     height: 90px;
     border-radius: 8px;
 }
+
+.favorite-icon {
+    vertical-align: middle;
+}
+
+.country-flag-icon {
+    width: 22px;
+    height: 16px;
+    vertical-align: middle;
+}

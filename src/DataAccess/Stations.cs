@@ -102,14 +102,14 @@ public class Stations : IStations
         }
     }
 
-    public void SetFavorite(int stationId)
+    public void SetFavorite(int stationId, bool isFavorite)
     {
         using (var db = new Database())
         {
             var station = db.Stations.FirstOrDefault(s => s.Id == stationId);
             if (station != null)
             {
-                station.IsFavorite = !station.IsFavorite;
+                station.IsFavorite = isFavorite;
                 db.SaveChanges();
             }
         }
