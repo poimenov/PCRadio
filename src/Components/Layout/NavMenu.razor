@@ -6,7 +6,7 @@
 @inject IStringLocalizer<NavMenu> Localizer
 
 <div id="body-navmenu" class="navmenu body-content"
-    style="overflow-y: auto;overflow-x: hidden;@(expanded ? "min-width: 220px;max-width: 220px;" : "")">
+    style="overflow-y: auto;overflow-x: hidden;@(expanded ? (genresExpanded ? MAX_WIDTH_STYLE : MED_WIDTH_STYLE) : MIN_WIDTH_STYLE)">
     <input type="checkbox" title="Menu expand/collapse toggle" id="navmenu-toggle" class="navmenu-icon" />
     <label for="navmenu-toggle" class="navmenu-icon">
         <FluentIcon Value="@(new Size20.Navigation())" Color="Color.Fill" />
@@ -20,7 +20,8 @@
             <FluentNavLink Href="favorites" Icon="@(new Size20.Star())" IconColor="Color.Accent">
                 @Localizer["Favorites"]
             </FluentNavLink>
-            <FluentNavGroup Icon="@(new Size20.MusicNote2())" IconColor="Color.Accent" Title="@Localizer["Genres"]">
+            <FluentNavGroup Icon="@(new Size20.MusicNote2())" IconColor="Color.Accent" Title="@Localizer["Genres"]"
+                @bind-Expanded="genresExpanded">
                 @foreach (var genre in genres.GetAll())
                 {
                     <FluentNavLink Href="@($"genre/{genre.Id}")" Icon="@(new Size20.MusicNote1())" IconColor="Color.Accent"
@@ -36,5 +37,9 @@
     </nav>
 </div>
 @code {
+    private const string MAX_WIDTH_STYLE = "min-width: 220px;max-width: 220px;";
+    private const string MED_WIDTH_STYLE = "min-width: 200px;max-width: 200px;";
+    private const string MIN_WIDTH_STYLE = "min-width: 40px;max-width: 40px;";
     private bool expanded = true;
+    private bool genresExpanded = false;
 }
