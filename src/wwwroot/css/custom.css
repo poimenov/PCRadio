@@ -4,6 +4,7 @@
     padding: 5px;
     margin: 0px;
     overflow: hidden;
+    border-radius: 8px;
 }
 
 .station-list .selected {

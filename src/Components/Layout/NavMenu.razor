@@ -4,7 +4,9 @@
 @inject IGenres genres
 
 @inject IStringLocalizer<NavMenu> Localizer
-<div class="navmenu body-content" style="overflow-y: auto;overflow-x: hidden;">
+
+<div id="body-navmenu" class="navmenu body-content"
+    style="overflow-y: auto;overflow-x: hidden;@(expanded ? "min-width: 220px;max-width: 220px;" : "")">
     <input type="checkbox" title="Menu expand/collapse toggle" id="navmenu-toggle" class="navmenu-icon" />
     <label for="navmenu-toggle" class="navmenu-icon">
         <FluentIcon Value="@(new Size20.Navigation())" Color="Color.Fill" />
