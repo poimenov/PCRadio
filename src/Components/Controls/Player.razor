@@ -1,7 +1,7 @@
 @using Microsoft.Extensions.Options
 @using PCRadio.DataAccess.Interfaces
-@using regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
-@using filled = Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
+@using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using _filled = Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 @using PCRadio.DataAccess.Models
 @using PCRadio.Extensions
 @inject IJSRuntime JSRuntime
@@ -11,18 +11,20 @@
 <div class="player">
     <img class="logo" src="@Station?.Logo" alt="@Station?.Name" loading="lazy" />
     <div>
-        <div style="font-weight: bold;">@Station?.Name</div>
-        <div title="@Station?.Description">
+        <div style="font-weight: bold;">@Station?.GetCountryIcon() @Station?.Name <span
+                style="font-weight: normal;">(@_country @_cities)</span> </div>
+        <div style="font-style: italic;">@_genres @_subgenres</div>
+        <div title="@Station?.Description" style="font-size: 12px;">
             @Station?.Description
         </div>
     </div>
     <div style="margin-right: 24px;vertical-align: middle;">
         <div>
-            <FluentButton IconStart="@(_isPlaying?new regular.Size24.Pause():new regular.Size24.Play())"
+            <FluentButton IconStart="@(_isPlaying?new _regular.Size24.Pause():new _regular.Size24.Play())"
                 Color="Color.Accent" OnClick="@Play" />
         </div>
         <div>
-            <FluentButton IconStart="@(_station!.IsFavorite ? new filled.Size24.Heart() : new regular.Size24.Heart())"
+            <FluentButton IconStart="@(Station!.IsFavorite ? new _filled.Size24.Heart() : new _regular.Size24.Heart())"
                 Color="Color.Accent" OnClick="@ToggleFavorite" />
         </div>
     </div>
@@ -41,34 +43,46 @@
 </div>
 
 @code {
-    private Station? _station = default!;
-    private bool _isPlaying { get; set; }
+    private bool _isPlaying;
+    private string? _country;
+    private string? _cities;
+    private string? _genres;
+    private string? _subgenres;
 
     [Parameter]
-    public Station? Station
-    {
-        get => _station;
-        set
-        {
-            _station = value;
-            _isPlaying = false;
-            JSRuntime.InvokeVoidAsync("playAudio", false);
-        }
-    }
+    public Station? Station { get; set; }
 
     [Parameter]
     public EventCallback<Station> OnStationChanged { get; set; }
 
-    private async void Play()
+    protected override void OnParametersSet()
+    {
+        if (Station != null)
+        {
+            _isPlaying = false;
+            var station = stations.GetStation(Station.Id);
+            _country = station?.Country?.Name;
+            _cities = string.Join(", ", station?.StationCities?.Select(x => x.City?.Name)
+            .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
+            _genres = string.Join(", ", station?.StationGenres?.Select(x => x.Genre?.Name)
+            .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
+            _subgenres = string.Join(", ", station?.StationSubGenres?.Select(x => x.SubGenre?.Name)
+            .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
+        }
+    }
+    private async Task Play()
     {
         _isPlaying = !_isPlaying;
         await JSRuntime.InvokeVoidAsync("playAudio", _isPlaying);
     }
 
-    private async void ToggleFavorite()
+    private async Task ToggleFavorite()
     {
-        _station!.IsFavorite = !_station!.IsFavorite;
-        stations.SetFavorite(_station.Id, _station.IsFavorite);
-        await OnStationChanged.InvokeAsync(_station);
+        if (Station != null)
+        {
+            Station.IsFavorite = !Station.IsFavorite;
+            stations.SetFavorite(Station.Id, Station.IsFavorite);
+            await OnStationChanged.InvokeAsync(Station);
+        }
     }
 }

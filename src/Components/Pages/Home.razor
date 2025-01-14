@@ -1,23 +1,27 @@
 ﻿@page "/"
 @attribute [StreamRendering]
 @using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
 @using PCRadio.DataAccess.Interfaces
 @using PCRadio.DataAccess.Models
 @inject IStringLocalizer<Home> localizer
+@inject IOptions<AppSettings> options
 @inject IStations stations
 
 <FluentLayout>
-    <h1>@localizer["Header"] (@Count)</h1>
-    <PCRadio.Components.Controls.StationList Count="@Count" PageSize="@PAGE_SIZE"
-        Stations="@stations.GetRecommended(0,PAGE_SIZE).ToList()"
-        GetStations="@((skip, take) => stations.GetRecommended(skip, take))" />
+    <h1>@localizer["Header"] (@_count)</h1>
+    <PCRadio.Components.Controls.StationsList Count="@_count" PageSize="@PageSize" Stations="@_stations?.ToList()"
+        GetStations="@((skip, take) => stations.GetRecommended(skip, take, out _count))" />
 </FluentLayout>
 
 @code
 {
-    private IEnumerable<Station>? _stations { get; set; }
+    private int PageSize => options.Value.PageSize;
+    private IEnumerable<Station>? _stations = default!;
+    private int _count;
 
-    private const int PAGE_SIZE = 50;
-    private int Count => stations.GetRecommendedCount();
-
+    protected override void OnInitialized()
+    {
+        _stations = stations.GetRecommended(0, PageSize, out _count);
+    }
 }

@@ -1,8 +1,8 @@
 @using PCRadio.DataAccess.Models
 @using System.Diagnostics
 @using PCRadio.Extensions
-@using regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
-@using filled = Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
+@using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using _filled = Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 
 @if (SelectedStation != null)
 {
@@ -29,11 +29,11 @@ else
                 {
                     if (context.IsFavorite)
                     {
-                        <FluentIcon Value="@(new filled.Size16.Heart())" Color="Color.Accent" Class="favorite-icon" />
+                        <FluentIcon Value="@(new _filled.Size16.Heart())" Color="Color.Accent" Class="favorite-icon" />
                     }
                     else
                     {
-                        <FluentIcon Value="@(new regular.Size16.Heart())" Color="Color.Accent" Class="favorite-icon" />
+                        <FluentIcon Value="@(new _regular.Size16.Heart())" Color="Color.Accent" Class="favorite-icon" />
                     }
                 }                        
                         @context?.Description
@@ -46,7 +46,6 @@ else
         <FluentAnchor Style="@(GetNextEnabled ? "" : "display:none;")" Href="#" OnClick="@(()=>GetNext())">Next @PageSize
         </FluentAnchor>
     </div>
-
 }
 @code {
     [Parameter]
@@ -55,21 +54,17 @@ else
     public int Count { get; set; }
     [Parameter]
     public List<Station>? Stations { get; set; }
-    private Func<int, int, IEnumerable<Station>> _getStations = default!;
     [Parameter]
-    public Func<int, int, IEnumerable<Station>> GetStations
-    {
-        get => _getStations;
-        set
-        {
-            SelectedStation = null;
-            _getStations = value;
-        }
-    }
+    public Func<int, int, IEnumerable<Station>> GetStations { get; set; } = default!;
 
     private Station? SelectedStation { get; set; }
 
     private bool GetNextEnabled => Stations?.Count < Count;
+
+    protected override void OnParametersSet()
+    {
+        SelectedStation = null;
+    }
 
     private void GetNext()
     {
@@ -83,5 +78,4 @@ else
     {
         SelectedStation = station;
     }
-
 }

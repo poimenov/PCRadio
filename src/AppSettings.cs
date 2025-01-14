@@ -17,6 +17,7 @@ public class AppSettings
     public string? DefaultLanguage { get; set; }
     public string? ArchiveUrl { get; set; }
     public string? ArchivePassword { get; set; }
+    public int PageSize { get; set; } = 50;
     public Quality Quality { get; set; } = Quality.Medium;
     private string _appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), APPLICATION_NAME);
     public string AppDataPath

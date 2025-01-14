@@ -6,99 +6,74 @@ namespace PCRadio.DataAccess;
 
 public class Stations : IStations
 {
-    public IEnumerable<Station> GetByCity(int id, int skip, int take)
+    public IEnumerable<Station> GetByGenre(int id, int skip, int take, out int totalCount)
     {
         using (var db = new Database())
         {
-            return db.Stations.Where(s => s.StationCities!.Select(sc => sc.CityId).Contains(id)).Skip(skip).Take(take).ToList();
+            var query = db.Stations.Where(s => s.StationGenres!.Select(sg => sg.GenreId).Contains(id));
+            totalCount = query.Count();
+            return query.Skip(skip).Take(take).ToList();
         }
     }
 
-    public int GetByCityCount(int id)
+    public IEnumerable<Station> GetFavorites(int skip, int take, out int totalCount)
     {
         using (var db = new Database())
         {
-            return db.Stations.Where(s => s.StationCities!.Select(sc => sc.CityId).Contains(id)).Count();
+            var query = db.Stations.Where(s => s.IsFavorite);
+            totalCount = query.Count();
+            return query.Skip(skip).Take(take).ToList();
         }
     }
 
-    public IEnumerable<Station> GetByCountry(int id, int skip, int take)
+    public IEnumerable<Station> GetRecommended(int skip, int take, out int totalCount)
     {
         using (var db = new Database())
         {
-            return db.Stations.Where(s => s.CountryId == id).Skip(skip).Take(take).ToList();
+            var query = db.Stations.Where(s => s.Recomended);
+            totalCount = query.Count();
+            return query.Skip(skip).Take(take).ToList();
         }
     }
 
-    public int GetByCountryCount(int id)
+    public Station? GetStation(int id)
     {
         using (var db = new Database())
         {
-            return db.Stations.Where(s => s.CountryId == id).Count();
+            return db.Stations
+                .Include(s => s.Country)
+                .Include(s => s.StationCities)!
+                .ThenInclude(sc => sc.City)
+                .Include(s => s.StationGenres)!
+                .ThenInclude(sg => sg.Genre)
+                .Include(s => s.StationSubGenres)!
+                .ThenInclude(sg => sg.SubGenre)
+                .FirstOrDefault(s => s.Id == id);
         }
     }
 
-    public IEnumerable<Station> GetByGenre(int id, int skip, int take)
+    public IEnumerable<Station> Search(SearchParams searchParams, int skip, int take, out int totalCount)
     {
         using (var db = new Database())
         {
-            return db.Stations.Where(s => s.StationGenres!.Select(sg => sg.GenreId).Contains(id)).Skip(skip).Take(take).ToList();
-        }
-    }
+            var query = db.Stations.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(searchParams.Name))
+            {
+                query = query.Where(s => s.Name.Contains(searchParams.Name));
+            }
 
-    public int GetByGenreCount(int id)
-    {
-        using (var db = new Database())
-        {
-            return db.Stations.Where(s => s.StationGenres!.Select(sg => sg.GenreId).Contains(id)).Count();
-        }
-    }
+            if (searchParams.GenreId > 0)
+            {
+                query = query.Where(s => s.StationGenres!.Select(sg => sg.GenreId).Contains(searchParams.GenreId));
+            }
 
-    public IEnumerable<Station> GetBySubGenre(int id, int skip, int take)
-    {
-        using (var db = new Database())
-        {
-            return db.Stations.Where(s => s.StationSubGenres!.Select(ss => ss.SubGenreId).Contains(id)).Skip(skip).Take(take).ToList();
-        }
-    }
+            if (searchParams.CountryId != 0)
+            {
+                query = query.Where(s => s.CountryId == searchParams.CountryId);
+            }
 
-    public int GetBySubGenreCount(int id)
-    {
-        using (var db = new Database())
-        {
-            return db.Stations.Where(s => s.StationSubGenres!.Select(ss => ss.SubGenreId).Contains(id)).Count();
-        }
-    }
-
-    public IEnumerable<Station> GetFavorites(int skip, int take)
-    {
-        using (var db = new Database())
-        {
-            return db.Stations.Where(s => s.IsFavorite).Skip(skip).Take(take).ToList();
-        }
-    }
-
-    public int GetFavoritesCount()
-    {
-        using (var db = new Database())
-        {
-            return db.Stations.Where(s => s.IsFavorite).Count();
-        }
-    }
-
-    public IEnumerable<Station> GetRecommended(int skip, int take)
-    {
-        using (var db = new Database())
-        {
-            return db.Stations.Where(s => s.Recomended).Skip(skip).Take(take).ToList();
-        }
-    }
-
-    public int GetRecommendedCount()
-    {
-        using (var db = new Database())
-        {
-            return db.Stations.Where(s => s.Recomended).Count();
+            totalCount = query.Count();
+            return query.Skip(skip).Take(take).ToList();
         }
     }
 

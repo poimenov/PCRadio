@@ -2,19 +2,18 @@ using PCRadio.DataAccess.Models;
 
 namespace PCRadio.DataAccess.Interfaces;
 
+public class SearchParams
+{
+    public string? Name { get; set; }
+    public int GenreId { get; set; }
+    public int CountryId { get; set; }
+}
 public interface IStations
 {
-    IEnumerable<Station> GetFavorites(int skip, int take);
-    IEnumerable<Station> GetRecommended(int skip, int take);
-    IEnumerable<Station> GetByGenre(int id, int skip, int take);
-    IEnumerable<Station> GetBySubGenre(int id, int skip, int take);
-    IEnumerable<Station> GetByCountry(int id, int skip, int take);
-    IEnumerable<Station> GetByCity(int id, int skip, int take);
+    IEnumerable<Station> GetFavorites(int skip, int take, out int totalCount);
+    IEnumerable<Station> GetRecommended(int skip, int take, out int totalCount);
+    IEnumerable<Station> GetByGenre(int id, int skip, int take, out int totalCount);
+    IEnumerable<Station> Search(SearchParams searchParams, int skip, int take, out int totalCount);
     void SetFavorite(int stationId, bool isFavorite);
-    int GetByGenreCount(int id);
-    int GetBySubGenreCount(int id);
-    int GetByCountryCount(int id);
-    int GetByCityCount(int id);
-    int GetFavoritesCount();
-    int GetRecommendedCount();
+    Station? GetStation(int id);
 }

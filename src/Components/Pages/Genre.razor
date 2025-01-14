@@ -1,22 +1,29 @@
 @page "/genre/{Id:int}"
 @attribute [StreamRendering]
 @using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
 @using PCRadio.DataAccess.Interfaces
 @using PCRadio.DataAccess.Models
 @inject IStringLocalizer<Genre> localizer
 @inject IStations stations
+@inject IOptions<AppSettings> options
 @inject IGenres genres
 
 <FluentLayout>
-    <h1>@genres.GetById(Id)?.Name (@Count)</h1>
-    <PCRadio.Components.Controls.StationList Count="@Count" PageSize="@PAGE_SIZE"
-        Stations="@stations.GetByGenre(Id,0,PAGE_SIZE).ToList()"
-        GetStations="@((skip, take) => stations.GetByGenre(Id, skip, take))" />
+    <h1>@genres.GetById(Id)?.Name (@_count)</h1>
+    <PCRadio.Components.Controls.StationsList Count="@_count" PageSize="@PageSize" Stations="@_stations?.ToList()"
+        GetStations="@((skip, take) => stations.GetByGenre(Id, skip, take, out _count))" />
 </FluentLayout>
 @code
 {
+    private int PageSize => options.Value.PageSize;
     [Parameter]
     public int Id { get; set; }
-    private const int PAGE_SIZE = 50;
-    private int Count => stations.GetByGenreCount(Id);
+    private IEnumerable<Station>? _stations = default!;
+    private int _count;
+
+    protected override void OnParametersSet()
+    {
+        _stations = stations.GetByGenre(Id, 0, PageSize, out _count);
+    }
 }
