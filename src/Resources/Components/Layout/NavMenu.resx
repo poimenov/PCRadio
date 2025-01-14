@@ -6,6 +6,9 @@
     <data name="Favorites" xml:space="preserve">
         <value>Favorites</value>
     </data>
+    <data name="Search" xml:space="preserve">
+        <value>Search</value>
+    </data>    
     <data name="Genres" xml:space="preserve">
         <value>Genres</value>
     </data>    

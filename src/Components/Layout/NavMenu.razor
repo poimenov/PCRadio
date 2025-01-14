@@ -20,6 +20,9 @@
             <FluentNavLink Href="favorites" Icon="@(new Size20.Star())" IconColor="Color.Accent">
                 @Localizer["Favorites"]
             </FluentNavLink>
+            <FluentNavLink Href="search" Icon="@(new Size20.Search())" IconColor="Color.Accent">
+                @Localizer["Search"]
+            </FluentNavLink>
             <FluentNavGroup Icon="@(new Size20.MusicNote2())" IconColor="Color.Accent" Title="@Localizer["Genres"]"
                 @bind-Expanded="genresExpanded">
                 @foreach (var genre in genres.GetAll())

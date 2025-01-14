@@ -1,0 +1,107 @@
+@page "/search"
+
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using PCRadio.DataAccess.Interfaces
+@using _models = PCRadio.DataAccess.Models
+@using PCRadio.Extensions
+@using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@inject IStringLocalizer<Search> localizer
+@inject IStations stations
+@inject IOptions<AppSettings> options
+@inject IGenres genres
+@inject ICountries countries
+@inject IGenres genres
+
+<FluentLayout>
+    <h1>@localizer["Header"]
+        @if (_count > 0)
+        {
+            <text>(</text> @_count <text>)</text>
+        }
+    </h1>
+    <FluentGrid Style="margin-bottom: 10px;">
+        <FluentGridItem>
+            <FluentTextField Label="@localizer["SearchLabel"]" @bind-Value="@SearchName"
+                Placeholder="@localizer["SearchPlaceholder"]" Style="width: 200px;" />
+        </FluentGridItem>
+
+        <FluentGridItem>
+            <FluentSelect TOption="_models.Genre" Label="@localizer["Genre"]" OptionValue="@(x=>x?.Id.ToString())"
+                Items="@Genres" Width="200px" Height="200px" @bind-SelectedOption="@SearchGenre">
+                <OptionTemplate>@context?.Name</OptionTemplate>
+            </FluentSelect>
+        </FluentGridItem>
+
+        <FluentGridItem>
+            <FluentSelect TOption="_models.Country" Label="@localizer["Country"]" OptionValue="@(x=>x?.Id.ToString())"
+                Items="@Countries" Width="150px" Height="200px" @bind-SelectedOption="@SearchCountry">
+                <OptionTemplate>
+                    <FluentStack>
+                        @context?.GetCountryIcon()
+                        @context?.Name
+                    </FluentStack>
+                </OptionTemplate>
+            </FluentSelect>
+        </FluentGridItem>
+        <FluentGridItem style="padding-top: 36px;">
+            <FluentButton IconStart="@(new _regular.Size20.Search())" OnClick="PerformSearch"></FluentButton>
+        </FluentGridItem>
+    </FluentGrid>
+
+    <PCRadio.Components.Controls.StationsList Count="@_count" PageSize="@PageSize" Stations="@_stations?.ToList()"
+        GetStations="@((skip, take) => stations.Search(_params, skip, take, out _count))" />
+</FluentLayout>
+
+
+@code
+{
+    private int PageSize => options.Value.PageSize;
+    private string? SearchName { get; set; }
+    private List<_models.Country>? _countries = null;
+    private List<_models.Country> Countries
+    {
+        get
+        {
+            if (_countries is null)
+            {
+                _countries = countries.GetAll().ToList();
+                _countries.Insert(0, new _models.Country { Id = 0, Name = string.Empty });
+            }
+
+            return _countries;
+        }
+    }
+    private List<_models.Genre>? _genres = null;
+    private List<_models.Genre> Genres
+    {
+        get
+        {
+            if (_genres is null)
+            {
+                _genres = genres.GetAll().ToList();
+                _genres.Insert(0, new _models.Genre { Id = 0, Name = string.Empty });
+            }
+
+            return _genres;
+        }
+    }
+    private _models.Country? SearchCountry { get; set; }
+    private _models.Genre? SearchGenre { get; set; }
+    private IEnumerable<_models.Station>? _stations = default!;
+    private int _count;
+    private SearchParams? _params = default!;
+    private bool _searchEnabled => !string.IsNullOrEmpty(SearchName);
+
+    protected override void OnInitialized()
+    {
+        SearchCountry = Countries.First();
+        SearchGenre = Genres.First();
+    }
+
+    private void PerformSearch()
+    {
+        _params = new SearchParams { Name = SearchName, CountryId = SearchCountry?.Id ?? 0, GenreId = SearchGenre?.Id ?? 0 };
+        _stations = stations.Search(_params, 0, PageSize, out _count);
+    }
+}

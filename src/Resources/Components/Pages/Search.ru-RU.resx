@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="Header" xml:space="preserve">
+        <value>Поиск станций</value>
+    </data>   
+    <data name="SearchLabel" xml:space="preserve">
+        <value>Название станции</value>
+    </data> 
+    <data name="SearchPlaceholder" xml:space="preserve">
+        <value>Название станции содержит</value>
+    </data>    
+    <data name="Countries" xml:space="preserve">
+        <value>Страны</value>
+    </data>  
+    <data name="Genres" xml:space="preserve">
+        <value>Жанры</value>
+    </data>                  
+</root>

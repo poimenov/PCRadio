@@ -52,14 +52,20 @@ public class Stations : IStations
         }
     }
 
-    public IEnumerable<Station> Search(SearchParams searchParams, int skip, int take, out int totalCount)
+    public IEnumerable<Station> Search(SearchParams? searchParams, int skip, int take, out int totalCount)
     {
+        if (searchParams == null)
+        {
+            totalCount = 0;
+            return new List<Station>();
+        }
+
         using (var db = new Database())
         {
             var query = db.Stations.AsQueryable();
             if (!string.IsNullOrWhiteSpace(searchParams.Name))
             {
-                query = query.Where(s => s.Name.Contains(searchParams.Name));
+                query = query.Where(s => EF.Functions.Like(s.Name, $"%{searchParams.Name}%"));
             }
 
             if (searchParams.GenreId > 0)
