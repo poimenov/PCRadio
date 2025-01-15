@@ -17,13 +17,22 @@
         </FluentBodyContent>
     </FluentStack>
     <FluentFooter>
-        <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="https://www.fluentui-blazor.net"
-            OnClick="@(()=>OpenLink("https://www.fluentui-blazor.net"))">@localizer["Documentation"]</FluentAnchor>
+        <FluentStack Orientation="Orientation.Horizontal">
+            <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="https://www.tryphotino.io"
+                OnClick="@(()=>OpenLink("https://www.tryphotino.io"))">@localizer["Blazor"]
+            </FluentAnchor>
+            <FluentAnchor Href="#" Appearance="Appearance.Hypertext"
+                title="https://learn.microsoft.com/en-us/aspnet/core/blazor"
+                OnClick="@(()=>OpenLink("https://learn.microsoft.com/en-us/aspnet/core/blazor"))">@localizer["Photino"]
+            </FluentAnchor>
+        </FluentStack>
         <FluentSpacer />
-        <FluentAnchor Href="#" Appearance="Appearance.Hypertext"
-            title="https://learn.microsoft.com/en-us/aspnet/core/blazor"
-            OnClick="@(()=>OpenLink("https://learn.microsoft.com/en-us/aspnet/core/blazor"))">@localizer["About"]
-        </FluentAnchor>
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Right">
+            <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="https://www.fluentui-blazor.net"
+                OnClick="@(()=>OpenLink("https://www.fluentui-blazor.net"))">@localizer["FluentUI"]</FluentAnchor>
+            <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="https://github.com/poimenov/PCRadio"
+                OnClick="@(()=>OpenLink("https://github.com/poimenov/PCRadio"))">@localizer["SourceCode"]</FluentAnchor>
+        </FluentStack>
     </FluentFooter>
 </FluentLayout>
 

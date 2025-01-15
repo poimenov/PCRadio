@@ -7,7 +7,7 @@
         <value>Station name</value>
     </data>
     <data name="SearchPlaceholder" xml:space="preserve">
-        <value>Station name contains</value>
+        <value>Name contains</value>
     </data>     
     <data name="Countries" xml:space="preserve">
         <value>Countries</value>

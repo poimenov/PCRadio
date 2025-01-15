@@ -7,7 +7,7 @@
         <value>Название станции</value>
     </data> 
     <data name="SearchPlaceholder" xml:space="preserve">
-        <value>Название станции содержит</value>
+        <value>Название содержит</value>
     </data>    
     <data name="Countries" xml:space="preserve">
         <value>Страны</value>

@@ -65,7 +65,7 @@ public class Stations : IStations
             var query = db.Stations.AsQueryable();
             if (!string.IsNullOrWhiteSpace(searchParams.Name))
             {
-                query = query.Where(s => EF.Functions.Like(s.Name, $"%{searchParams.Name}%"));
+                query = query.Where(s => EF.Functions.Like(s.Name, $"%{searchParams.Name.Trim()}%"));
             }
 
             if (searchParams.GenreId > 0)

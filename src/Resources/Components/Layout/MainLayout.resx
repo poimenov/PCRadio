@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-    <data name="Documentation" xml:space="preserve">
-        <value>Documentation and demos</value>
+    <data name="FluentUI" xml:space="preserve">
+        <value>Fluent UI Blazor</value>
     </data>
-    <data name="About" xml:space="preserve">
+    <data name="Blazor" xml:space="preserve">
         <value>About Blazor</value>
     </data>
+    <data name="Photino" xml:space="preserve">
+        <value>About Photino</value>
+    </data>   
+    <data name="SourceCode" xml:space="preserve">
+        <value>Source code</value>
+    </data>      
 </root>

@@ -1,8 +1,10 @@
+@using Microsoft.Extensions.Localization
 @using PCRadio.DataAccess.Models
 @using System.Diagnostics
 @using PCRadio.Extensions
 @using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @using _filled = Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
+@inject IStringLocalizer<StationsList> localizer
 
 @if (SelectedStation != null)
 {
@@ -43,7 +45,7 @@ else
         </OptionTemplate>
     </FluentListbox>
     <div style="text-align: right;padding-right: 24px;">
-        <FluentAnchor Style="@(GetNextEnabled ? "" : "display:none;")" Href="#" OnClick="@(()=>GetNext())">Next @PageSize
+        <FluentAnchor Style="@(GetNextEnabled ? "" : "display:none;")" Href="#" OnClick="@(()=>GetNext())">@localizer["Next"] @PageSize
         </FluentAnchor>
     </div>
 }

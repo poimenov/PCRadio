@@ -23,7 +23,7 @@
     <FluentGrid Style="margin-bottom: 10px;">
         <FluentGridItem>
             <FluentTextField Label="@localizer["SearchLabel"]" @bind-Value="@SearchName"
-                Placeholder="@localizer["SearchPlaceholder"]" Style="width: 200px;" />
+                Placeholder="@localizer["SearchPlaceholder"]" Style="width: 210px;" />
         </FluentGridItem>
 
         <FluentGridItem>
@@ -38,7 +38,7 @@
                 Items="@Countries" Width="150px" Height="200px" @bind-SelectedOption="@SearchCountry">
                 <OptionTemplate>
                     <FluentStack>
-                        @context?.GetCountryIcon()
+                        @context?.GetCountryIcon(false)
                         @context?.Name
                     </FluentStack>
                 </OptionTemplate>
