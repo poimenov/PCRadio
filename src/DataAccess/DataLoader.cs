@@ -31,28 +31,17 @@ public class DataLoader : IDataLoader
         var bakFilePath = Path.Combine(_appSettings.AppDataPath, Database.DB_FILE_NAME + ".bak");
         if (File.Exists(filePath))
         {
-            // backup favorites
-            using (var connection = new SqliteConnection($"Data Source={filePath}"))
-            {
-                connection.Open();
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT Id FROM Stations WHERE IsFavorite = 1";
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            favorites = favorites.Append(reader.GetInt32(0));
-                        }
-                    }
-                }
-                connection.Close();
-            }
-
             // backup database
             File.Copy(filePath, bakFilePath, true);
-            File.Delete(filePath);
-            Debug.WriteLine($"File copied ({DateTime.Now - start})");
+
+            // select favorites and delete database
+            using (var db = new Database())
+            {
+                favorites = db.Stations.Where(s => s.IsFavorite).Select(s => s.Id).ToList();
+                db.Database.EnsureDeleted();
+            }
+
+            Debug.WriteLine($"Database was backuped ({DateTime.Now - start})");
         }
 
         _databaseMigrator.MigrateDatabase();
@@ -150,6 +139,11 @@ public class DataLoader : IDataLoader
                     await transaction.RollbackAsync();
                     Debug.WriteLine(ex.Message);
                     _logger.LogError(ex, "Loading data failed");
+                    if (ex.InnerException != null)
+                    {
+                        Debug.WriteLine(ex.InnerException);
+                        _logger.LogError(ex.InnerException, ex.InnerException.Message);
+                    }
                 }
             }
         }

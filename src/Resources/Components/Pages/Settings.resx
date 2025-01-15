@@ -23,7 +23,10 @@
     </data>
     <data name="High" xml:space="preserve">
         <value>High</value>
-    </data>          
+    </data> 
+    <data name="DataBaseUpdate" xml:space="preserve">
+        <value>Update stations list</value>
+    </data>              
     <data name="LanguageAnnotation" xml:space="preserve">
         <value>changes will take effect after restart program</value>
     </data>        

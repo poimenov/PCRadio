@@ -13,7 +13,7 @@ public class DatabaseMigrator : IDatabaseMigrator
     {
         _logger = logger;
         _settings = options.Value;
-    }    
+    }
     public void MigrateDatabase()
     {
         if (!Directory.Exists(_settings.AppDataPath))
@@ -26,7 +26,15 @@ public class DatabaseMigrator : IDatabaseMigrator
         {
             using (var _database = new Database())
             {
-                _database.Database.Migrate();
+                try
+                {
+                    _database.Database.Migrate();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, e.Message);
+                    throw;
+                }
             }
 
             if (_logger != null)

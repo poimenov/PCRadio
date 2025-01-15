@@ -3,6 +3,8 @@
 @using Microsoft.Extensions.Options
 @using Microsoft.FluentUI.AspNetCore.Components.Extensions
 @using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
+@using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@inject PCRadio.Services.Interfaces.IDbUpdateService dbUpdateService
 @inject IOptions<AppSettings> options
 @inject IStringLocalizer<Settings> localizer
 
@@ -51,11 +53,18 @@
             </FluentSelect>
         </FluentGridItem>
 
+        <FluentGridItem>
+            <FluentButton OnClick="Update" Loading="@loading" IconStart="@(new _regular.Size16.ArrowClockwise())">
+                @localizer["DataBaseUpdate"]</FluentButton>
+        </FluentGridItem>
+
     </FluentGrid>
 </div>
 
 @code
 {
+    private string _initialLang = string.Empty;
+    private bool loading = false;
     private System.Globalization.CultureInfo? _language;
     public System.Globalization.CultureInfo? Language
     {
@@ -66,6 +75,7 @@
             if (value != null)
             {
                 options.Value.DefaultLanguage = value.ToString();
+                options.Value.NeedsDatabaseUpdate = options.Value.DefaultLanguage != _initialLang;
                 options.Value.Save();
             }
         }
@@ -85,6 +95,7 @@
 
     protected override void OnInitialized()
     {
+        _initialLang = options.Value.DefaultLanguage ?? string.Empty;
         if (!string.IsNullOrEmpty(options.Value.DefaultLanguage) &&
         AppCultures.Cultures.Select(x => x.ToString()).Contains(options.Value.DefaultLanguage))
         {
@@ -96,7 +107,13 @@
         }
 
         Quality = options.Value.Quality;
+    }
 
+    private async Task Update()
+    {
+        loading = true;
+        await dbUpdateService.UpdateDatabaseAsync();
+        loading = false;
     }
 
 }

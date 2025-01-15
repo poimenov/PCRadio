@@ -18,6 +18,7 @@ public class AppSettings
     public string? ArchiveUrl { get; set; }
     public string? ArchivePassword { get; set; }
     public int PageSize { get; set; } = 50;
+    public bool NeedsDatabaseUpdate { get; set; } = false;
     public Quality Quality { get; set; } = Quality.Medium;
     private string _appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), APPLICATION_NAME);
     public string AppDataPath

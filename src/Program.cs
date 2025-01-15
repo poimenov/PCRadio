@@ -76,13 +76,15 @@ public class Program
         AppDomain.CurrentDomain.SetData("DataDirectory", settings.AppDataPath);
         XmlConfigurator.Configure(new FileInfo("log4net.config"));
 
-        if (!File.Exists(Path.Combine(settings.AppDataPath, Database.DB_FILE_NAME)))
+        if (!File.Exists(Path.Combine(settings.AppDataPath, Database.DB_FILE_NAME)) || settings.NeedsDatabaseUpdate)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             app.Services.GetRequiredService<IDbUpdateService>().UpdateDatabaseAsync().Wait();
             stopwatch.Stop();
             Debug.WriteLine($"Database update took {stopwatch.ElapsedMilliseconds} ms");
+            settings.NeedsDatabaseUpdate = false;
+            settings.Save();
         }
 
         // customize window

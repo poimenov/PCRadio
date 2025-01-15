@@ -23,7 +23,10 @@
     </data>
     <data name="High" xml:space="preserve">
         <value>Высокое</value>
-    </data>                   
+    </data>   
+    <data name="DataBaseUpdate" xml:space="preserve">
+        <value>Обновить список станций</value>
+    </data>                    
     <data name="LanguageAnnotation" xml:space="preserve">
         <value>изменения вступят вступят силу после перезапуска программы</value>
     </data>     
