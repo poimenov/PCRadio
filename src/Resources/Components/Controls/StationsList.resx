@@ -2,5 +2,8 @@
 <root>
     <data name="Next" xml:space="preserve">
         <value>Next</value>
-    </data>     
+    </data>
+    <data name="NoStations" xml:space="preserve">
+        <value>No stations</value>
+    </data>         
 </root>

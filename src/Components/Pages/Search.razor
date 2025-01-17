@@ -27,14 +27,14 @@
         </FluentGridItem>
 
         <FluentGridItem>
-            <FluentSelect TOption="_models.Genre" Label="@localizer["Genre"]" OptionValue="@(x=>x?.Id.ToString())"
+            <FluentSelect TOption="_models.Genre" Label="@localizer["Genres"]" OptionValue="@(x=>x?.Id.ToString())"
                 Items="@Genres" Width="200px" Height="200px" @bind-SelectedOption="@SearchGenre">
                 <OptionTemplate>@context?.Name</OptionTemplate>
             </FluentSelect>
         </FluentGridItem>
 
         <FluentGridItem>
-            <FluentSelect TOption="_models.Country" Label="@localizer["Country"]" OptionValue="@(x=>x?.Id.ToString())"
+            <FluentSelect TOption="_models.Country" Label="@localizer["Countries"]" OptionValue="@(x=>x?.Id.ToString())"
                 Items="@Countries" Width="150px" Height="200px" @bind-SelectedOption="@SearchCountry">
                 <OptionTemplate>
                     <FluentStack>
