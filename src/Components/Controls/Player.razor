@@ -1,12 +1,16 @@
+@using Microsoft.Extensions.Localization
 @using Microsoft.Extensions.Options
 @using PCRadio.DataAccess.Interfaces
 @using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @using _filled = Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 @using PCRadio.DataAccess.Models
 @using PCRadio.Extensions
+@using PCRadio.Services.Interfaces
 @inject IJSRuntime JSRuntime
 @inject IOptions<AppSettings> options
 @inject IStations stations
+@inject ILinkOpeningService linkOpeningService
+@inject IStringLocalizer<Player> localizer
 
 <div class="player">
     <img class="logo" src="@Station?.Logo" alt="@Station?.Name" loading="lazy" />
@@ -14,27 +18,86 @@
         <div style="font-weight: bold;">@Station?.GetCountryIcon() @Station?.Name <span
                 style="font-weight: normal;">(@_country @_cities)</span> </div>
         <div style="font-style: italic;">@_genres @_subgenres</div>
-        <div title="@Station?.Description" style="font-size: 12px;">
+        <div title="@Station?.Description" style="font-size: 12px;height:36px;overflow: hidden;">
             @Station?.Description
         </div>
+        <marquee id="NowPlaying" direction="left" behavior="scroll" scrollamount="2"
+            style="font-size: 12px;@(string.IsNullOrEmpty(_searchText)?"display: none;":"")"></marquee>
+
     </div>
     <div style="margin-right: 24px;vertical-align: middle;">
         <div>
             <FluentButton IconStart="@(_isPlaying?new _regular.Size24.Pause():new _regular.Size24.Play())"
-                Color="Color.Accent" OnClick="@Play" />
+                Color="Color.Accent" OnClick="@Play" Title="@localizer["PlayStop"]" />
         </div>
         <div>
             <FluentButton IconStart="@(Station!.IsFavorite ? new _filled.Size24.Heart() : new _regular.Size24.Heart())"
-                Color="Color.Accent" OnClick="@ToggleFavorite" />
+                Color="Color.Accent" OnClick="@ToggleFavorite" Title="@localizer["AddToFavorites"]" />
+        </div>
+        <div>
+            <input type="hidden" id="searchText" @bind:event="oninput" @bind:get="_searchText" @bind:set="OnInput" />
+            <FluentButton IconStart="@(new _regular.Size24.Globe())" Color="Color.Accent" OnClick="@Search"
+                Disabled="@(string.IsNullOrEmpty(_searchText))" Title="@localizer["SearchInYoutube"]" />
         </div>
     </div>
 
     <audio id="audio" src="@($"{Station?.Stream}-{options.Value.GetQuality()}")" controls style="display: none;" />
     <script>
+        var intervalId;
+
+        function getJson(url, callback) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.responseType = 'json';
+            xhr.onload = function () {
+                var status = xhr.status;
+                if (status === 200) {
+                    callback(null, xhr.response);
+                } else {
+                    callback(status, xhr.response);
+                }
+            };
+            xhr.send();
+        }
+
+        function setSearchText(value) {
+            var searchText = document.getElementById("searchText");
+            if (searchText.value != value) {
+                searchText.value = value;
+                searchText.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+
+        function setMarquee(value) {
+            var marquee = document.getElementById("NowPlaying");
+            if (marquee.innerHTML != value) {
+                marquee.innerHTML = value;
+            }
+        }
+
+        function getMetadata(name) {
+            getJson("https://meta.pcradio.ru/" + name + "_current.json", function (err, data) {
+                if (err !== null) {
+                    console.log('Something went wrong: ' + err);
+                } else {
+                    var newText = data.artist + " - " + data.title;
+                    setMarquee(newText);
+                    setSearchText(newText);
+                }
+            });
+        }
+
         function playAudio(isPlaying) {
             var player = document.getElementById("audio");
+            clearInterval(intervalId);
+            intervalId = null;
+            setMarquee("");
+            setSearchText("");
             if (isPlaying) {
                 player.play();
+                var name = player.src.split("/")[3];
+                name = name.substring(0, name.indexOf("-"));
+                intervalId = setInterval(getMetadata, 5000, name);
             } else {
                 player.pause();
             }
@@ -48,6 +111,7 @@
     private string? _cities;
     private string? _genres;
     private string? _subgenres;
+    private string? _searchText { get; set; } = string.Empty;
 
     [Parameter]
     public Station? Station { get; set; }
@@ -60,6 +124,7 @@
         if (Station != null)
         {
             _isPlaying = false;
+            _searchText = string.Empty;
             var station = stations.GetStation(Station.Id);
             _country = station?.Country?.Name;
             _cities = string.Join(", ", station?.StationCities?.Select(x => x.City?.Name)
@@ -84,5 +149,23 @@
             stations.SetFavorite(Station.Id, Station.IsFavorite);
             await OnStationChanged.InvokeAsync(Station);
         }
+    }
+
+    private void OnInput(string? value)
+    {
+        if (_isPlaying)
+        {
+            _searchText = value;
+        }
+    }
+
+    private void Search()
+    {
+        if (!string.IsNullOrWhiteSpace(_searchText))
+        {
+            linkOpeningService.OpenUrl("https://www.youtube.com/results?search_query=" +
+            System.Web.HttpUtility.UrlEncode(_searchText));
+        }
+
     }
 }

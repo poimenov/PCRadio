@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="PlayStop" xml:space="preserve">
+        <value>Воспроизвести/Остановить</value>
+    </data>
+    <data name="AddToFavorites" xml:space="preserve">
+        <value>Добавить/Удалить в/из Избранное</value>
+    </data> 
+    <data name="SearchInYoutube" xml:space="preserve">
+        <value>Искать в Youtube</value>
+    </data>     
+</root>

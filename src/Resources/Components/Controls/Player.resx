@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="PlayStop" xml:space="preserve">
+        <value>Play/Stop</value>
+    </data>
+    <data name="AddToFavorites" xml:space="preserve">
+        <value>Add/Remove to/from Favorites</value>
+    </data> 
+    <data name="SearchInYoutube" xml:space="preserve">
+        <value>Search in Youtube</value>
+    </data>     
+</root>
