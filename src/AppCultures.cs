@@ -1,9 +1,15 @@
 using System.Globalization;
+using System.Text;
+using System.Xml.Linq;
+using Microsoft.AspNetCore.Components;
+using PSC.CSharp.Library.CountryData;
+using PSC.CSharp.Library.CountryData.SVGImages;
 
 namespace PCRadio;
 
 public static class AppCultures
 {
+    private static CountryHelper countryHelper = new CountryHelper();
     public static CultureInfo[] Cultures => (new string[] { DefaultCulture.ToString(), "ru-RU" }).Select(x => new CultureInfo(x)).ToArray();
     public static CultureInfo DefaultCulture => new CultureInfo("en-US");
     public static Dictionary<int, string> CountryCodes = new Dictionary<int, string>()
@@ -122,6 +128,36 @@ public static class AppCultures
         {114, "tz"}
     };
 
+    public static MarkupString GetCountrySvgMarkupString(int? id, bool withTitle = true)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" class=\"country-flag-icon\" viewBox=\"0 0 640 480\">");
+        if (id.HasValue && CountryCodes.ContainsKey(id.Value))
+        {
+            var countryCode = CountryCodes[id.Value];
+            if (withTitle)
+            {
+                sb.AppendLine($"<title>{countryHelper.GetNameByCountryCode(countryCode)}</title>");
+            }
+
+            sb.AppendLine(countryHelper.GetFlagByCountryCode(countryCode, FlagType.Wide));
+        }
+        sb.AppendLine("</svg>");
+
+        if (id.HasValue && id.Value == 4)
+        {
+            var svg = XElement.Parse(sb.ToString());
+            var pathes = svg.Descendants().Where(x => x.Name.LocalName == "path" && !x.Attributes().Any(y => y.Name == "fill"));
+            foreach (var path in pathes)
+            {
+                path.SetAttributeValue("fill", "black");
+            }
+
+            return new MarkupString(svg.ToString());
+        }
+
+        return new MarkupString(sb.ToString());
+    }
 }
 
 
