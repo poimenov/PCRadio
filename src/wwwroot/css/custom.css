@@ -72,3 +72,9 @@ fluent-listbox.station-list:focus-within {
     height: 16px;
     vertical-align: middle;
 }
+
+fluent-anchor.appName.hypertext::part(control) {
+    color: var(--fill-color);
+    font-size: 24px;
+    font-weight: bold;
+}

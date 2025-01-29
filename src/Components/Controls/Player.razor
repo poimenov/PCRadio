@@ -22,7 +22,8 @@
             @Station?.Description
         </div>
         <marquee id="NowPlaying" direction="left" behavior="scroll" scrollamount="2"
-            style="font-size: 12px;@(string.IsNullOrEmpty(_searchText)?"display: none;":"")"></marquee>
+            style="color:var(--accent-fill-rest);font-size: 12px;@(string.IsNullOrEmpty(_searchText)?"display: none;":"")">
+        </marquee>
     </div>
     <FluentSpacer />
     <div style="width: 32px;margin-left:2px;vertical-align: middle;">
