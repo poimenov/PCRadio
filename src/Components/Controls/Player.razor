@@ -22,13 +22,13 @@
             @Station?.Description
         </div>
         <marquee id="NowPlaying" direction="left" behavior="scroll" scrollamount="2"
-            style="color:var(--accent-fill-rest);font-size: 12px;@(string.IsNullOrEmpty(_searchText)?"display: none;":"")">
+            style="color:var(--accent-fill-rest);font-size: 12px;@(string.IsNullOrEmpty(_searchText) ? "display: none;" : "")">
         </marquee>
     </div>
     <FluentSpacer />
     <div style="width: 32px;margin-left:2px;vertical-align: middle;">
         <div>
-            <FluentButton IconStart="@(_isPlaying?new _regular.Size24.Pause():new _regular.Size24.Play())"
+            <FluentButton IconStart="@(_isPlaying ? new _regular.Size24.Pause() : new _regular.Size24.Play())"
                 Color="Color.Accent" OnClick="@Play" Title="@localizer["PlayStop"]" />
         </div>
         <div>
@@ -37,7 +37,7 @@
         </div>
         <div>
             <input type="hidden" id="searchText" @bind:event="oninput" @bind:get="_searchText" @bind:set="OnInput" />
-            <FluentButton IconStart="@(new _regular.Size24.Globe())" Color="Color.Accent" OnClick="@Search"
+            <FluentButton IconStart="@(new _regular.Size24.VideoClip())" Color="Color.Accent" OnClick="@Search"
                 Disabled="@(string.IsNullOrEmpty(_searchText))" Title="@localizer["SearchInYoutube"]" />
         </div>
     </div>
