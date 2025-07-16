@@ -4,7 +4,9 @@
 @using PCRadio.Extensions
 @using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @using _filled = Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
+@implements IDisposable
 @inject IStringLocalizer<StationsList> localizer
+@inject IJSRuntime JSRuntime
 
 @if (SelectedStation != null)
 {
@@ -44,10 +46,28 @@ else
             </FluentCard>
         </OptionTemplate>
     </FluentListbox>
-    <div style="text-align: right;padding-right: 24px;">
-        <FluentAnchor Style="@(GetNextEnabled ? "" : "display:none;")" Href="#" OnClick="@(()=>GetNext())">@localizer["Next"] @PageSize
-        </FluentAnchor>
-    </div>
+    <script>
+        var isScollToEnd = false;
+        function addScrollListener(stationListObjectReference) {
+            var stationList = document.querySelector(".station-list");
+            if (stationList !== null && stationList.parentElement !== null) {
+                scrollContainer = stationList.parentElement;
+                scrollContainer.addEventListener("scroll", (event) => {
+                    if(scrollContainer.scrollHeight - scrollContainer.scrollTop === scrollContainer.clientHeight && !isScollToEnd) {
+                        isScollToEnd = true;
+                        console.log("Reached the bottom of the scroll container.");
+                        stationListObjectReference.invokeMethodAsync("GetNext")
+                            .then(() => {
+                                isScollToEnd = false;
+                            })
+                            .catch(error => {
+                                console.error("Error invoking GetNext:", error);
+                            });
+                    }
+                });  
+            }
+        }      
+    </script>
 }
 @code {
     [Parameter]
@@ -58,8 +78,11 @@ else
     public List<Station>? Stations { get; set; }
     [Parameter]
     public Func<int, int, IEnumerable<Station>> GetStations { get; set; } = default!;
+    
+    public void Dispose() => stationListObjectReference?.Dispose();
 
     private Station? SelectedStation { get; set; }
+    private DotNetObjectReference<StationsList>? stationListObjectReference;
 
     private bool GetNextEnabled => Stations?.Count < Count;
 
@@ -67,12 +90,22 @@ else
     {
         SelectedStation = null;
     }
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            stationListObjectReference = DotNetObjectReference.Create(this);
+            JSRuntime.InvokeVoidAsync("addScrollListener", stationListObjectReference);
+        }
+    }
 
-    private void GetNext()
+    [JSInvokable]
+    public void GetNext()
     {
         if (GetNextEnabled)
         {
             Stations!.AddRange(GetStations(Stations.Count, PageSize).ToList());
+            this.StateHasChanged();
         }
     }
 
