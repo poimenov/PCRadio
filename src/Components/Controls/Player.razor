@@ -14,7 +14,7 @@
 
 <FluentStack Orientation="Orientation.Horizontal" Class="player">
     <img class="logo" src="@Station?.Logo" alt="@Station?.Name" loading="lazy" />
-    <div>
+    <div style="min-width: 462px;">
         <div style="font-weight: bold;">@Station?.GetCountryIcon() @Station?.Name <span
                 style="font-weight: normal;">(@_country @_cities)</span> </div>
         <div style="font-style: italic;">@_genres @_subgenres</div>
@@ -26,7 +26,19 @@
         </marquee>
     </div>
     <FluentSpacer />
-    <div style="width: 32px;margin-left:2px;vertical-align: middle;">
+    <div style="margin-left:2px;">
+        <div>
+            <FluentButton Id="popoverButton" IconStart="@(new _regular.Size24.Speaker2())" Color="Color.Accent"
+                OnClick="@(() => _isPopoverVisible = !_isPopoverVisible)" Title="@localizer["Volume"]" />
+        </div>
+        <div>
+            <input type="hidden" id="searchText" @bind:event="oninput" @bind:get="_searchText" @bind:set="OnInput" />
+            <FluentButton IconStart="@(new _regular.Size24.VideoClip())" Color="Color.Accent" OnClick="@Search"
+                Disabled="@(string.IsNullOrEmpty(_searchText))" Title="@localizer["SearchInYoutube"]" />
+        </div>
+    </div>
+
+    <div style="margin-left:2px;margin-right: 20px;">
         <div>
             <FluentButton IconStart="@(_isPlaying ? new _regular.Size24.Pause() : new _regular.Size24.Play())"
                 Color="Color.Accent" OnClick="@Play" Title="@localizer["PlayStop"]" />
@@ -35,24 +47,22 @@
             <FluentButton IconStart="@(Station!.IsFavorite ? new _filled.Size24.Heart() : new _regular.Size24.Heart())"
                 Color="Color.Accent" OnClick="@ToggleFavorite" Title="@localizer["AddToFavorites"]" />
         </div>
-        <div>
-            <input type="hidden" id="searchText" @bind:event="oninput" @bind:get="_searchText" @bind:set="OnInput" />
-            <FluentButton IconStart="@(new _regular.Size24.VideoClip())" Color="Color.Accent" OnClick="@Search"
-                Disabled="@(string.IsNullOrEmpty(_searchText))" Title="@localizer["SearchInYoutube"]" />
-        </div>
     </div>
-    <div style="width: 32px;margin-left: 2px;">
+</FluentStack>
+<FluentPopover AnchorId="popoverButton" @bind-Open="_isPopoverVisible" Style="width: 90px; height: 260px;"
+    VerticalPosition="VerticalPosition.Bottom" HorizontalPosition="HorizontalPosition.Left">
+
+    <Body>
         <FluentSlider Orientation="Orientation.Vertical" Min="0.0" Max="1.0" Step="0.1" ValueChanged="@SetVolume"
-            Value="@_volume" TValue="double" Style="min-height: 90px;height:90px;margin-top:5px;">
+            Value="@_volume" TValue="double" Style="width: 30px; height: 200px;">
             <FluentSliderLabel Position="0.0">0%</FluentSliderLabel>
             <FluentSliderLabel Position="0.25">25%</FluentSliderLabel>
             <FluentSliderLabel Position="0.5">50%</FluentSliderLabel>
             <FluentSliderLabel Position="0.75">75%</FluentSliderLabel>
             <FluentSliderLabel Position="100">100%</FluentSliderLabel>
         </FluentSlider>
-
-    </div>
-</FluentStack>
+    </Body>
+</FluentPopover>
 <audio id="audio" src="@($"{Station?.Stream}-{options.Value.GetQuality()}")" controls style="display: none;" />
 <script>
     var intervalId;
@@ -129,6 +139,7 @@
     private string? _subgenres;
     private string? _searchText = string.Empty;
     private double _volume = 1.0;
+    private bool _isPopoverVisible;
 
     [Parameter]
     public Station? Station { get; set; }

@@ -8,5 +8,8 @@
     </data> 
     <data name="SearchInYoutube" xml:space="preserve">
         <value>Search in Youtube</value>
-    </data>     
+    </data>
+    <data name="Volume" xml:space="preserve">
+        <value>Volume</value>
+    </data>    
 </root>
