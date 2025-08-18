@@ -35,7 +35,7 @@ public class Program
         //add json configuration
         var configuration = new ConfigurationBuilder()
             .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddJsonFile(AppSettings.JSON_FILE_NAME, optional: true, reloadOnChange: true)
+            .AddJsonFile(AppSettings.JSON_FILE_NAME, optional: true, reloadOnChange: false)
             .AddEnvironmentVariables()
             .Build();
         builder.Services.AddSingleton<IConfiguration>(configuration);

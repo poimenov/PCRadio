@@ -9,6 +9,7 @@
         <FluentStack Orientation="Orientation.Horizontal">
             <img src="favicon.ico" style="height: 24px;" />
             <FluentAnchor Href="#" Appearance="Appearance.Hypertext" Class="appName"
+                title="@($"{AppSettings.APPLICATION_NAME} v{typeof(AppSettings).Assembly.GetName().Version}")"
                 OnClick="@(()=>OpenLink("https://pcradio.ru"))">
                 @AppSettings.APPLICATION_NAME</FluentAnchor>
         </FluentStack>
