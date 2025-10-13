@@ -4,16 +4,16 @@
 @using Microsoft.Extensions.Options
 @using PCRadio.DataAccess.Interfaces
 @using PCRadio.DataAccess.Models
+@using PCRadio.Services.Interfaces
 @inject IStringLocalizer<Genre> localizer
 @inject IStations stations
 @inject IOptions<AppSettings> options
 @inject IGenres genres
+@inject IAppStateService appStateService
 
-<FluentLayout>
-    <h1>@genres.GetById(Id)?.Name (@_count)</h1>
-    <PCRadio.Components.Controls.StationsList Count="@_count" PageSize="@PageSize" Stations="@_stations?.ToList()"
-        GetStations="@((skip, take) => stations.GetByGenre(Id, skip, take, out _count))" />
-</FluentLayout>
+<PCRadio.Components.Controls.StationsList Count="@_count" PageSize="@PageSize" Stations="@_stations?.ToList()"
+    GetStations="@((skip, take) => stations.GetByGenre(Id, skip, take, out _count))" />
+
 @code
 {
     private int PageSize => options.Value.PageSize;
@@ -25,5 +25,6 @@
     protected override void OnParametersSet()
     {
         _stations = stations.GetByGenre(Id, 0, PageSize, out _count);
+        appStateService.Title = $"{genres.GetById(Id)?.Name} ({_count})";
     }
 }

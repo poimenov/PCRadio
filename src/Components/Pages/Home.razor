@@ -4,15 +4,14 @@
 @using Microsoft.Extensions.Options
 @using PCRadio.DataAccess.Interfaces
 @using PCRadio.DataAccess.Models
+@using PCRadio.Services.Interfaces
 @inject IStringLocalizer<Home> localizer
 @inject IOptions<AppSettings> options
 @inject IStations stations
+@inject IAppStateService appStateService
 
-<FluentLayout>
-    <h1>@localizer["Header"] (@_count)</h1>
-    <PCRadio.Components.Controls.StationsList Count="@_count" PageSize="@PageSize" Stations="@_stations?.ToList()"
-        GetStations="@((skip, take) => stations.GetRecommended(skip, take, out _count))" />
-</FluentLayout>
+<PCRadio.Components.Controls.StationsList Count="@_count" PageSize="@PageSize" Stations="@_stations?.ToList()"
+    GetStations="@((skip, take) => stations.GetRecommended(skip, take, out _count))" />
 
 @code
 {
@@ -23,5 +22,7 @@
     protected override void OnInitialized()
     {
         _stations = stations.GetRecommended(0, PageSize, out _count);
+        appStateService.Title = $"{localizer["Header"]} ({_count})";
+
     }
 }

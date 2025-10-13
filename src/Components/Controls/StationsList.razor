@@ -4,18 +4,15 @@
 @using PCRadio.Extensions
 @using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @using _filled = Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
+@using PCRadio.Services.Interfaces
 @implements IDisposable
 @inject IStringLocalizer<StationsList> localizer
 @inject IJSRuntime JSRuntime
-
-@if (SelectedStation != null)
-{
-    <PCRadio.Components.Controls.Player Station="@SelectedStation" OnStationChanged="@OnStationChanged" />
-}
+@inject IAppStateService appStateService
 
 @if (Stations == null || !Stations.Any())
 {
-    <div class="empty-message">@localizer["NoStations"]</div>
+    <div class="empty-message" style="height:100%">@localizer["NoStations"]</div>
 }
 else
 {
@@ -78,25 +75,34 @@ else
     public List<Station>? Stations { get; set; }
     [Parameter]
     public Func<int, int, IEnumerable<Station>> GetStations { get; set; } = default!;
-    
+
     public void Dispose() => stationListObjectReference?.Dispose();
 
-    private Station? SelectedStation { get; set; }
+    private Station? _selectedStation = default!;
+    private Station? SelectedStation 
+    { 
+        get => _selectedStation; 
+        set 
+        {
+            if (value != null && value != _selectedStation)
+            {
+                _selectedStation = value;
+                appStateService.CurrentStationId = value.Id;
+            }
+        } 
+    }
     private DotNetObjectReference<StationsList>? stationListObjectReference;
 
     private bool GetNextEnabled => Stations?.Count < Count;
 
-    protected override void OnParametersSet()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        SelectedStation = null;
-    }
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender)
+        if (Stations != null && Stations.Any())
         {
             stationListObjectReference = DotNetObjectReference.Create(this);
-            JSRuntime.InvokeVoidAsync("addScrollListener", stationListObjectReference);
-        }
+            await JSRuntime.InvokeVoidAsync("addScrollListener", stationListObjectReference);
+        }        
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     [JSInvokable]
@@ -109,8 +115,4 @@ else
         }
     }
 
-    private void OnStationChanged(Station station)
-    {
-        SelectedStation = station;
-    }
 }

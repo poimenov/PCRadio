@@ -4,11 +4,11 @@
 @using Microsoft.FluentUI.AspNetCore.Components.Extensions
 @using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 @using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using PCRadio.Services.Interfaces
 @inject PCRadio.Services.Interfaces.IDbUpdateService dbUpdateService
 @inject IOptions<AppSettings> options
 @inject IStringLocalizer<Settings> localizer
-
-<h1>@localizer["Header"]</h1>
+@inject IAppStateService appStateService
 
 <FluentDesignTheme @bind-Mode="@Mode" @bind-OfficeColor="@OfficeColor" StorageName="theme" />
 
@@ -26,7 +26,7 @@
                 <OptionTemplate>
                     <FluentStack>
                         <FluentIcon Value="@(new Size20.RectangleLandscape())" Color="Color.Custom"
-                            CustomColor="@(@context.ToAttributeValue() != "default" ? context.ToAttributeValue() : "#036ac4" )" />
+                            CustomColor="@(@context.ToAttributeValue() != "default" ? context.ToAttributeValue() : "#036ac4")" />
                         <FluentLabel>@context</FluentLabel>
                     </FluentStack>
                 </OptionTemplate>
@@ -107,6 +107,7 @@
         }
 
         Quality = options.Value.Quality;
+        appStateService.Title = localizer["Header"];
     }
 
     private async Task Update()

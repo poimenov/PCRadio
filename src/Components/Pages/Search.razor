@@ -6,52 +6,46 @@
 @using _models = PCRadio.DataAccess.Models
 @using PCRadio.Extensions
 @using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using PCRadio.Services.Interfaces
 @inject IStringLocalizer<Search> localizer
 @inject IStations stations
 @inject IOptions<AppSettings> options
 @inject IGenres genres
 @inject ICountries countries
 @inject IGenres genres
+@inject IAppStateService appStateService
 
-<FluentLayout>
-    <h1>@localizer["Header"]
-        @if (_count > 0)
-        {
-            <text>(</text> @_count <text>)</text>
-        }
-    </h1>
-    <FluentGrid Style="margin-bottom: 10px;">
-        <FluentGridItem>
-            <FluentTextField Label="@localizer["SearchLabel"]" @bind-Value="@SearchName"
-                Placeholder="@localizer["SearchPlaceholder"]" Style="width: 210px;" />
-        </FluentGridItem>
+<FluentGrid Style="margin-bottom: 10px;">
+    <FluentGridItem>
+        <FluentTextField Label="@localizer["SearchLabel"]" @bind-Value="@SearchName"
+            Placeholder="@localizer["SearchPlaceholder"]" Style="width: 210px;" />
+    </FluentGridItem>
 
-        <FluentGridItem>
-            <FluentSelect TOption="_models.Genre" Label="@localizer["Genres"]" OptionValue="@(x=>x?.Id.ToString())"
-                Items="@Genres" Width="200px" Height="200px" @bind-SelectedOption="@SearchGenre">
-                <OptionTemplate>@context?.Name</OptionTemplate>
-            </FluentSelect>
-        </FluentGridItem>
+    <FluentGridItem>
+        <FluentSelect TOption="_models.Genre" Label="@localizer["Genres"]" OptionValue="@(x => x?.Id.ToString())"
+            Items="@Genres" Width="200px" Height="200px" @bind-SelectedOption="@SearchGenre">
+            <OptionTemplate>@context?.Name</OptionTemplate>
+        </FluentSelect>
+    </FluentGridItem>
 
-        <FluentGridItem>
-            <FluentSelect TOption="_models.Country" Label="@localizer["Countries"]" OptionValue="@(x=>x?.Id.ToString())"
-                Items="@Countries" Width="150px" Height="200px" @bind-SelectedOption="@SearchCountry">
-                <OptionTemplate>
-                    <FluentStack>
-                        @context?.GetCountryIcon(false)
-                        @context?.Name
-                    </FluentStack>
-                </OptionTemplate>
-            </FluentSelect>
-        </FluentGridItem>
-        <FluentGridItem style="padding-top: 36px;">
-            <FluentButton IconStart="@(new _regular.Size20.Search())" OnClick="PerformSearch"></FluentButton>
-        </FluentGridItem>
-    </FluentGrid>
+    <FluentGridItem>
+        <FluentSelect TOption="_models.Country" Label="@localizer["Countries"]" OptionValue="@(x => x?.Id.ToString())"
+            Items="@Countries" Width="150px" Height="200px" @bind-SelectedOption="@SearchCountry">
+            <OptionTemplate>
+                <FluentStack>
+                    @context?.GetCountryIcon(false)
+                    @context?.Name
+                </FluentStack>
+            </OptionTemplate>
+        </FluentSelect>
+    </FluentGridItem>
+    <FluentGridItem style="padding-top: 36px;">
+        <FluentButton IconStart="@(new _regular.Size20.Search())" OnClick="PerformSearch"></FluentButton>
+    </FluentGridItem>
+</FluentGrid>
 
-    <PCRadio.Components.Controls.StationsList Count="@_count" PageSize="@PageSize" Stations="@_stations?.ToList()"
-        GetStations="@((skip, take) => stations.Search(_params, skip, take, out _count))" />
-</FluentLayout>
+<PCRadio.Components.Controls.StationsList Count="@_count" PageSize="@PageSize" Stations="@_stations?.ToList()"
+    GetStations="@((skip, take) => stations.Search(_params, skip, take, out _count))" />
 
 
 @code
@@ -97,11 +91,14 @@
     {
         SearchCountry = Countries.First();
         SearchGenre = Genres.First();
+        appStateService.Title = localizer["Header"];
     }
 
     private void PerformSearch()
     {
         _params = new SearchParams { Name = SearchName, CountryId = SearchCountry?.Id ?? 0, GenreId = SearchGenre?.Id ?? 0 };
         _stations = stations.Search(_params, 0, PageSize, out _count);
+        var title = _count > 0 ? $"{localizer["Header"]} ({_count})" : localizer["Header"];
+        appStateService.Title = title;
     }
 }

@@ -1,9 +1,11 @@
 ﻿@using Microsoft.Extensions.Localization
 @using Microsoft.Extensions.Options
+@using PCRadio.DataAccess.Models
 @using PCRadio.Services.Interfaces
 @inherits LayoutComponentBase
 @inject ILinkOpeningService linkOpeningService
 @inject IStringLocalizer<MainLayout> localizer
+@inject IAppStateService appStateService
 <FluentLayout>
     <FluentHeader>
         <FluentStack Orientation="Orientation.Horizontal">
@@ -18,7 +20,15 @@
         <NavMenu />
         <FluentBodyContent Class="body-content">
             <div class="content">
-                @Body
+                <FluentLayout>                 
+
+                    <h1>@Title</h1>
+                    @Body
+                    @if (SelectedStationId.HasValue)
+                    {
+                        <PCRadio.Components.Controls.Player StationId="@SelectedStationId" />
+                    }                    
+                </FluentLayout>
             </div>
         </FluentBodyContent>
     </FluentStack>
@@ -44,6 +54,28 @@
 
 @code
 {
+    string Title { get; set; } = string.Empty;
+    int? SelectedStationId { get; set; }
+
+    protected override void OnInitialized()
+    {
+        appStateService.TitleChanged += (title) => InvokeAsync(() =>
+        {
+            if(Title != title)
+            {
+                Title = title;
+                StateHasChanged();
+            }
+        });
+        appStateService.CurrentStationIdChanged += (stationId) => InvokeAsync(() =>
+        {
+            if(SelectedStationId != stationId)
+            {
+                SelectedStationId = stationId;
+                StateHasChanged();
+            }
+        });
+    }
     void OpenLink(string url)
     {
         linkOpeningService.OpenUrl(url);

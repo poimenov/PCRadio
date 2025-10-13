@@ -51,7 +51,7 @@
     </div>
 </FluentStack>
 <FluentPopover AnchorId="popoverButton" @bind-Open="_isPopoverVisible" Style="width: 90px; height: 260px;"
-    VerticalPosition="VerticalPosition.Bottom" HorizontalPosition="HorizontalPosition.Left">
+    VerticalPosition="VerticalPosition.Top" HorizontalPosition="HorizontalPosition.Left">
 
     <Body>
         <FluentSlider Orientation="Orientation.Vertical" Min="0.0" Max="1.0" Step="0.1" ValueChanged="@SetVolume"
@@ -133,6 +133,9 @@
 </script>
 
 @code {
+    [Parameter]
+    public int? StationId { get; set; }
+
     private bool _isPlaying;
     private string? _country;
     private string? _cities;
@@ -141,29 +144,25 @@
     private string? _searchText = string.Empty;
     private double _volume = 1.0;
     private bool _isPopoverVisible;
-
-    [Parameter]
-    public Station? Station { get; set; }
-
-    [Parameter]
-    public EventCallback<Station> OnStationChanged { get; set; }
+    private Station? Station { get; set; }
 
     protected override void OnParametersSet()
     {
-        if (Station != null)
+        if (StationId.HasValue && Station?.Id != StationId.Value)
         {
             _isPlaying = false;
             _searchText = string.Empty;
-            var station = stations.GetStation(Station.Id);
-            _country = station?.Country?.Name;
-            _cities = string.Join(", ", station?.StationCities?.Select(x => x.City?.Name)
+            Station = stations.GetStation(StationId.Value);
+            _country = Station?.Country?.Name;
+            _cities = string.Join(", ", Station?.StationCities?.Select(x => x.City?.Name)
             .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
-            _genres = string.Join(", ", station?.StationGenres?.Select(x => x.Genre?.Name)
+            _genres = string.Join(", ", Station?.StationGenres?.Select(x => x.Genre?.Name)
             .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
-            _subgenres = string.Join(", ", station?.StationSubGenres?.Select(x => x.SubGenre?.Name)
+            _subgenres = string.Join(", ", Station?.StationSubGenres?.Select(x => x.SubGenre?.Name)
             .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
         }
     }
+
     private async Task Play()
     {
         _isPlaying = !_isPlaying;
@@ -176,13 +175,12 @@
         await JSRuntime.InvokeVoidAsync("setVolume", volume);
     }
 
-    private async Task ToggleFavorite()
+    private void ToggleFavorite()
     {
         if (Station != null)
         {
             Station.IsFavorite = !Station.IsFavorite;
             stations.SetFavorite(Station.Id, Station.IsFavorite);
-            await OnStationChanged.InvokeAsync(Station);
         }
     }
 

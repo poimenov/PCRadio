@@ -19,6 +19,10 @@ fluent-listbox.station-list:focus-within {
     outline: none;
 }
 
+div:has(fluent-listbox.station-list) {
+    height: 100%;
+}
+
 .station-list {
     display: grid;
     grid-template-columns:  repeat(auto-fill, minmax(290px, 1fr));
@@ -27,7 +31,7 @@ fluent-listbox.station-list:focus-within {
     justify-content: stretch;
     justify-items: start;
     padding: 5px;
-    max-height: calc(100dvh - 145px) !important;
+    max-height: calc(100% - 145px) !important;
 }
 
 .station-card {  
