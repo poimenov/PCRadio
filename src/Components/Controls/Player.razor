@@ -2,16 +2,21 @@
 @using Microsoft.Extensions.Localization
 @using Microsoft.Extensions.Options
 @using PCRadio.DataAccess.Interfaces
+@using PCRadio.Services
+@using System.Globalization
+@using System.Text.Json.Serialization
 @using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @using _filled = Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 @using PCRadio.DataAccess.Models
 @using PCRadio.Extensions
 @using PCRadio.Services.Interfaces
+@implements IDisposable
 @inject IJSRuntime JSRuntime
 @inject IOptions<AppSettings> options
 @inject IStations stations
 @inject ILinkOpeningService linkOpeningService
 @inject IStringLocalizer<Player> localizer
+@inject HttpClient httpClient
 
 <FluentStack Orientation="Orientation.Horizontal" Class="player">
     <img class="logo" src="@Station?.Logo" alt="@Station?.Name" loading="lazy" />
@@ -23,7 +28,7 @@
             @Station?.Description
         </div>
         <marquee id="NowPlaying" direction="left" behavior="scroll" scrollamount="2"
-            style="color:var(--accent-fill-rest);font-size: 12px;@(string.IsNullOrEmpty(_searchText) ? "display: none;" : "")">
+            style="cursor: pointer;color:var(--accent-fill-rest);font-size: 12px;@(string.IsNullOrEmpty(SearchText) ? "display: none;" : "")">
         </marquee>
     </div>
     <FluentSpacer />
@@ -33,9 +38,9 @@
                 OnClick="@(() => _isPopoverVisible = !_isPopoverVisible)" Title="@localizer["Volume"]" />
         </div>
         <div>
-            <input type="hidden" id="searchText" @bind:event="oninput" @bind:get="_searchText" @bind:set="OnInput" />
-            <FluentButton IconStart="@(new _regular.Size24.VideoClip())" Color="Color.Accent" OnClick="@Search"
-                Disabled="@(string.IsNullOrEmpty(_searchText))" Title="@localizer["SearchInYoutube"]" />
+            <FluentButton Id="btnSearch" IconStart="@(new _regular.Size24.VideoClip())" Color="Color.Accent"
+                OnClick="@Search" Disabled="@(string.IsNullOrEmpty(SearchText))"
+                Title="@localizer["SearchInYoutube"]" />
         </div>
     </div>
 
@@ -64,32 +69,9 @@
         </FluentSlider>
     </Body>
 </FluentPopover>
-<audio id="audio" src="@($"{Station?.Stream}-{options.Value.GetQuality()}")" controls style="display: none;" />
+<audio id="audio" src="@AudioUrl" controls style="display: none;" />
 <script>
     var intervalId;
-
-    function getJson(url, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url, true);
-        xhr.responseType = 'json';
-        xhr.onload = function () {
-            var status = xhr.status;
-            if (status === 200) {
-                callback(null, xhr.response);
-            } else {
-                callback(status, xhr.response);
-            }
-        };
-        xhr.send();
-    }
-
-    function setSearchText(value) {
-        var searchText = document.getElementById("searchText");
-        if (searchText.value != value) {
-            searchText.value = value;
-            searchText.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-    }
 
     function setMarquee(value) {
         var marquee = document.getElementById("NowPlaying");
@@ -98,31 +80,31 @@
         }
     }
 
-    function getMetadata(name) {
-        getJson("https://meta.pcradio.ru/" + name + "_current.json", function (err, data) {
-            if (err !== null) {
-                console.log('Something went wrong: ' + err);
-            } else {
-                var newText = data.artist + " - " + data.title;
-                setMarquee(newText);
-                setSearchText(newText);
+    window.setPageRef = (dotNetRef) => {
+        window.getCurrentTrackName = () => {
+            var player = document.getElementById("audio");
+            if (player.src && !player.paused) {
+                var name = player.src.split("/")[3];
+                name = name.substring(0, name.indexOf("-"));
+                dotNetRef.invokeMethodAsync('Ping', name).then(result => {
+                    setMarquee(result);
+                });
             }
-        });
-    }
+            else {
+                setMarquee("");
+            }
+        };
+        intervalId = setInterval(getCurrentTrackName, 5000);
+    };
 
     function playAudio(isPlaying) {
         var player = document.getElementById("audio");
-        clearInterval(intervalId);
-        intervalId = null;
-        setMarquee("");
-        setSearchText("");
-        if (isPlaying) {
-            player.play();
-            var name = player.src.split("/")[3];
-            name = name.substring(0, name.indexOf("-"));
-            intervalId = setInterval(getMetadata, 5000, name);
-        } else {
-            player.pause();
+        if (player) {
+            if (isPlaying && player.paused) {
+                player.play();
+            } else if (!isPlaying && !player.paused) {
+                player.pause();
+            }
         }
     }
 
@@ -130,6 +112,7 @@
         var player = document.getElementById("audio");
         player.volume = volume;
     }
+
 </script>
 
 @code {
@@ -142,16 +125,41 @@
     private string? _genres;
     private string? _subgenres;
     private string? _searchText = string.Empty;
+    private string? SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (_searchText != value)
+            {
+                _searchText = value;
+                StateHasChanged();
+            }
+        }
+    }
     private double _volume = 1.0;
     private bool _isPopoverVisible;
     private Station? Station { get; set; }
+    private DotNetObjectReference<Player>? thisRef;
+    string AudioUrl => $"{Station?.Stream}-{options.Value.GetQuality()}";
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            thisRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("setPageRef", thisRef);
+        }
 
-    protected override void OnParametersSet()
+        await JSRuntime.InvokeVoidAsync("playAudio", _isPlaying);
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+
+    protected override async Task OnParametersSetAsync()
     {
         if (StationId.HasValue && Station?.Id != StationId.Value)
         {
-            _isPlaying = false;
-            _searchText = string.Empty;
+            SearchText = string.Empty;
             Station = stations.GetStation(StationId.Value);
             _country = Station?.Country?.Name;
             _cities = string.Join(", ", Station?.StationCities?.Select(x => x.City?.Name)
@@ -160,7 +168,10 @@
             .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
             _subgenres = string.Join(", ", Station?.StationSubGenres?.Select(x => x.SubGenre?.Name)
             .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
+            StateHasChanged();
         }
+
+        await base.OnParametersSetAsync();
     }
 
     private async Task Play()
@@ -184,21 +195,79 @@
         }
     }
 
-    private void OnInput(string? value)
+    private void Search()
     {
-        if (_isPlaying)
+        if (!string.IsNullOrWhiteSpace(SearchText))
         {
-            _searchText = value;
+            var searchUrl = string.Format(options.Value.TrackSearchUrl, System.Web.HttpUtility.UrlEncode(SearchText));
+            linkOpeningService.OpenUrl(searchUrl);
         }
     }
 
-    private void Search()
+    [JSInvokable]
+    public async Task<string> Ping(string name)
     {
-        if (!string.IsNullOrWhiteSpace(_searchText))
+        if (!httpClient.DefaultRequestHeaders.Contains(FileDownloadService.USER_AGENT_HEADER_NAME))
         {
-            linkOpeningService.OpenUrl("https://www.youtube.com/results?search_query=" +
-            System.Web.HttpUtility.UrlEncode(_searchText));
+            httpClient.DefaultRequestHeaders.Add(FileDownloadService.USER_AGENT_HEADER_NAME, FileDownloadService.USER_AGENT);
         }
 
+        try
+        {
+            if (!string.IsNullOrEmpty(name))
+            {
+                var url = string.Format(options.Value.CurrentTrackInfoUrl, name);
+                var response = await httpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var stream = await response.Content.ReadAsStreamAsync();
+                    var currentTrack = await System.Text.Json.JsonSerializer.DeserializeAsync<CurrentTrack>(stream);
+                    if (currentTrack != null)
+                    {
+                        SearchText = $"{currentTrack.Artist} - {currentTrack.Title}";
+                        return SearchText;
+                    }
+                }
+            }
+
+            SearchText = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(ex.Message);
+            SearchText = string.Empty;
+        }
+
+        return SearchText;
+    }
+
+    public void Dispose() => thisRef?.Dispose();
+
+    public class CurrentTrack
+    {
+        [JsonPropertyName("artist")]
+        public string Artist { get; set; } = string.Empty;
+        [JsonPropertyName("title")]
+        public string Title { get; set; } = string.Empty;
+        [JsonPropertyName("time")]
+        public string TimeString { get; set; } = string.Empty;
+        [JsonPropertyName("date")]
+        public string DateString { get; set; } = string.Empty;
+        public DateTime DateTime
+        {
+            get
+            {
+                if (DateTime.TryParseExact(
+                $"{DateString} {TimeString}",
+                "yyyy-MM-dd HH:mm:ss",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None,
+                out DateTime result))
+                {
+                    return result;
+                }
+                return DateTime.MinValue;
+            }
+        }
     }
 }

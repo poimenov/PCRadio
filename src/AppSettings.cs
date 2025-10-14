@@ -17,6 +17,8 @@ public class AppSettings
     public string? DefaultLanguage { get; set; }
     public string? ArchiveUrl { get; set; }
     public string? ArchivePassword { get; set; }
+    public string TrackSearchUrl { get; set; } = "https://www.youtube.com/results?search_query={0}";
+    public string CurrentTrackInfoUrl { get; set; } = "https://meta.pcradio.ru/{0}_current.json";
     public int PageSize { get; set; } = 50;
     public bool NeedsDatabaseUpdate { get; set; } = false;
     public Quality Quality { get; set; } = Quality.Medium;

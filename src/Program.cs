@@ -45,7 +45,7 @@ public class Program
             options.ResourcesPath = "Resources";
         });
 
-        builder.Services.AddScoped(sp => new HttpClient(new HttpClientHandler(), disposeHandler: true));
+        builder.Services.AddSingleton(sp => new HttpClient(new HttpClientHandler(), disposeHandler: true));
         builder.Services.AddTransient<IPlatformService, PlatformService>();
         builder.Services.AddTransient<IProcessService, ProcessService>();
         builder.Services.AddTransient<ILinkOpeningService, LinkOpeningService>();
@@ -90,7 +90,7 @@ public class Program
 
         // customize window
         app.MainWindow
-            .SetSize(new Size(900, 500))
+            .SetSize(new Size(900, 600))
             .SetIconFile("wwwroot/favicon.ico")
             .SetTitle(AppSettings.APPLICATION_NAME);
 

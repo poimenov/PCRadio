@@ -6,8 +6,8 @@ namespace PCRadio.Services;
 
 public class FileDownloadService : IFileDownloadService
 {
-    private const string USER_AGENT_HEADER_NAME = "User-Agent";
-    private const string USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+    public const string USER_AGENT_HEADER_NAME = "User-Agent";
+    public const string USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
     ILogger<FileDownloadService> _logger;
     private readonly HttpClient _httpClient;
     public FileDownloadService(ILogger<FileDownloadService> logger, HttpClient httpClient)
