@@ -17,6 +17,8 @@
 @inject ILinkOpeningService linkOpeningService
 @inject IStringLocalizer<Player> localizer
 @inject HttpClient httpClient
+@inject IHistoryRecords historyRecords
+@inject IAppStateService appStateService
 
 <FluentStack Orientation="Orientation.Horizontal" Class="player">
     <img class="logo" src="@Station?.Logo" alt="@Station?.Name" loading="lazy" />
@@ -28,7 +30,7 @@
             @Station?.Description
         </div>
         <marquee id="NowPlaying" direction="left" behavior="scroll" scrollamount="2"
-            style="cursor: pointer;color:var(--accent-fill-rest);font-size: 12px;@(string.IsNullOrEmpty(SearchText) ? "display: none;" : "")">
+            style="color:var(--accent-fill-rest);font-size: 12px;@(string.IsNullOrEmpty(SearchText) ? "display: none;" : "")">
         </marquee>
     </div>
     <FluentSpacer />
@@ -141,6 +143,7 @@
     private bool _isPopoverVisible;
     private Station? Station { get; set; }
     private DotNetObjectReference<Player>? thisRef;
+    private HistoryRecordEqualityComparer historyRecordEqualityComparer = new HistoryRecordEqualityComparer();
     string AudioUrl => $"{Station?.Stream}-{options.Value.GetQuality()}";
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -225,6 +228,20 @@
                     if (currentTrack != null)
                     {
                         SearchText = $"{currentTrack.Artist} - {currentTrack.Title}";
+                        if (Station != null && (!string.IsNullOrEmpty(currentTrack.Artist) || !string.IsNullOrEmpty(currentTrack.Title)))
+                        {
+                            var record = new HistoryRecord
+                            {
+                                StartTime = currentTrack.DateTime,
+                                StationName = Station.Name,
+                                TrackName = SearchText
+                            };
+                            if (!historyRecordEqualityComparer.Equals(appStateService.LastHistoryRecord, record))
+                            {
+                                await historyRecords.AddAsync(record);
+                                appStateService.LastHistoryRecord = record;
+                            }
+                        }
                         return SearchText;
                     }
                 }
@@ -266,7 +283,8 @@
                 {
                     return result;
                 }
-                return DateTime.MinValue;
+
+                return DateTime.Now;
             }
         }
     }

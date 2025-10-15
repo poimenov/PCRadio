@@ -58,6 +58,7 @@ public class Program
         builder.Services.AddTransient<IStations, Stations>();
         builder.Services.AddTransient<IGenres, Genres>();
         builder.Services.AddTransient<ICountries, Countries>();
+        builder.Services.AddTransient<IHistoryRecords, HistoryRecords>();
         builder.Services.AddSingleton<IAppStateService, AppStateService>();
 
         var app = builder.Build();

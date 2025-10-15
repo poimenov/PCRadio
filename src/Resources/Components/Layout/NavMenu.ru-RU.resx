@@ -11,7 +11,10 @@
     </data>    
     <data name="Genres" xml:space="preserve">
         <value>Жанры</value>
-    </data>      
+    </data>  
+    <data name="History" xml:space="preserve">
+        <value>История</value>
+    </data>    
     <data name="Settings" xml:space="preserve">
         <value>Настройки</value>
     </data>

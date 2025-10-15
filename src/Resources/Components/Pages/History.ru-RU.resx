@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="History" xml:space="preserve">
+        <value>История</value>
+    </data> 
+    <data name="NoHistory" xml:space="preserve">
+        <value>Нет истории</value>
+    </data> 
+    <data name="StartTime" xml:space="preserve">
+        <value>Время</value>
+    </data> 
+    <data name="Station" xml:space="preserve">
+        <value>Станция</value>
+    </data> 
+    <data name="Track" xml:space="preserve">
+        <value>Название</value>
+    </data>                   
+</root>

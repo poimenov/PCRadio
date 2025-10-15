@@ -1,9 +1,27 @@
 using PCRadio.DataAccess.Models;
+using PCRadio.Services.Interfaces;
 
 namespace PCRadio.Services;
 
-public class AppStateService : Interfaces.IAppStateService
+public class AppStateService : IAppStateService
 {
+    private HistoryRecord? _lastHistoryRecord;
+    public HistoryRecord? LastHistoryRecord
+    {
+        get => _lastHistoryRecord;
+        set
+        {
+            if (_lastHistoryRecord != value)
+            {
+                _lastHistoryRecord = value;
+                if (value != null)
+                {
+                    HistoryRecordChanged?.Invoke(value);
+                }
+            }
+        }
+    }
+
     private string _title = string.Empty;
     public string Title
     {
@@ -35,4 +53,5 @@ public class AppStateService : Interfaces.IAppStateService
 
     public event Action<string>? TitleChanged;
     public event Action<int>? CurrentStationIdChanged;
+    public event Action<HistoryRecord>? HistoryRecordChanged;
 }

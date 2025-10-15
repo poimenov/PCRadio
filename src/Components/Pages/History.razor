@@ -1,0 +1,62 @@
+@page "/history"
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using PCRadio.Services.Interfaces
+@using PCRadio.DataAccess.Models
+@using PCRadio.DataAccess.Interfaces
+@using Microsoft.FluentUI.AspNetCore.Components
+@using Microsoft.FluentUI.AspNetCore.Components.DataGrid
+@using System.Linq
+@inject IStringLocalizer<Settings> localizer
+@inject IOptions<AppSettings> options
+@inject IAppStateService appStateService
+@inject IHistoryRecords historyRecords
+@inject ILinkOpeningService linkOpeningService
+
+@if (Records == null || !Records.Any())
+{
+    <div class="empty-message" style="height:100%">@localizer["NoHistory"]</div>
+}
+else
+{
+    <div style="height:100%;overflow:auto;">
+        <FluentDataGrid Items="@RecordsQuery" Class="history-records-grid" StripedRows="true" HoveredRows="true"
+            SelectionMode="DataGridSelectionMode.None">
+            <PropertyColumn Property="@(p => p.StartTime)" Title="@localizer["StartTime"]" Width="200px"
+                Format="yyyy-MM-dd HH:mm:ss" />
+            <PropertyColumn Property="@(p => p.StationName)" Title="@localizer["Station"]" />
+            <TemplateColumn Title="@localizer["Track"]">
+                <FluentAnchor Href="#" Appearance="Appearance.Hypertext" OnClick="@(() => OpenLink(@context.TrackName))">
+                    @context.TrackName
+                </FluentAnchor>
+            </TemplateColumn>
+        </FluentDataGrid>
+    </div>
+}
+
+@code {
+    IEnumerable<HistoryRecord> Records { get; set; } = Array.Empty<HistoryRecord>();
+    IQueryable<HistoryRecord> RecordsQuery => Records.AsQueryable();
+
+    protected override async Task OnInitializedAsync()
+    {
+        appStateService.Title = localizer["History"];
+        appStateService.HistoryRecordChanged += OnHistoryRecordChanged;
+        Records = await historyRecords.GetAllAsync();
+    }
+
+    private void OnHistoryRecordChanged(HistoryRecord record)
+    {
+        Records = historyRecords.GetAllAsync().Result;
+        StateHasChanged();
+    }
+
+    private void OpenLink(string trackName)
+    {
+        if (!string.IsNullOrWhiteSpace(trackName))
+        {
+            var searchUrl = string.Format(options.Value.TrackSearchUrl, System.Web.HttpUtility.UrlEncode(trackName));
+            linkOpeningService.OpenUrl(searchUrl);
+        }
+    }
+}

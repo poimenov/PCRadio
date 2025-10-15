@@ -21,4 +21,5 @@ public class Database : DbContext
     public virtual DbSet<StationCity> StationCities { get; set; }
     public virtual DbSet<StationGenre> StationGenres { get; set; }
     public virtual DbSet<StationSubGenre> StationSubGenres { get; set; }
+    public virtual DbSet<HistoryRecord> HistoryRecords { get; set; }
 }
