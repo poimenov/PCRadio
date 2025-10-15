@@ -95,6 +95,22 @@ else
 
     private bool GetNextEnabled => Stations?.Count < Count;
 
+    protected override void OnInitialized()
+    {
+        appStateService.FavoriteStationChanged += (fs) =>
+        {
+            if (Stations != null && Stations.Any() && fs != null)
+            {
+                var station = Stations.FirstOrDefault(s => s.Id == fs.StationId);
+                if (station != null)
+                {
+                    station.IsFavorite = fs.IsFavorite;
+                    StateHasChanged();
+                }
+            }
+        };
+        base.OnInitialized();
+    }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (Stations != null && Stations.Any())

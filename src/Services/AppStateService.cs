@@ -5,13 +5,31 @@ namespace PCRadio.Services;
 
 public class AppStateService : IAppStateService
 {
+    private HistoryRecordEqualityComparer historyRecordEqualityComparer = new HistoryRecordEqualityComparer();
+    private FavoriteStationEqualityComparer favoriteStationEqualityComparer = new FavoriteStationEqualityComparer();
+    private FavoriteStation? _favoriteStation;
+    public FavoriteStation? FavoriteStation
+    {
+        get => _favoriteStation;
+        set
+        {
+            if (!favoriteStationEqualityComparer.Equals(_favoriteStation, value))
+            {
+                _favoriteStation = value;
+                if (value != null)
+                {
+                    FavoriteStationChanged?.Invoke(value);
+                }
+            }
+        }
+    }
     private HistoryRecord? _lastHistoryRecord;
     public HistoryRecord? LastHistoryRecord
     {
         get => _lastHistoryRecord;
         set
         {
-            if (_lastHistoryRecord != value)
+            if (!historyRecordEqualityComparer.Equals(_lastHistoryRecord, value))
             {
                 _lastHistoryRecord = value;
                 if (value != null)
@@ -54,4 +72,5 @@ public class AppStateService : IAppStateService
     public event Action<string>? TitleChanged;
     public event Action<int>? CurrentStationIdChanged;
     public event Action<HistoryRecord>? HistoryRecordChanged;
+    public event Action<FavoriteStation>? FavoriteStationChanged;
 }

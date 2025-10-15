@@ -195,6 +195,11 @@
         {
             Station.IsFavorite = !Station.IsFavorite;
             stations.SetFavorite(Station.Id, Station.IsFavorite);
+            appStateService.FavoriteStation = new FavoriteStation
+            {
+                StationId = Station.Id,
+                IsFavorite = Station.IsFavorite
+            };
         }
     }
 
