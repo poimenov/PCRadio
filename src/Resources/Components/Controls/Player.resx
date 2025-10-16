@@ -11,5 +11,8 @@
     </data>
     <data name="Volume" xml:space="preserve">
         <value>Volume</value>
-    </data>    
+    </data> 
+    <data name="StreamNotAvailable" xml:space="preserve">
+        <value>Stream not available</value>
+    </data>
 </root>

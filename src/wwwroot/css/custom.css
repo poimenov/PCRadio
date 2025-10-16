@@ -82,3 +82,11 @@ fluent-anchor.appName.hypertext::part(control) {
     font-size: 24px;
     font-weight: bold;
 }
+
+fluent-slider[orientation="vertical"]::part(track-container) {
+    background: var(--accent-fill-rest);
+}
+
+fluent-slider[orientation="vertical"]::part(track-start) {
+    background: var(--neutral-fill-strong-rest);
+}

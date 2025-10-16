@@ -19,6 +19,7 @@
 @inject HttpClient httpClient
 @inject IHistoryRecords historyRecords
 @inject IAppStateService appStateService
+@inject IToastService toastService
 
 <FluentStack Orientation="Orientation.Horizontal" Class="player">
     <img class="logo" src="@Station?.Logo" alt="@Station?.Name" loading="lazy" />
@@ -61,17 +62,17 @@
     VerticalPosition="VerticalPosition.Top" HorizontalPosition="HorizontalPosition.Left">
 
     <Body>
-        <FluentSlider Orientation="Orientation.Vertical" Min="0.0" Max="1.0" Step="0.1" ValueChanged="@SetVolume"
-            Value="@_volume" TValue="double" Style="width: 30px; height: 200px;">
-            <FluentSliderLabel Position="0.0">0%</FluentSliderLabel>
-            <FluentSliderLabel Position="0.25">25%</FluentSliderLabel>
+        <FluentSlider Orientation="Orientation.Vertical" Min="0.0" Max="1.0" Step="0.01" ValueChanged="@SetVolume"
+            Value="@(1.0 - _volume)" TValue="double" Style="width: 30px; height: 200px;">
+            <FluentSliderLabel Position="1.0">0%</FluentSliderLabel>
+            <FluentSliderLabel Position="0.75">25%</FluentSliderLabel>
             <FluentSliderLabel Position="0.5">50%</FluentSliderLabel>
-            <FluentSliderLabel Position="0.75">75%</FluentSliderLabel>
-            <FluentSliderLabel Position="100">100%</FluentSliderLabel>
+            <FluentSliderLabel Position="0.25">75%</FluentSliderLabel>
+            <FluentSliderLabel Position="0.0">100%</FluentSliderLabel>
         </FluentSlider>
     </Body>
 </FluentPopover>
-<audio id="audio" src="@AudioUrl" controls style="display: none;" />
+<audio id="audio" src="@AudioUrl" controls style="display: none;" onerror="@ShowMessage" onstalled="@ShowMessage" />
 <script>
     var intervalId;
 
@@ -139,7 +140,7 @@
             }
         }
     }
-    private double _volume = 1.0;
+    private double _volume = 0.5;
     private bool _isPopoverVisible;
     private Station? Station { get; set; }
     private DotNetObjectReference<Player>? thisRef;
@@ -156,7 +157,6 @@
         await JSRuntime.InvokeVoidAsync("playAudio", _isPlaying);
         await base.OnAfterRenderAsync(firstRender);
     }
-
 
     protected override async Task OnParametersSetAsync()
     {
@@ -185,8 +185,19 @@
 
     private async Task SetVolume(double volume)
     {
-        _volume = volume;
-        await JSRuntime.InvokeVoidAsync("setVolume", volume);
+        _volume = 1.0 - volume;
+        await JSRuntime.InvokeVoidAsync("setVolume", _volume);
+    }
+
+    private async Task ShowMessage()
+    {
+        if (Station != null)
+        {
+            var message = $"{localizer["StreamNotAvailable"]}: {Station.Name} ({AudioUrl})";
+            toastService.ShowError(message);
+            _isPlaying = false;
+            await JSRuntime.InvokeVoidAsync("playAudio", _isPlaying);
+        }
     }
 
     private void ToggleFavorite()
