@@ -7,7 +7,7 @@
 @using Microsoft.FluentUI.AspNetCore.Components
 @using Microsoft.FluentUI.AspNetCore.Components.DataGrid
 @using System.Linq
-@inject IStringLocalizer<Settings> localizer
+@inject IStringLocalizer<History> localizer
 @inject IOptions<AppSettings> options
 @inject IAppStateService appStateService
 @inject IHistoryRecords historyRecords
@@ -20,13 +20,14 @@
 else
 {
     <div style="height:100%;overflow:auto;">
-        <FluentDataGrid Items="@RecordsQuery" Class="history-records-grid" StripedRows="true" HoveredRows="true"
+        <FluentDataGrid Items="@RecordsQuery" StripedRows="true" HoveredRows="true"
             SelectionMode="DataGridSelectionMode.None">
-            <PropertyColumn Property="@(p => p.StartTime)" Title="@localizer["StartTime"]" Width="200px"
+            <PropertyColumn Property="@(p => p.StartTime)" Title="@localizer["StartTime"]" width="180px"
                 Format="yyyy-MM-dd HH:mm:ss" />
-            <PropertyColumn Property="@(p => p.StationName)" Title="@localizer["Station"]" />
+            <PropertyColumn Property="@(p => p.StationName)" Title="@localizer["Station"]" width="180px" />
             <TemplateColumn Title="@localizer["Track"]">
-                <FluentAnchor Href="#" Appearance="Appearance.Hypertext" OnClick="@(() => OpenLink(@context.TrackName))">
+                <FluentAnchor Href="#" Appearance="Appearance.Hypertext" OnClick="@(() => OpenLink(@context.TrackName))"
+                    title="@context.TrackName" class="historyLink">
                     @context.TrackName
                 </FluentAnchor>
             </TemplateColumn>

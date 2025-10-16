@@ -78,9 +78,10 @@ div:has(fluent-listbox.station-list) {
 }
 
 fluent-anchor.appName.hypertext::part(control) {
-    color: var(--fill-color);
-    font-size: 24px;
-    font-weight: bold;
+  font-size: 50px;
+  font-weight: bolder;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--fill-color);
 }
 
 fluent-slider[orientation="vertical"]::part(track-container) {
@@ -89,4 +90,11 @@ fluent-slider[orientation="vertical"]::part(track-container) {
 
 fluent-slider[orientation="vertical"]::part(track-start) {
     background: var(--neutral-fill-strong-rest);
+}
+
+.historyLink {
+    text-overflow: ellipsis; 
+    overflow: hidden; 
+    display: block; 
+    max-width: 100%;
 }

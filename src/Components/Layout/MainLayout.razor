@@ -8,8 +8,9 @@
 @inject IAppStateService appStateService
 <FluentLayout>
     <FluentHeader>
-        <FluentStack Orientation="Orientation.Horizontal">
-            <img src="favicon.ico" style="height: 24px;" />
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Left" 
+            Spacing="Spacing.Medium" VerticalAlignment="VerticalAlignment.Center">
+            <img src="favicon.ico" style="height: 50px;" />
             <FluentAnchor Href="#" Appearance="Appearance.Hypertext" Class="appName"
                 title="@($"{AppSettings.APPLICATION_NAME} v{typeof(AppSettings).Assembly.GetName().Version}")"
                 OnClick="@(()=>OpenLink("https://pcradio.ru"))">
