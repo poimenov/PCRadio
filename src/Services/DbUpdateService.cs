@@ -26,18 +26,18 @@ public class DbUpdateService : IDbUpdateService
         _dataLoader = dataLoader;
     }
 
-    public async Task UpdateDatabaseAsync()
+    public async Task<bool> UpdateDatabaseAsync()
     {
         if (string.IsNullOrEmpty(_settings.ArchiveUrl))
         {
             _logger.LogWarning("ArchiveUrl is not set.");
-            return;
+            return false;
         }
 
         if (string.IsNullOrEmpty(_settings.ArchivePassword))
         {
             _logger.LogWarning("ArchivePassword is not set.");
-            return;
+            return false;
         }
 
         var filePath = Path.Combine(_settings.AppDataPath, FILE_NAME);
@@ -48,16 +48,28 @@ public class DbUpdateService : IDbUpdateService
         }
 
         //download file
-        await _fileDownloadService.DownloadFileAsync(string.Format(_settings.ArchiveUrl, culture.TwoLetterISOLanguageName), filePath);
+        if (!await _fileDownloadService.DownloadFileAsync(string.Format(_settings.ArchiveUrl, culture.TwoLetterISOLanguageName), filePath))
+        {
+            _logger.LogError("Failed to download archive file.");
+            return false;
+        }
 
-        //extract file
-        var jsonFilePath = await _archiveExtractService.ExtractArchiveAsync(filePath, _settings.ArchivePassword);
+        try
+        {
+            //extract file
+            var jsonFilePath = await _archiveExtractService.ExtractArchiveAsync(filePath, _settings.ArchivePassword);
 
-        ///parse json
-        var parseResult = _parseJsonService.Parse(jsonFilePath);
+            ///parse json
+            var parseResult = await _parseJsonService.ParseAsync(jsonFilePath);
 
-        //load data
-        await _dataLoader.LoadDataAsync(parseResult);
+            //load data
+            return await _dataLoader.LoadDataAsync(parseResult);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update database.");
+            return false;
+        }
     }
 
 }

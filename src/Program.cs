@@ -82,10 +82,10 @@ public class Program
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            app.Services.GetRequiredService<IDbUpdateService>().UpdateDatabaseAsync().Wait();
+            var success = app.Services.GetRequiredService<IDbUpdateService>().UpdateDatabaseAsync().GetAwaiter().GetResult();
             stopwatch.Stop();
-            Debug.WriteLine($"Database update took {stopwatch.ElapsedMilliseconds} ms");
-            settings.NeedsDatabaseUpdate = false;
+            Debug.WriteLine($"Database update was {(success ? "successful" : "not successful")} and took {stopwatch.ElapsedMilliseconds} ms");
+            settings.NeedsDatabaseUpdate = !success;
             settings.Save();
         }
 

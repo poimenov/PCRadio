@@ -9,6 +9,7 @@
 @inject IOptions<AppSettings> options
 @inject IStringLocalizer<Settings> localizer
 @inject IAppStateService appStateService
+@inject IToastService toastService
 
 <FluentDesignTheme @bind-Mode="@Mode" @bind-OfficeColor="@OfficeColor" StorageName="theme" />
 
@@ -40,7 +41,7 @@
                     <OptionTemplate>@context!.NativeName
                     </OptionTemplate>
                 </FluentSelect>
-                <div style="width: 250px;">(@localizer["LanguageAnnotation"])</div>
+                <div style="width: 250px;">@localizer["LanguageAnnotation"]</div>
             </FluentStack>
         </FluentGridItem>
 
@@ -113,7 +114,15 @@
     private async Task Update()
     {
         loading = true;
-        await dbUpdateService.UpdateDatabaseAsync();
+        if (await dbUpdateService.UpdateDatabaseAsync())
+        {
+            toastService.ShowSuccess(localizer["DataBaseUpdateSuccess"]);
+        }
+        else
+        {
+            toastService.ShowError(localizer["DataBaseUpdateFailed"]);
+        }
+
         loading = false;
     }
 

@@ -49,5 +49,5 @@ public class ParseStation
 
 public interface IParseJsonService
 {
-    ParseResult Parse(string jsonFilePath);
+    Task<ParseResult> ParseAsync(string jsonFilePath);
 }

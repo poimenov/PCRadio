@@ -29,7 +29,7 @@ public class ParseJsonService : IParseJsonService
         var obj = serializer.Deserialize<Dictionary<string, int[]>>(reader);
         if (obj != null)
         {
-            var dict = (Dictionary<string, int[]>)obj;
+            var dict = obj;
             return dict.ToDictionary(x => Convert.ToInt32(x.Key), x => x.Value);
         }
 
@@ -42,7 +42,7 @@ public class ParseJsonService : IParseJsonService
         var obj = serializer.Deserialize<List<Item>>(reader);
         if (obj != null)
         {
-            var dict = (List<Item>)obj;
+            var dict = obj;
             return dict.ToDictionary(x => Convert.ToInt32(x.Id), x => x.Name);
         }
 
@@ -55,20 +55,20 @@ public class ParseJsonService : IParseJsonService
         var obj = serializer.Deserialize<List<ParseStation>>(reader);
         if (obj != null)
         {
-            var dict = (List<ParseStation>)obj;
+            var dict = obj;
             return dict.ToDictionary(x => Convert.ToInt32(x.Id), x => x);
         }
 
         return new Dictionary<int, ParseStation>();
     }
-    public ParseResult Parse(string jsonFilePath)
+    public async Task<ParseResult> ParseAsync(string jsonFilePath)
     {
         var retVal = new ParseResult();
         Debug.WriteLine("ParseJsonService.Parse started");
         using var streamReader = new StreamReader(jsonFilePath);
-        using var reader = new JsonTextReader(streamReader);
+        await using var reader = new JsonTextReader(streamReader);
         reader.SupportMultipleContent = true;
-        while (reader.Read())
+        while (await reader.ReadAsync())
         {
             if (reader.TokenType == JsonToken.StartObject && reader.Path == "countries_cities")
             {

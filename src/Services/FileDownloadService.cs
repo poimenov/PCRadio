@@ -16,22 +16,33 @@ public class FileDownloadService : IFileDownloadService
         _httpClient = httpClient;
     }
 
-    public async Task DownloadFileAsync(string url, string filePath)
+    public async Task<bool> DownloadFileAsync(string url, string filePath)
     {
         _httpClient.DefaultRequestHeaders.Clear();
         _httpClient.DefaultRequestHeaders.Add(USER_AGENT_HEADER_NAME, USER_AGENT);
-        HttpResponseMessage response = await _httpClient.GetAsync(url);
-        if (response.IsSuccessStatusCode)
+        try
         {
-            using (Stream stream = await response.Content.ReadAsStreamAsync())
+            HttpResponseMessage response = await _httpClient.GetAsync(url);
+            if (response.IsSuccessStatusCode)
             {
-                using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+                using (Stream stream = await response.Content.ReadAsStreamAsync())
                 {
-                    await stream.CopyToAsync(fileStream);
+                    using (FileStream fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await stream.CopyToAsync(fileStream);
+                    }
+                    _logger.LogInformation("File downloaded successfully.");
+                    Debug.WriteLine("File downloaded successfully.");
+                    return true;
                 }
-                _logger.LogInformation("File downloaded successfully.");
-                Debug.WriteLine("File downloaded successfully.");
             }
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error downloading file.");
+            Debug.WriteLine($"Error downloading file: {ex.Message}");
+        }
+
+        return false;
     }
 }

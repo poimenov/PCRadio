@@ -10,7 +10,7 @@
         <value>Цвет</value>
     </data>
     <data name="Language" xml:space="preserve">
-        <value>Язык</value>
+        <value>Язык *</value>
     </data>
     <data name="Quality" xml:space="preserve">
         <value>Качество потока</value>
@@ -28,6 +28,12 @@
         <value>Обновить список станций</value>
     </data>                    
     <data name="LanguageAnnotation" xml:space="preserve">
-        <value>изменения вступят вступят силу после перезапуска программы</value>
-    </data>     
+        <value>* изменения вступят вступят силу после перезапуска программы</value>
+    </data> 
+    <data name="DataBaseUpdateSuccess" xml:space="preserve">
+        <value>Обновление базы данных успешно завершено.</value>
+    </data>  
+    <data name="DataBaseUpdateFailed" xml:space="preserve">
+        <value>Ошибка обновления базы данных. Подробности в логе. Повторите попытку позже.</value>
+    </data>    
 </root>

@@ -10,7 +10,7 @@
         <value>Color</value>
     </data>
     <data name="Language" xml:space="preserve">
-        <value>Language</value>
+        <value>Language *</value>
     </data> 
     <data name="Quality" xml:space="preserve">
         <value>Stream quality</value>
@@ -28,6 +28,12 @@
         <value>Update stations list</value>
     </data>              
     <data name="LanguageAnnotation" xml:space="preserve">
-        <value>changes will take effect after restart program</value>
-    </data>        
+        <value>* changes will take effect after restart program</value>
+    </data>  
+    <data name="DataBaseUpdateSuccess" xml:space="preserve">
+        <value>Database update completed successfully.</value>
+    </data>  
+    <data name="DataBaseUpdateFailed" xml:space="preserve">
+        <value>Database update failed. Details in the log. Please try again later.</value>
+    </data>
 </root>

@@ -20,11 +20,12 @@ public class DataLoader : IDataLoader
         _appSettings = options.Value;
         _databaseMigrator = databaseMigrator;
     }
-    public async Task LoadDataAsync(ParseResult result)
+    public async Task<bool> LoadDataAsync(ParseResult result)
     {
         _logger.LogInformation("Loading data started");
         var start = DateTime.Now;
         var favorites = Enumerable.Empty<int>();
+        var historyRecords = Enumerable.Empty<HistoryRecord>();
         var success = false;
         var sql = string.Empty;
         var filePath = Path.Combine(_appSettings.AppDataPath, Database.DB_FILE_NAME);
@@ -34,22 +35,46 @@ public class DataLoader : IDataLoader
             // backup database
             File.Copy(filePath, bakFilePath, true);
 
-            // select favorites and delete database
-            using (var db = new Database())
+            // select favorites, history and delete database
+            await using (var db = new Database())
             {
-                favorites = db.Stations.Where(s => s.IsFavorite).Select(s => s.Id).ToList();
-                db.Database.EnsureDeleted();
-            }
+                try
+                {
+                    favorites = await db.Stations.Where(s => s.IsFavorite).Select(s => s.Id).ToListAsync();
+                    var migrationIds = await db.Database.SqlQueryRaw<string>("SELECT MigrationId FROM __EFMigrationsHistory").ToListAsync();
+                    if (migrationIds.Any(id => id.Contains("AddedHistory")))
+                    {
+                        historyRecords = await db.HistoryRecords.ToListAsync();
+                    }
 
-            Debug.WriteLine($"Database was backuped ({DateTime.Now - start})");
+                    Debug.WriteLine($"Database was backuped ({DateTime.Now - start})");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    _logger.LogError(ex, "Failed to backup database");
+                    if (ex.InnerException != null)
+                    {
+                        Debug.WriteLine(ex.InnerException);
+                        _logger.LogError(ex.InnerException, ex.InnerException.Message);
+                    }
+
+                    return false;
+                }
+                finally
+                {
+                    await db.Database.EnsureDeletedAsync();
+                    await db.DisposeAsync();
+                }
+            }
         }
 
         _databaseMigrator.MigrateDatabase();
         Debug.WriteLine($"Database migrated ({DateTime.Now - start})");
 
-        using (var db = new Database())
+        await using (var db = new Database())
         {
-            using (var transaction = db.Database.BeginTransaction())
+            await using (var transaction = await db.Database.BeginTransactionAsync())
             {
                 try
                 {
@@ -130,6 +155,13 @@ public class DataLoader : IDataLoader
                     await db.SaveChangesAsync();
                     Debug.WriteLine($"Added station subgenres ({DateTime.Now - start})");
 
+                    if (historyRecords.Any())
+                    {
+                        await db.HistoryRecords.AddRangeAsync(historyRecords);
+                        await db.SaveChangesAsync();
+                        Debug.WriteLine($"Restored history records ({DateTime.Now - start})");
+                    }
+
                     await transaction.CommitAsync();
                     success = true;
                     _logger.LogInformation("Loading data completed");
@@ -152,5 +184,7 @@ public class DataLoader : IDataLoader
         {
             File.Copy(bakFilePath, filePath, true);
         }
+
+        return success;
     }
 }

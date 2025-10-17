@@ -24,7 +24,7 @@ public class ArchiveExtractService : IArchiveExtractService
 
         var outputPath = fi.FullName.Replace(fi.Extension, ".json");
 
-        using (ZipInputStream s = new ZipInputStream(fi.OpenRead()))
+        await using (ZipInputStream s = new ZipInputStream(fi.OpenRead()))
         {
             s.Password = archivePassword;
             ZipEntry theEntry;
@@ -32,7 +32,7 @@ public class ArchiveExtractService : IArchiveExtractService
             {
                 if (!string.IsNullOrEmpty(theEntry.Name) && theEntry.Name.EndsWith(".json"))
                 {
-                    using (FileStream streamWriter = File.Create(outputPath))
+                    await using (FileStream streamWriter = File.Create(outputPath))
                     {
                         int size = 2048;
                         byte[] data = new byte[2048];
