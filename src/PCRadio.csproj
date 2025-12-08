@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <NoDefaultLaunchSettingsFile>True</NoDefaultLaunchSettingsFile>
+    <PublishSingleFile>true</PublishSingleFile>
     <ApplicationIcon>wwwroot/favicon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
