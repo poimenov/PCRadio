@@ -69,7 +69,7 @@ public class DataLoader : IDataLoader
             }
         }
 
-        _databaseMigrator.MigrateDatabase();
+        await _databaseMigrator.MigrateDatabaseAsync();
         Debug.WriteLine($"Database migrated ({DateTime.Now - start})");
 
         await using (var db = new Database())

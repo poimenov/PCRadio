@@ -44,8 +44,8 @@
     </FluentGridItem>
 </FluentGrid>
 
-<PCRadio.Components.Controls.StationsList Count="@_count" PageSize="@PageSize" Stations="@_stations?.ToList()"
-    GetStations="@((skip, take) => stations.Search(_params, skip, take, out _count))" />
+<PCRadio.Components.Controls.StationsList Count="@_result?.TotalCount" PageSize="@PageSize"
+    Stations="@_result?.Stations.ToList()" GetStations="@((skip, take) => stations.SearchAsync(_params, skip, take))" />
 
 
 @code
@@ -82,8 +82,7 @@
     }
     private _models.Country? SearchCountry { get; set; }
     private _models.Genre? SearchGenre { get; set; }
-    private IEnumerable<_models.Station>? _stations = default!;
-    private int _count;
+    private StationsResult? _result = default!;
     private SearchParams? _params = default!;
     private bool _searchEnabled => !string.IsNullOrEmpty(SearchName);
 
@@ -94,11 +93,11 @@
         appStateService.Title = localizer["Header"];
     }
 
-    private void PerformSearch()
+    private async Task PerformSearch()
     {
         _params = new SearchParams { Name = SearchName, CountryId = SearchCountry?.Id ?? 0, GenreId = SearchGenre?.Id ?? 0 };
-        _stations = stations.Search(_params, 0, PageSize, out _count);
-        var title = _count > 0 ? $"{localizer["Header"]} ({_count})" : localizer["Header"];
+        _result = await stations.SearchAsync(_params, 0, PageSize);
+        var title = _result.TotalCount > 0 ? $"{localizer["Header"]} ({_result.TotalCount})" : localizer["Header"];
         appStateService.Title = title;
     }
 }

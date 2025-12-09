@@ -11,20 +11,21 @@
 @inject IGenres genres
 @inject IAppStateService appStateService
 
-<PCRadio.Components.Controls.StationsList Count="@_count" PageSize="@PageSize" Stations="@_stations?.ToList()"
-    GetStations="@((skip, take) => stations.GetByGenre(Id, skip, take, out _count))" />
+<PCRadio.Components.Controls.StationsList Count="@_result?.TotalCount" PageSize="@PageSize"
+    Stations="@_result?.Stations.ToList()"
+    GetStations="@(async (skip, take) => await stations.GetByGenreAsync(Id, skip, take))" />
 
 @code
 {
     private int PageSize => options.Value.PageSize;
     [Parameter]
     public int Id { get; set; }
-    private IEnumerable<Station>? _stations = default!;
-    private int _count;
+    private StationsResult? _result = default!;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        _stations = stations.GetByGenre(Id, 0, PageSize, out _count);
-        appStateService.Title = $"{genres.GetById(Id)?.Name} ({_count})";
+        _result = await stations.GetByGenreAsync(Id, 0, PageSize);
+        appStateService.Title = $"{genres.GetById(Id)?.Name} ({_result?.TotalCount ?? 0})";
+        await base.OnParametersSetAsync();
     }
 }

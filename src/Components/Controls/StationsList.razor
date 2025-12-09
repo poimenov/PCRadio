@@ -1,14 +1,16 @@
 @using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Logging
+@using PCRadio.DataAccess.Interfaces
 @using PCRadio.DataAccess.Models
-@using System.Diagnostics
 @using PCRadio.Extensions
 @using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @using _filled = Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 @using PCRadio.Services.Interfaces
-@implements IDisposable
+@implements IAsyncDisposable
 @inject IStringLocalizer<StationsList> localizer
 @inject IJSRuntime JSRuntime
 @inject IAppStateService appStateService
+@inject ILogger<StationsList> logger
 
 @if (Stations == null || !Stations.Any())
 {
@@ -16,27 +18,27 @@
 }
 else
 {
-    <FluentListbox Items="@Stations" @bind-SelectedOption="@SelectedStation" OptionValue="@(x=>x?.Id.ToString())"
-    Class="station-list">
-    <OptionTemplate>
-        <FluentCard Class="station-card">
-            <img class="logo" src="@context?.Logo" alt="@context?.Name" loading="lazy" />
+    <FluentListbox Items="@Stations" @bind-SelectedOption="@SelectedStation" OptionValue="@(x => x?.Id.ToString())"
+        Class="station-list">
+        <OptionTemplate>
+            <FluentCard Class="station-card">
+                <img class="logo" src="@context?.Logo" alt="@context?.Name" loading="lazy" />
                 <div style="width: 180px !important;">
                     <div style="font-weight: bold; height: 20px !important;overflow: hidden;">
                         @context?.GetCountryIcon() @context?.Name
                     </div>
                     <div style="height: 60px !important;overflow: hidden;" title="@context?.Description">
-            @if (context != null)
-                {
-                    if (context.IsFavorite)
-                    {
-                        <FluentIcon Value="@(new _filled.Size16.Heart())" Color="Color.Accent" Class="favorite-icon" />
-                    }
-                    else
-                    {
-                        <FluentIcon Value="@(new _regular.Size16.Heart())" Color="Color.Accent" Class="favorite-icon" />
-                    }
-                }                        
+                        @if (context != null)
+                        {
+                            if (context.IsFavorite)
+                            {
+                                <FluentIcon Value="@(new _filled.Size16.Heart())" Color="Color.Accent" Class="favorite-icon" />
+                            }
+                            else
+                            {
+                                <FluentIcon Value="@(new _regular.Size16.Heart())" Color="Color.Accent" Class="favorite-icon" />
+                            }
+                        }
                         @context?.Description
                     </div>
                 </div>
@@ -44,60 +46,108 @@ else
         </OptionTemplate>
     </FluentListbox>
     <script>
-        var isScollToEnd = false;
-        function addScrollListener(stationListObjectReference) {
-            var stationList = document.querySelector(".station-list");
-            if (stationList !== null && stationList.parentElement !== null) {
-                scrollContainer = stationList.parentElement;
-                scrollContainer.addEventListener("scroll", (event) => {
-                    if(scrollContainer.scrollHeight - scrollContainer.scrollTop === scrollContainer.clientHeight && !isScollToEnd) {
-                        isScollToEnd = true;
-                        console.log("Reached the bottom of the scroll container.");
+        window.stationsListModule = {
+            listeners: new Map(),
+
+            addScrollListener: function (componentId, stationListObjectReference) {
+                if (this.listeners.has(componentId)) {
+                    console.warn("Scroll listener already added for component:", componentId);
+                    return;
+                }
+
+                var stationList = document.querySelector(".station-list");
+                if (stationList === null || stationList.parentElement === null) {
+                    console.error("Station list or its parent element not found");
+                    return;
+                }
+
+                var scrollContainer = stationList.parentElement;
+                var isScrollInProgress = false;
+
+                var scrollHandler = (event) => {
+                    if (isScrollInProgress) {
+                        return;
+                    }
+
+                    // Check if scrolled to bottom with small threshold
+                    var threshold = 100;
+                    if (scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight <= threshold) {
+                        isScrollInProgress = true;
+                        console.log("Reached near bottom of scroll container");
+
                         stationListObjectReference.invokeMethodAsync("GetNext")
                             .then(() => {
-                                isScollToEnd = false;
+                                isScrollInProgress = false;
                             })
                             .catch(error => {
                                 console.error("Error invoking GetNext:", error);
+                                isScrollInProgress = false;
                             });
                     }
-                });  
+                };
+
+                scrollContainer.addEventListener("scroll", scrollHandler);
+                this.listeners.set(componentId, { container: scrollContainer, handler: scrollHandler });
+                console.log("Scroll listener added for component:", componentId);
+            },
+
+            removeScrollListener: function (componentId) {
+                var listener = this.listeners.get(componentId);
+                if (listener) {
+                    listener.container.removeEventListener("scroll", listener.handler);
+                    this.listeners.delete(componentId);
+                    console.log("Scroll listener removed for component:", componentId);
+                }
             }
-        }      
+        };
     </script>
 }
+
 @code {
     [Parameter]
-    public int PageSize { get; set; }
+    public int PageSize { get; set; } = 20;
+
     [Parameter]
-    public int Count { get; set; }
+    public int? Count { get; set; }
+
     [Parameter]
     public List<Station>? Stations { get; set; }
-    [Parameter]
-    public Func<int, int, IEnumerable<Station>> GetStations { get; set; } = default!;
 
-    public void Dispose() => stationListObjectReference?.Dispose();
+    [Parameter]
+    public Func<int, int, Task<StationsResult>>? GetStations { get; set; }
 
     private Station? _selectedStation = default!;
-    private Station? SelectedStation 
-    { 
-        get => _selectedStation; 
-        set 
+    private Station? SelectedStation
+    {
+        get => _selectedStation;
+        set
         {
             if (value != null && value != _selectedStation)
             {
                 _selectedStation = value;
                 appStateService.CurrentStationId = value.Id;
             }
-        } 
+        }
     }
-    private DotNetObjectReference<StationsList>? stationListObjectReference;
 
-    private bool GetNextEnabled => Stations?.Count < Count;
+    private DotNetObjectReference<StationsList>? stationListObjectReference;
+    private bool scrollListenerAdded;
+    private string? componentId;
+    private Action<FavoriteStation>? favoriteStationChangedHandler;
+
+    private bool GetNextEnabled => Stations != null && Stations.Count < Count;
 
     protected override void OnInitialized()
     {
-        appStateService.FavoriteStationChanged += (fs) =>
+        if (PageSize <= 0)
+        {
+            PageSize = 20;
+        }
+
+        componentId = Guid.NewGuid().ToString();
+
+        // Subscribe to favorite station changes
+        favoriteStationChangedHandler = (fs) =>
         {
             if (Stations != null && Stations.Any() && fs != null)
             {
@@ -109,26 +159,93 @@ else
                 }
             }
         };
+
+        appStateService.FavoriteStationChanged += favoriteStationChangedHandler;
         base.OnInitialized();
     }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (Stations != null && Stations.Any())
+        if (Stations != null && Stations.Any() && !scrollListenerAdded)
         {
-            stationListObjectReference = DotNetObjectReference.Create(this);
-            await JSRuntime.InvokeVoidAsync("addScrollListener", stationListObjectReference);
-        }        
+            try
+            {
+                stationListObjectReference = DotNetObjectReference.Create(this);
+                await JSRuntime.InvokeVoidAsync("stationsListModule.addScrollListener", componentId, stationListObjectReference);
+                scrollListenerAdded = true;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Error initializing scroll listener for component {ComponentId}", componentId);
+            }
+        }
         await base.OnAfterRenderAsync(firstRender);
     }
 
     [JSInvokable]
-    public void GetNext()
+    public async Task GetNext()
     {
-        if (GetNextEnabled)
+        try
         {
-            Stations!.AddRange(GetStations(Stations.Count, PageSize).ToList());
-            this.StateHasChanged();
+            if (!GetNextEnabled)
+            {
+                return;
+            }
+
+            if (GetStations == null)
+            {
+                return;
+            }
+
+            if (Stations == null)
+            {
+                return;
+            }
+
+            var result = await GetStations(Stations.Count, PageSize);
+            if (result != null && result.Stations.Any())
+            {
+                Stations.AddRange(result.Stations);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Error loading next batch of stations");
         }
     }
 
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        try
+        {
+            // Unsubscribe from favorite station changes
+            if (favoriteStationChangedHandler != null)
+            {
+                appStateService.FavoriteStationChanged -= favoriteStationChangedHandler;
+            }
+
+            // Remove scroll listener
+            if (scrollListenerAdded && !string.IsNullOrEmpty(componentId))
+            {
+                try
+                {
+                    await JSRuntime.InvokeVoidAsync("stationsListModule.removeScrollListener", componentId);
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogWarning(ex, "Error removing scroll listener for component {ComponentId}", componentId);
+                }
+            }
+
+            // Dispose DotNetObjectReference
+            stationListObjectReference?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Error during component disposal");
+        }
+
+        GC.SuppressFinalize(this);
+    }
 }

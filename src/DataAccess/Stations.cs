@@ -6,41 +6,55 @@ namespace PCRadio.DataAccess;
 
 public class Stations : IStations
 {
-    public IEnumerable<Station> GetByGenre(int id, int skip, int take, out int totalCount)
+    public async Task<StationsResult> GetByGenreAsync(int id, int skip, int take)
     {
-        using (var db = new Database())
+        await using (var db = new Database())
         {
             var query = db.Stations.Where(s => s.StationGenres!.Select(sg => sg.GenreId).Contains(id));
-            totalCount = query.Count();
-            return query.Skip(skip).Take(take).ToList();
+            var totalCount = await query.CountAsync();
+            var stations = await query.Skip(skip).Take(take).ToListAsync();
+            return new StationsResult
+            {
+                Stations = stations,
+                TotalCount = totalCount
+            };
         }
     }
 
-    public IEnumerable<Station> GetFavorites(int skip, int take, out int totalCount)
+    public async Task<StationsResult> GetFavoritesAsync(int skip, int take)
     {
-        using (var db = new Database())
+        await using (var db = new Database())
         {
             var query = db.Stations.Where(s => s.IsFavorite);
-            totalCount = query.Count();
-            return query.Skip(skip).Take(take).ToList();
+            var totalCount = await query.CountAsync();
+            var stations = await query.Skip(skip).Take(take).ToListAsync();
+            return new StationsResult
+            {
+                Stations = stations,
+                TotalCount = totalCount
+            };
         }
     }
 
-    public IEnumerable<Station> GetRecommended(int skip, int take, out int totalCount)
+    public async Task<StationsResult> GetRecommendedAsync(int skip, int take)
     {
-        using (var db = new Database())
+        await using (var db = new Database())
         {
             var query = db.Stations.Where(s => s.Recomended);
-            totalCount = query.Count();
-            return query.Skip(skip).Take(take).ToList();
+            var totalCount = await query.CountAsync();
+            var stations = await query.Skip(skip).Take(take).ToListAsync();
+            return new StationsResult
+            {
+                Stations = stations,
+                TotalCount = totalCount
+            };
         }
     }
-
-    public Station? GetStation(int id)
+    public async Task<Station?> GetStationAsync(int id)
     {
-        using (var db = new Database())
+        await using (var db = new Database())
         {
-            return db.Stations
+            return await db.Stations
                 .Include(s => s.Country)
                 .Include(s => s.StationCities)!
                 .ThenInclude(sc => sc.City)
@@ -48,19 +62,21 @@ public class Stations : IStations
                 .ThenInclude(sg => sg.Genre)
                 .Include(s => s.StationSubGenres)!
                 .ThenInclude(sg => sg.SubGenre)
-                .FirstOrDefault(s => s.Id == id);
+                .FirstOrDefaultAsync(s => s.Id == id);
         }
     }
 
-    public IEnumerable<Station> Search(SearchParams? searchParams, int skip, int take, out int totalCount)
+    public async Task<StationsResult> SearchAsync(SearchParams? searchParams, int skip, int take)
     {
         if (searchParams == null)
         {
-            totalCount = 0;
-            return new List<Station>();
+            return new StationsResult
+            {
+                Stations = Enumerable.Empty<Station>(),
+                TotalCount = 0
+            };
         }
-
-        using (var db = new Database())
+        await using (var db = new Database())
         {
             var query = db.Stations.AsQueryable();
             if (!string.IsNullOrWhiteSpace(searchParams.Name))
@@ -78,20 +94,25 @@ public class Stations : IStations
                 query = query.Where(s => s.CountryId == searchParams.CountryId);
             }
 
-            totalCount = query.Count();
-            return query.Skip(skip).Take(take).ToList();
+            var totalCount = await query.CountAsync();
+            var stations = await query.Skip(skip).Take(take).ToListAsync();
+            return new StationsResult
+            {
+                Stations = stations,
+                TotalCount = totalCount
+            };
         }
     }
 
-    public void SetFavorite(int stationId, bool isFavorite)
+    public async Task SetFavoriteAsync(int stationId, bool isFavorite)
     {
-        using (var db = new Database())
+        await using (var db = new Database())
         {
-            var station = db.Stations.FirstOrDefault(s => s.Id == stationId);
+            var station = await db.Stations.FirstOrDefaultAsync(s => s.Id == stationId);
             if (station != null)
             {
                 station.IsFavorite = isFavorite;
-                db.SaveChanges();
+                await db.SaveChangesAsync();
             }
         }
     }

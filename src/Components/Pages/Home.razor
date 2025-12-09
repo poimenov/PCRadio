@@ -10,19 +10,18 @@
 @inject IStations stations
 @inject IAppStateService appStateService
 
-<PCRadio.Components.Controls.StationsList Count="@_count" PageSize="@PageSize" Stations="@_stations?.ToList()"
-    GetStations="@((skip, take) => stations.GetRecommended(skip, take, out _count))" />
+<PCRadio.Components.Controls.StationsList Count="@_result?.TotalCount" PageSize="@PageSize"
+    Stations="@_result?.Stations.ToList()" GetStations="@((skip, take) => stations.GetRecommendedAsync(skip, take))" />
 
 @code
 {
     private int PageSize => options.Value.PageSize;
-    private IEnumerable<Station>? _stations = default!;
-    private int _count;
+    private StationsResult? _result = default!;
 
-    protected override void OnInitialized()
+    protected override async Task OnParametersSetAsync()
     {
-        _stations = stations.GetRecommended(0, PageSize, out _count);
-        appStateService.Title = $"{localizer["Header"]} ({_count})";
-
+        _result = await stations.GetRecommendedAsync(0, PageSize);
+        appStateService.Title = $"{localizer["Header"]} ({_result?.TotalCount ?? 0})";
+        await base.OnParametersSetAsync();
     }
 }

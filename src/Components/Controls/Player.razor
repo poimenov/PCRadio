@@ -1,3 +1,4 @@
+@using Microsoft.Extensions.Logging
 @using Microsoft.FluentUI.AspNetCore.Components
 @using Microsoft.Extensions.Localization
 @using Microsoft.Extensions.Options
@@ -10,7 +11,7 @@
 @using PCRadio.DataAccess.Models
 @using PCRadio.Extensions
 @using PCRadio.Services.Interfaces
-@implements IDisposable
+@implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 @inject IOptions<AppSettings> options
 @inject IStations stations
@@ -20,6 +21,7 @@
 @inject IHistoryRecords historyRecords
 @inject IAppStateService appStateService
 @inject IToastService toastService
+@inject ILogger<Player> logger
 
 <FluentStack Orientation="Orientation.Horizontal" Class="player">
     <img class="logo" src="@Station?.Logo" alt="@Station?.Name" loading="lazy" />
@@ -74,11 +76,13 @@
 </FluentPopover>
 <audio id="audio" src="@AudioUrl" controls style="display: none;" onerror="@ShowMessage" onstalled="@ShowMessage" />
 <script>
-    var intervalId;
+    var playerIntervalId;
 
     function setMarquee(value) {
         var marquee = document.getElementById("NowPlaying");
-        if (marquee.innerHTML != value) {
+        console.log("Ping result 3:", value);
+        if (marquee && marquee.innerHTML != value) {
+            console.log("Ping result 4:", value);
             marquee.innerHTML = value;
         }
     }
@@ -86,25 +90,43 @@
     window.setPageRef = (dotNetRef) => {
         window.getCurrentTrackName = () => {
             var player = document.getElementById("audio");
-            if (player.src && !player.paused) {
+            if (player && player.src && !player.paused) {
                 var name = player.src.split("/")[3];
-                name = name.substring(0, name.indexOf("-"));
-                dotNetRef.invokeMethodAsync('Ping', name).then(result => {
-                    setMarquee(result);
-                });
+                if (name) {
+                    name = name.substring(0, name.indexOf("-"));
+                    dotNetRef.invokeMethodAsync('Ping', name).then(result => {
+                        console.log("Ping result 1:", result);
+                        if (result) {
+                            console.log("Ping result 2:", result);
+                            setMarquee(result);
+                        }
+                    }).catch(error => {
+                        console.error("Error invoking Ping:", error);
+                        setMarquee("");
+                    });
+                }
             }
             else {
                 setMarquee("");
             }
         };
-        intervalId = setInterval(getCurrentTrackName, 5000);
+        playerIntervalId = setInterval(getCurrentTrackName, 5000);
+    };
+
+    window.cleanupPlayer = () => {
+        if (playerIntervalId) {
+            clearInterval(playerIntervalId);
+            playerIntervalId = null;
+        }
     };
 
     function playAudio(isPlaying) {
         var player = document.getElementById("audio");
         if (player) {
             if (isPlaying && player.paused) {
-                player.play();
+                player.play().catch(error => {
+                    console.error("Error playing audio:", error);
+                });
             } else if (!isPlaying && !player.paused) {
                 player.pause();
             }
@@ -113,9 +135,10 @@
 
     function setVolume(volume) {
         var player = document.getElementById("audio");
-        player.volume = volume;
+        if (player) {
+            player.volume = volume;
+        }
     }
-
 </script>
 
 @code {
@@ -145,16 +168,34 @@
     private Station? Station { get; set; }
     private DotNetObjectReference<Player>? thisRef;
     private HistoryRecordEqualityComparer historyRecordEqualityComparer = new HistoryRecordEqualityComparer();
-    string AudioUrl => $"{Station?.Stream}-{options.Value.GetQuality()}";
+
+    string AudioUrl => $"{Station?.Stream}-{options?.Value?.GetQuality() ?? "unknown"}";
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            thisRef = DotNetObjectReference.Create(this);
-            await JSRuntime.InvokeVoidAsync("setPageRef", thisRef);
+            try
+            {
+                thisRef = DotNetObjectReference.Create(this);
+                await JSRuntime.InvokeVoidAsync("setPageRef", thisRef);
+                logger?.LogInformation("Player initialized");
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Error initializing player");
+            }
         }
 
-        await JSRuntime.InvokeVoidAsync("playAudio", _isPlaying);
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("playAudio", _isPlaying);
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Error controlling audio playback");
+        }
+
         await base.OnAfterRenderAsync(firstRender);
     }
 
@@ -163,15 +204,19 @@
         if (StationId.HasValue && Station?.Id != StationId.Value)
         {
             SearchText = string.Empty;
-            Station = stations.GetStation(StationId.Value);
-            _country = Station?.Country?.Name;
-            _cities = string.Join(", ", Station?.StationCities?.Select(x => x.City?.Name)
-            .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
-            _genres = string.Join(", ", Station?.StationGenres?.Select(x => x.Genre?.Name)
-            .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
-            _subgenres = string.Join(", ", Station?.StationSubGenres?.Select(x => x.SubGenre?.Name)
-            .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
-            StateHasChanged();
+            Station = await stations.GetStationAsync(StationId.Value);
+
+            if (Station != null)
+            {
+                _country = Station.Country?.Name ?? string.Empty;
+                _cities = string.Join(", ", Station.StationCities?.Select(x => x.City?.Name)
+                .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
+                _genres = string.Join(", ", Station.StationGenres?.Select(x => x.Genre?.Name)
+                .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
+                _subgenres = string.Join(", ", Station.StationSubGenres?.Select(x => x.SubGenre?.Name)
+                .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
+                StateHasChanged();
+            }
         }
 
         await base.OnParametersSetAsync();
@@ -180,13 +225,28 @@
     private async Task Play()
     {
         _isPlaying = !_isPlaying;
-        await JSRuntime.InvokeVoidAsync("playAudio", _isPlaying);
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("playAudio", _isPlaying);
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Error controlling playback");
+        }
     }
 
     private async Task SetVolume(double volume)
     {
+        // Inverted because slider goes from top (1.0) to bottom (0.0)
         _volume = 1.0 - volume;
-        await JSRuntime.InvokeVoidAsync("setVolume", _volume);
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("setVolume", _volume);
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Error setting volume");
+        }
     }
 
     private async Task ShowMessage()
@@ -196,16 +256,23 @@
             var message = $"{localizer["StreamNotAvailable"]}: {Station.Name} ({AudioUrl})";
             toastService.ShowError(message);
             _isPlaying = false;
-            await JSRuntime.InvokeVoidAsync("playAudio", _isPlaying);
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("playAudio", _isPlaying);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Error stopping playback after stream error");
+            }
         }
     }
 
-    private void ToggleFavorite()
+    private async Task ToggleFavorite()
     {
         if (Station != null)
         {
             Station.IsFavorite = !Station.IsFavorite;
-            stations.SetFavorite(Station.Id, Station.IsFavorite);
+            await stations.SetFavoriteAsync(Station.Id, Station.IsFavorite);
             appStateService.FavoriteStation = new FavoriteStation
             {
                 StationId = Station.Id,
@@ -216,50 +283,64 @@
 
     private void Search()
     {
-        if (!string.IsNullOrWhiteSpace(SearchText))
+        if (!string.IsNullOrWhiteSpace(SearchText) && options?.Value != null)
         {
-            var searchUrl = string.Format(options.Value.TrackSearchUrl, System.Web.HttpUtility.UrlEncode(SearchText));
-            linkOpeningService.OpenUrl(searchUrl);
+            try
+            {
+                var encodedText = Uri.EscapeDataString(SearchText);
+                var searchUrl = string.Format(options.Value.TrackSearchUrl, encodedText);
+                linkOpeningService.OpenUrl(searchUrl);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Error performing search for: {SearchText}", SearchText);
+            }
         }
     }
 
     [JSInvokable]
     public async Task<string> Ping(string name)
     {
-        if (!httpClient.DefaultRequestHeaders.Contains(FileDownloadService.USER_AGENT_HEADER_NAME))
+        if (string.IsNullOrWhiteSpace(name) || options?.Value == null)
         {
-            httpClient.DefaultRequestHeaders.Add(FileDownloadService.USER_AGENT_HEADER_NAME, FileDownloadService.USER_AGENT);
+            return string.Empty;
         }
 
         try
         {
-            if (!string.IsNullOrEmpty(name))
+            var url = string.Format(options.Value.CurrentTrackInfoUrl, Uri.EscapeDataString(name));
+
+            // Use HttpRequestMessage to avoid mutating global headers
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.TryAddWithoutValidation(FileDownloadService.USER_AGENT_HEADER_NAME, FileDownloadService.USER_AGENT);
+
+            var response = await httpClient.SendAsync(request);
+            if (response.IsSuccessStatusCode)
             {
-                var url = string.Format(options.Value.CurrentTrackInfoUrl, name);
-                var response = await httpClient.GetAsync(url);
-                if (response.IsSuccessStatusCode)
+                var stream = await response.Content.ReadAsStreamAsync();
+                var currentTrack = await System.Text.Json.JsonSerializer.DeserializeAsync<CurrentTrack>(stream);
+
+                if (currentTrack != null && Station != null)
                 {
-                    var stream = await response.Content.ReadAsStreamAsync();
-                    var currentTrack = await System.Text.Json.JsonSerializer.DeserializeAsync<CurrentTrack>(stream);
-                    if (currentTrack != null)
+                    SearchText = $"{currentTrack.Artist} - {currentTrack.Title}";
+
+                    if (!string.IsNullOrEmpty(currentTrack.Artist) || !string.IsNullOrEmpty(currentTrack.Title))
                     {
-                        SearchText = $"{currentTrack.Artist} - {currentTrack.Title}";
-                        if (Station != null && (!string.IsNullOrEmpty(currentTrack.Artist) || !string.IsNullOrEmpty(currentTrack.Title)))
+                        var record = new HistoryRecord
                         {
-                            var record = new HistoryRecord
-                            {
-                                StartTime = currentTrack.DateTime,
-                                StationName = Station.Name,
-                                TrackName = SearchText
-                            };
-                            if (!historyRecordEqualityComparer.Equals(appStateService.LastHistoryRecord, record))
-                            {
-                                await historyRecords.AddAsync(record);
-                                appStateService.LastHistoryRecord = record;
-                            }
+                            StartTime = currentTrack.DateTime,
+                            StationName = Station.Name,
+                            TrackName = SearchText
+                        };
+
+                        if (!historyRecordEqualityComparer.Equals(appStateService.LastHistoryRecord, record))
+                        {
+                            await historyRecords.AddAsync(record);
+                            appStateService.LastHistoryRecord = record;
                         }
-                        return SearchText;
                     }
+
+                    return SearchText;
                 }
             }
 
@@ -267,25 +348,43 @@
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine(ex.Message);
+            logger?.LogError(ex, "Error fetching current track info for: {Name}", name);
             SearchText = string.Empty;
         }
 
         return SearchText;
     }
 
-    public void Dispose() => thisRef?.Dispose();
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        try
+        {
+            // Clean up JavaScript resources
+            await JSRuntime.InvokeVoidAsync("cleanupPlayer");
+        }
+        catch (Exception ex)
+        {
+            logger?.LogWarning(ex, "Error cleaning up player resources");
+        }
+
+        thisRef?.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
     public class CurrentTrack
     {
         [JsonPropertyName("artist")]
         public string Artist { get; set; } = string.Empty;
+
         [JsonPropertyName("title")]
         public string Title { get; set; } = string.Empty;
+
         [JsonPropertyName("time")]
         public string TimeString { get; set; } = string.Empty;
+
         [JsonPropertyName("date")]
         public string DateString { get; set; } = string.Empty;
+
         public DateTime DateTime
         {
             get
