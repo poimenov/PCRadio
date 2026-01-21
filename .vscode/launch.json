@@ -9,11 +9,11 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "Build: PCRadio",
-            "program": "${workspaceFolder}/src/bin/Debug/net8.0/PCRadio.dll",
+            "program": "${workspaceFolder}/src/bin/Debug/net10.0/PCRadio.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src",
             "stopAtEntry": false,
             "console": "internalConsole"
-        }            
+        }
     ]
 }

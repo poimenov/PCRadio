@@ -76,9 +76,9 @@ public class DbUpdateService : IDbUpdateService
 
         try
         {
-            // Download archive file
-            _logger.LogInformation("Downloading archive from: {Url}", _settings.ArchiveUrl);
+            // Download archive file            
             var downloadUrl = string.Format(_settings.ArchiveUrl, culture.TwoLetterISOLanguageName);
+            _logger.LogInformation("Downloading archive from: {Url}", downloadUrl);
 
             if (!await _fileDownloadService.DownloadFileAsync(downloadUrl, filePath))
             {
