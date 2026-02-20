@@ -12,4 +12,13 @@
     <data name="SourceCode" xml:space="preserve">
         <value>Source code</value>
     </data>      
+    <data name="Export" xml:space="preserve">
+        <value>Export</value>
+    </data>
+    <data name="ExportTitle" xml:space="preserve">
+        <value>Export stations in M3U format</value>
+    </data>  
+    <data name="SelectFolder" xml:space="preserve">
+        <value>Select folder to export stations list</value>
+    </data>   
 </root>

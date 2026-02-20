@@ -6,6 +6,85 @@ namespace PCRadio.DataAccess;
 
 public class Stations : IStations
 {
+    private const string GET_STATION_GENRES_SQL = @"
+    SELECT g.Name FROM StationGenres sg
+    JOIN Genres g ON sg.GenreId = g.Id
+    WHERE sg.StationId = {0}
+    UNION
+    SELECT sg2.Name FROM StationSubGenres ssg
+    JOIN SubGenres sg2 ON ssg.SubGenreId = sg2.Id
+    WHERE ssg.StationId = {0}";
+
+    private async Task<IEnumerable<string>> GetStationGenresAsync(Database db, int stationId)
+    {
+        return await db.Genres.FromSqlRaw(GET_STATION_GENRES_SQL, stationId).Select(g => g.Name).ToListAsync();
+    }
+
+    public async Task<IEnumerable<StationInfo>> ExportByGenreAsync(int id)
+    {
+        if (id <= 0)
+        {
+            return Enumerable.Empty<StationInfo>();
+        }
+
+        await using (var db = new Database())
+        {
+            if (!await db.Genres.AnyAsync(g => g.Id == id))
+            {
+                return Enumerable.Empty<StationInfo>();
+            }
+
+            var retVal = await db.Stations.Where(s => s.StationGenres!.Select(sg => sg.GenreId).Contains(id)).Select(s => new StationInfo
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Url = s.Stream,
+                LogoUrl = s.Logo,
+                Genres = Enumerable.Empty<string>()
+            }).ToListAsync();
+
+            retVal.ForEach(async s => s.Genres = await GetStationGenresAsync(db, s.Id));
+
+            return retVal;
+        }
+    }
+
+    public async Task<IEnumerable<StationInfo>> ExportFavoritesAsync()
+    {
+        await using (var db = new Database())
+        {
+            var retVal = await db.Stations.Where(s => s.IsFavorite).Select(s => new StationInfo
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Url = s.Stream,
+                LogoUrl = s.Logo,
+                Genres = Enumerable.Empty<string>()
+            }).ToListAsync();
+
+            retVal.ForEach(async s => s.Genres = await GetStationGenresAsync(db, s.Id));
+            return retVal;
+        }
+    }
+
+    public async Task<IEnumerable<StationInfo>> ExportRecommendedAsync()
+    {
+        await using (var db = new Database())
+        {
+            var retVal = await db.Stations.Where(s => s.Recomended).Select(s => new StationInfo
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Url = s.Stream,
+                LogoUrl = s.Logo,
+                Genres = Enumerable.Empty<string>()
+            }).ToListAsync();
+
+            retVal.ForEach(async s => s.Genres = await GetStationGenresAsync(db, s.Id));
+            return retVal;
+        }
+    }
+
     public async Task<StationsResult> GetByGenreAsync(int id, int skip, int take)
     {
         await using (var db = new Database())

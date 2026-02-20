@@ -11,5 +11,14 @@
     </data>
     <data name="SourceCode" xml:space="preserve">
         <value>Исходный код</value>
-    </data>    
+    </data>  
+    <data name="Export" xml:space="preserve">
+        <value>Экспорт</value>
+    </data>
+    <data name="ExportTitle" xml:space="preserve">
+        <value>Экспорт станций в формате M3U</value>
+    </data>  
+    <data name="SelectFolder" xml:space="preserve">
+        <value>Выберите папку для экспорта списка станций</value>
+    </data>           
 </root>

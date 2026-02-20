@@ -169,7 +169,7 @@
     private DotNetObjectReference<Player>? thisRef;
     private HistoryRecordEqualityComparer historyRecordEqualityComparer = new HistoryRecordEqualityComparer();
 
-    string AudioUrl => $"{Station?.Stream}-{options?.Value?.GetQuality() ?? "unknown"}";
+    string AudioUrl => $"{Station?.Stream}-{options?.Value?.GetQuality() ?? "med"}";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

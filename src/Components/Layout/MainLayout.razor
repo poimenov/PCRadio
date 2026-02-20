@@ -1,67 +1,90 @@
-﻿@using Microsoft.Extensions.Localization
+﻿@using IconsRegular24 = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular.Size24
+@using Microsoft.Extensions.Localization
 @using Microsoft.Extensions.Options
+@using PCRadio.DataAccess.Interfaces
 @using PCRadio.DataAccess.Models
+@using PCRadio.Extensions
 @using PCRadio.Services.Interfaces
 @inherits LayoutComponentBase
 @inject ILinkOpeningService linkOpeningService
 @inject IStringLocalizer<MainLayout> localizer
 @inject IAppStateService appStateService
+@inject IOptions<AppSettings> options
+@inject IOpenDialogService openDialogService
+@inject NavigationManager navigationManager
+@inject IStations stations
 <FluentLayout>
     <FluentHeader>
-        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Left" 
-            Spacing="Spacing.Medium" VerticalAlignment="VerticalAlignment.Center">
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Left"
+                     Spacing="Spacing.Medium" VerticalAlignment="VerticalAlignment.Center">
             <img src="favicon.ico" style="height: 50px;" />
             <FluentAnchor Href="#" Appearance="Appearance.Hypertext" Class="appName"
-                title="@($"{AppSettings.APPLICATION_NAME} v{typeof(AppSettings).Assembly.GetName().Version}")"
-                OnClick="@(()=>OpenLink("https://pcradio.ru"))">
+                          title="@($"{AppSettings.APPLICATION_NAME} v{typeof(AppSettings).Assembly.GetName().Version}")"
+                          OnClick="@(()=>OpenLink("https://pcradio.ru"))">
                 @AppSettings.APPLICATION_NAME</FluentAnchor>
+            </FluentStack>
+        </FluentHeader>
+        <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
+            <NavMenu />
+            <FluentBodyContent Class="body-content">
+                <div class="content">
+                    <FluentLayout>
+                        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Left"
+                                     Spacing="Spacing.Medium" VerticalAlignment="VerticalAlignment.Center">
+                            <FluentIcon Value="@TitleIcon" />
+                            <FluentLabel Typo="Typography.H2">@Title</FluentLabel>
+                            @if (IsExportVisible)
+                            {
+                                <FluentSpacer />
+                                <FluentButton
+                                    IconStart="@(new Microsoft.FluentUI.AspNetCore.Components.Icons.Regular.Size16.ArrowDownload())"
+                                    title="@localizer["ExportTitle"]" OnClick="@ExportStationsAsync"
+                                    Loading="@IsExportProcessing">@localizer["Export"]
+                                </FluentButton>
+                            }
+                        </FluentStack>
+                        @Body
+                        @if (SelectedStationId.HasValue)
+                        {
+                            <PCRadio.Components.Controls.Player StationId="@SelectedStationId" />
+                        }
+                    </FluentLayout>
+                </div>
+            </FluentBodyContent>
         </FluentStack>
-    </FluentHeader>
-    <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
-        <NavMenu />
-        <FluentBodyContent Class="body-content">
-            <div class="content">
-                <FluentLayout>                 
-                    <h1>@Title</h1>
-                    @Body
-                    @if (SelectedStationId.HasValue)
-                    {
-                        <PCRadio.Components.Controls.Player StationId="@SelectedStationId" />
-                    }                    
-                </FluentLayout>
-            </div>
-        </FluentBodyContent>
-    </FluentStack>
-    <FluentFooter>
-        <FluentStack Orientation="Orientation.Horizontal">
-            <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="https://www.tryphotino.io"
-                OnClick="@(()=>OpenLink("https://www.tryphotino.io"))">@localizer["Blazor"]
-            </FluentAnchor>
-            <FluentAnchor Href="#" Appearance="Appearance.Hypertext"
-                title="https://learn.microsoft.com/en-us/aspnet/core/blazor"
-                OnClick="@(()=>OpenLink("https://learn.microsoft.com/en-us/aspnet/core/blazor"))">@localizer["Photino"]
-            </FluentAnchor>
-        </FluentStack>
-        <FluentSpacer />
-        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Right">
-            <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="https://www.fluentui-blazor.net"
-                OnClick="@(()=>OpenLink("https://www.fluentui-blazor.net"))">@localizer["FluentUI"]</FluentAnchor>
-            <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="https://github.com/poimenov/PCRadio"
-                OnClick="@(()=>OpenLink("https://github.com/poimenov/PCRadio"))">@localizer["SourceCode"]</FluentAnchor>
-        </FluentStack>
-    </FluentFooter>
-</FluentLayout>
+        <FluentFooter>
+            <FluentStack Orientation="Orientation.Horizontal">
+                <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="https://www.tryphotino.io"
+                              OnClick="@(()=>OpenLink("https://www.tryphotino.io"))">@localizer["Blazor"]
+                </FluentAnchor>
+                <FluentAnchor Href="#" Appearance="Appearance.Hypertext"
+                              title="https://learn.microsoft.com/en-us/aspnet/core/blazor"
+                              OnClick="@(()=>OpenLink("https://learn.microsoft.com/en-us/aspnet/core/blazor"))">@localizer["Photino"]
+                </FluentAnchor>
+            </FluentStack>
+            <FluentSpacer />
+            <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Right">
+                <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="https://www.fluentui-blazor.net"
+                              OnClick="@(()=>OpenLink("https://www.fluentui-blazor.net"))">@localizer["FluentUI"]</FluentAnchor>
+                <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="https://github.com/poimenov/PCRadio"
+                              OnClick="@(()=>OpenLink("https://github.com/poimenov/PCRadio"))">@localizer["SourceCode"]</FluentAnchor>
+            </FluentStack>
+        </FluentFooter>
+    </FluentLayout>
 
 @code
 {
     string Title { get; set; } = string.Empty;
+    Icon TitleIcon { get; set; } = new IconsRegular24.Home();
+    bool IsExportVisible { get; set; } = true;
+    bool IsExportProcessing { get; set; } = false;
     int? SelectedStationId { get; set; }
 
     protected override void OnInitialized()
     {
         appStateService.TitleChanged += (title) => InvokeAsync(() =>
         {
-            if(Title != title)
+            if (Title != title)
             {
                 Title = title;
                 StateHasChanged();
@@ -69,15 +92,104 @@
         });
         appStateService.CurrentStationIdChanged += (stationId) => InvokeAsync(() =>
         {
-            if(SelectedStationId != stationId)
+            if (SelectedStationId != stationId)
             {
                 SelectedStationId = stationId;
                 StateHasChanged();
             }
         });
+        navigationManager.LocationChanged += (sender, args) => InvokeAsync(() =>
+        {
+            switch (navigationManager.Uri)
+            {
+                case var uri when uri.Contains("genre"):
+                    TitleIcon = new IconsRegular24.MusicNote2();
+                    IsExportVisible = true;
+                    break;
+                case var uri when uri.EndsWith("favorites"):
+                    TitleIcon = new IconsRegular24.Star();
+                    IsExportVisible = true;
+                    break;
+                case var uri when uri.EndsWith("settings"):
+                    TitleIcon = new IconsRegular24.Settings();
+                    IsExportVisible = false;
+                    break;
+                case var uri when uri.EndsWith("history"):
+                    TitleIcon = new IconsRegular24.History();
+                    IsExportVisible = false;
+                    break;
+                case var uri when uri.EndsWith("search"):
+                    TitleIcon = new IconsRegular24.Search();
+                    IsExportVisible = false;
+                    break;
+                default:
+                    TitleIcon = new IconsRegular24.Home();
+                    IsExportVisible = true;
+                    break;
+            }
+            StateHasChanged();
+        });
     }
-    void OpenLink(string url)
+    private void OpenLink(string url)
     {
         linkOpeningService.OpenUrl(url);
+    }
+    private async Task ExportStationsAsync()
+    {
+        var currentUri = navigationManager.Uri;
+        if (!(currentUri.Contains("genre") || currentUri.EndsWith("favorites") || currentUri.EndsWith("/")))
+        {
+            return;
+        }
+
+        var folderPath = openDialogService.OpenFolder(localizer["SelectFolder"],
+                                    Environment.GetFolderPath(Environment.SpecialFolder.MyMusic));
+        if (folderPath == null || !folderPath.Any() || !Directory.Exists(folderPath.First()))
+        {
+            return;
+        }
+
+        IsExportProcessing = true;
+
+        (IEnumerable<StationInfo>?, string) stationsToExport = currentUri switch
+        {
+            var uri when uri.Contains("genre") => (await stations.ExportByGenreAsync(GetIdFromUri(uri)), Title.Replace(" ", "_")),
+            var uri when uri.EndsWith("favorites") => (await stations.ExportFavoritesAsync(), "favorites"),
+            var uri when uri.EndsWith("/") => (await stations.ExportRecommendedAsync(), "recommended"),
+            _ => (null, string.Empty)
+        };
+
+        if (stationsToExport.Item1 != null && stationsToExport.Item1.Any())
+        {
+            var m3uContent = ConvertToM3U(stationsToExport.Item1);
+            var filePath = Path.Combine(folderPath.First(), $"PCRadio_{stationsToExport.Item2}.m3u");
+            await File.WriteAllTextAsync(filePath, m3uContent);
+        }
+
+        IsExportProcessing = false;
+    }
+    private int GetIdFromUri(string uri)
+    {
+        var segments = new Uri(uri).Segments;
+        if (segments.Length > 2 && int.TryParse(segments[2].TrimEnd('/'), out int id))
+        {
+            return id;
+        }
+
+        return 0;
+    }
+    private string ConvertToM3U(IEnumerable<StationInfo> stations)
+    {
+        var quality = options?.Value?.GetQuality() ?? "med";
+        var sBuilder = new System.Text.StringBuilder();
+        sBuilder.AppendLine("#EXTM3U");
+        foreach (var station in stations)
+        {
+            sBuilder.AppendLine($"#EXTINF:-1, tvg-logo=\"{station.LogoUrl}\" group-title=\"{string.Join(";",
+station.Genres)}\" radio=\"true\", {station.Name}");
+            sBuilder.AppendLine($"{station.Url}-{quality}");
+        }
+
+        return sBuilder.ToString();
     }
 }
