@@ -50,15 +50,18 @@ div:has(fluent-listbox.station-list) {
 
 .player {
     min-height: 100px;
-    margin-bottom: 5px;
-    display: grid;
-    grid-template-columns: 90px 1fr 50px;
-    grid-template-rows: 90px;
-    gap: 5px;
+    margin-bottom: 2px;
+    margin-top: 2px;
     padding: 2px;
     border: calc(var(--stroke-width) * 1px) solid var(--neutral-stroke-rest); 
     border-radius: calc(var(--control-corner-radius) * 1px);
     overflow: hidden;
+}
+
+.player-button {
+    min-width: 60px;
+    height: 60px;
+    margin: 0 4px;
 }
 
 .logo {

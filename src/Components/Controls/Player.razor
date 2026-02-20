@@ -23,49 +23,43 @@
 @inject IToastService toastService
 @inject ILogger<Player> logger
 
-<FluentStack Orientation="Orientation.Horizontal" Class="player">
-    <img class="logo" src="@Station?.Logo" alt="@Station?.Name" loading="lazy" />
-    <div style="min-width: 462px;">
-        <div style="font-weight: bold;">@Station?.GetCountryIcon() @Station?.Name <span
-                style="font-weight: normal;">(@_country @_cities)</span> </div>
-        <div style="font-style: italic;">@_genres @_subgenres</div>
-        <div title="@Station?.Description" style="font-size: 12px;height:36px;overflow: hidden;">
-            @Station?.Description
-        </div>
-        <marquee id="NowPlaying" direction="left" behavior="scroll" scrollamount="2"
-            style="color:var(--accent-fill-rest);font-size: 12px;@(string.IsNullOrEmpty(SearchText) ? "display: none;" : "")">
-        </marquee>
-    </div>
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" Class="player">
+    <img class="logo" src="@Station?.Logo" alt="@Station?.Name" title="@Station?.Description" loading="lazy" />
+    <FluentStack Orientation="Orientation.Vertical" VerticalAlignment="VerticalAlignment.Top" VerticalGap="2">
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+            @Station?.GetCountryIcon()
+            <FluentButton IconStart="@(Station!.IsFavorite ? new _filled.Size20.Heart() : new _regular.Size20.Heart())"
+                          Color="Color.Accent" OnClick="@ToggleFavorite" Title="@localizer["AddToFavorites"]" />
+            <b>@Station?.Name</b>
+            <span>(@_country @_cities)</span>
+        </FluentStack>
+        <i>@_genres @_subgenres</i>
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
+                     HorizontalGap="2">
+            <FluentButton Id="btnSearch" IconStart="@(new _regular.Size20.VideoClip())" Color="Color.Accent"
+                          OnClick="@Search" Disabled="@(string.IsNullOrEmpty(SearchText))"
+                          Title="@localizer["SearchInYoutube"]" />
+            <div id="NowPlaying"
+                 style="color:var(--accent-fill-rest);font-size: 12px;@(string.IsNullOrEmpty(SearchText) ? "display: none;" : "")">
+            </div>
+        </FluentStack>
+    </FluentStack>
     <FluentSpacer />
-    <div style="margin-left:2px;">
-        <div>
-            <FluentButton Id="popoverButton" IconStart="@(new _regular.Size24.Speaker2())" Color="Color.Accent"
-                OnClick="@(() => _isPopoverVisible = !_isPopoverVisible)" Title="@localizer["Volume"]" />
-        </div>
-        <div>
-            <FluentButton Id="btnSearch" IconStart="@(new _regular.Size24.VideoClip())" Color="Color.Accent"
-                OnClick="@Search" Disabled="@(string.IsNullOrEmpty(SearchText))"
-                Title="@localizer["SearchInYoutube"]" />
-        </div>
-    </div>
-
-    <div style="margin-left:2px;margin-right: 20px;">
-        <div>
-            <FluentButton IconStart="@(_isPlaying ? new _regular.Size24.Pause() : new _regular.Size24.Play())"
-                Color="Color.Accent" OnClick="@Play" Title="@localizer["PlayStop"]" />
-        </div>
-        <div>
-            <FluentButton IconStart="@(Station!.IsFavorite ? new _filled.Size24.Heart() : new _regular.Size24.Heart())"
-                Color="Color.Accent" OnClick="@ToggleFavorite" Title="@localizer["AddToFavorites"]" />
-        </div>
-    </div>
+    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
+                 HorizontalAlignment="HorizontalAlignment.Right" style="width: 130px;">
+        <FluentButton Id="popoverButton" Class="player-button" IconStart="@(new _regular.Size48.Speaker2())"
+                      Color="Color.Accent" OnClick="@(() => _isPopoverVisible = !_isPopoverVisible)"
+                      Title="@localizer["Volume"]" />
+        <FluentButton Class="player-button"
+                      IconStart="@(_isPlaying ? new _regular.Size48.Pause() : new _regular.Size48.Play())" Color="Color.Accent"
+                      OnClick="@Play" Title="@localizer["PlayStop"]" />
+    </FluentStack>
 </FluentStack>
 <FluentPopover AnchorId="popoverButton" @bind-Open="_isPopoverVisible" Style="width: 90px; height: 260px;"
-    VerticalPosition="VerticalPosition.Top" HorizontalPosition="HorizontalPosition.Left">
-
+               VerticalPosition="VerticalPosition.Top" HorizontalPosition="HorizontalPosition.Left">
     <Body>
         <FluentSlider Orientation="Orientation.Vertical" Min="0.0" Max="1.0" Step="0.01" ValueChanged="@SetVolume"
-            Value="@(1.0 - _volume)" TValue="double" Style="width: 30px; height: 200px;">
+                      Value="@(1.0 - _volume)" TValue="double" Style="width: 30px; height: 200px;">
             <FluentSliderLabel Position="1.0">0%</FluentSliderLabel>
             <FluentSliderLabel Position="0.75">25%</FluentSliderLabel>
             <FluentSliderLabel Position="0.5">50%</FluentSliderLabel>
