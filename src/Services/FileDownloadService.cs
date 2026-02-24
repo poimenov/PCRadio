@@ -42,26 +42,33 @@ public class FileDownloadService : IFileDownloadService
 
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, url);
-            request.Headers.TryAddWithoutValidation(USER_AGENT_HEADER_NAME, USER_AGENT);
-
-            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogWarning("Failed to download {Url}. Status code: {StatusCode}", url, response.StatusCode);
-                return false;
-            }
-
             var directory = Path.GetDirectoryName(filePath);
             if (!string.IsNullOrEmpty(directory))
                 Directory.CreateDirectory(directory);
 
-            await using var httpStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-            await using var fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true);
+            using (var request = new HttpRequestMessage(HttpMethod.Get, url))
+            {
+                request.Headers.TryAddWithoutValidation(USER_AGENT_HEADER_NAME, USER_AGENT);
 
-            await httpStream.CopyToAsync(fileStream).ConfigureAwait(false);
-            await fileStream.FlushAsync().ConfigureAwait(false);
+                using (var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead))
+                {
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        _logger.LogWarning("Failed to download {Url}. Status code: {StatusCode}", url, response.StatusCode);
+                        return false;
+                    }
+
+                    await using (var httpStream = await response.Content.ReadAsStreamAsync())
+                    {
+                        using (var fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 81920, FileOptions.Asynchronous))
+                        {
+                            await httpStream.CopyToAsync(fileStream);
+                            await fileStream.FlushAsync();
+                            fileStream.Close();
+                        }
+                    }
+                }
+            }
 
             if (File.Exists(filePath))
                 File.Delete(filePath);
