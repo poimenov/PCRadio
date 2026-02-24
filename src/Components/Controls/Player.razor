@@ -72,11 +72,9 @@
 <script>
     var playerIntervalId;
 
-    function setMarquee(value) {
+    function setCurrentTrackName(value) {
         var marquee = document.getElementById("NowPlaying");
-        console.log("Ping result 3:", value);
         if (marquee && marquee.innerHTML != value) {
-            console.log("Ping result 4:", value);
             marquee.innerHTML = value;
         }
     }
@@ -84,24 +82,22 @@
     window.setPageRef = (dotNetRef) => {
         window.getCurrentTrackName = () => {
             var player = document.getElementById("audio");
-            if (player && player.src && !player.paused) {
+            if (player && player.src) {
                 var name = player.src.split("/")[3];
                 if (name) {
                     name = name.substring(0, name.indexOf("-"));
                     dotNetRef.invokeMethodAsync('Ping', name).then(result => {
-                        console.log("Ping result 1:", result);
                         if (result) {
-                            console.log("Ping result 2:", result);
-                            setMarquee(result);
+                            setCurrentTrackName(result);
                         }
                     }).catch(error => {
                         console.error("Error invoking Ping:", error);
-                        setMarquee("");
+                        setCurrentTrackName("");
                     });
                 }
             }
             else {
-                setMarquee("");
+                setCurrentTrackName("");
             }
         };
         playerIntervalId = setInterval(getCurrentTrackName, 5000);
