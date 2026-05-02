@@ -34,5 +34,6 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="8.0.0" />
     <PackageReference Include="PSC.CSharp.Library.CountryData" Version="8.0.9" />
     <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
+    <PackageReference Include="log4net" Version="3.3.1" />
   </ItemGroup>
 </Project>
