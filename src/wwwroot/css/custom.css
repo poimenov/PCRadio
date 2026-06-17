@@ -1,5 +1,5 @@
 .station-list fluent-option {
-    width: 290px;
+    width: 100%;
     height: 110px;
     padding: 5px;
     margin: 0px;
@@ -25,9 +25,9 @@ div:has(fluent-listbox.station-list) {
 
 .station-list {
     display: grid;
-    grid-template-columns:  repeat(auto-fill, minmax(290px, 1fr));
+    grid-template-columns:  repeat(auto-fit, minmax(290px, 1fr));
     grid-auto-rows: auto;
-    grid-gap: 5px;
+    gap: 5px;
     justify-content: stretch;
     justify-items: start;
     padding: 5px;
@@ -38,7 +38,7 @@ div:has(fluent-listbox.station-list) {
     display: grid;
     width: 100%;
     height: 100%;
-    grid-template-columns: 90px 180px;    
+    grid-template-columns: 90px minmax(290px, 1fr);    
     gap: 5px;
     padding: 4px !important;
 }
