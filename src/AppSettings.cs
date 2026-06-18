@@ -18,11 +18,13 @@ public class AppSettings
     public string? ArchiveUrl { get; set; }
     public string? ArchivePassword { get; set; }
     public string TrackSearchUrl { get; set; } = "https://www.youtube.com/results?search_query={0}";
+    public string TrackDownloadBaseUrl { get; set; } = "https://m.z3.fm";
     public string CurrentTrackInfoUrl { get; set; } = "https://meta.pcradio.ru/{0}_current.json";
     public int PageSize { get; set; } = 50;
     public int HistoryRecordsCount { get; set; } = 100;
     public bool NeedsDatabaseUpdate { get; set; } = false;
     public Quality Quality { get; set; } = Quality.Medium;
+    public string DownloadPath { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
     private string _appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), APPLICATION_NAME);
     public string AppDataPath
     {

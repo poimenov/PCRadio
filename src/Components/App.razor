@@ -1,7 +1,8 @@
 ﻿<Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
         <FluentDesignTheme StorageName="theme" />
-        <FluentToastProvider MaxToastCount="3" Position="ToastPosition.TopRight" />
+        <FluentToastProvider MaxToastCount="3" Position="ToastPosition.TopLeft" />
+        <FluentDialogProvider />
         <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
     </Found>
 </Router>

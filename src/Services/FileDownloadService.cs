@@ -11,10 +11,10 @@ public class FileDownloadService : IFileDownloadService
     private readonly ILogger<FileDownloadService> _logger;
     private readonly HttpClient _httpClient;
 
-    public FileDownloadService(ILogger<FileDownloadService> logger, HttpClient httpClient)
+    public FileDownloadService(ILogger<FileDownloadService> logger, IHttpClientFactory httpClientFactory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _httpClient = httpClientFactory.CreateClient();
     }
 
     public async Task<bool> DownloadFileAsync(string url, string filePath)

@@ -17,11 +17,12 @@
 @inject IStations stations
 @inject ILinkOpeningService linkOpeningService
 @inject IStringLocalizer<Player> localizer
-@inject HttpClient httpClient
+@inject IHttpClientFactory httpClientFactory
 @inject IHistoryRecords historyRecords
 @inject IAppStateService appStateService
 @inject IToastService toastService
 @inject ILogger<Player> logger
+@inject IDialogService dialogService
 
 <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" Class="player">
     <img class="logo" src="@Station?.Logo" alt="@Station?.Name" title="@Station?.Description" loading="lazy" />
@@ -39,6 +40,9 @@
             <FluentButton Id="btnSearch" IconStart="@(new _regular.Size20.VideoClip())" Color="Color.Accent"
                           OnClick="@Search" Disabled="@(string.IsNullOrEmpty(SearchText))"
                           Title="@localizer["SearchInYoutube"]" />
+            <FluentButton Id="btnSearch" IconStart="@(new _regular.Size20.Search())" Color="Color.Accent"
+                          OnClick="@OpenSearchPanel" Disabled="@(string.IsNullOrEmpty(SearchText))"
+                          Title="@localizer["SearchInZ3FM"]" />
             <div id="NowPlaying"
                  style="color:var(--accent-fill-rest);font-size: 12px;@(string.IsNullOrEmpty(SearchText) ? "display: none;" : "")">
             </div>
@@ -57,6 +61,7 @@
 </FluentStack>
 <FluentPopover AnchorId="popoverButton" @bind-Open="_isPopoverVisible" Style="width: 90px; height: 260px;"
                VerticalPosition="VerticalPosition.Top" HorizontalPosition="HorizontalPosition.Left">
+
     <Body>
         <FluentSlider Orientation="Orientation.Vertical" Min="0.0" Max="1.0" Step="0.01" ValueChanged="@SetVolume"
                       Value="@(1.0 - _volume)" TValue="double" Style="width: 30px; height: 200px;">
@@ -134,6 +139,7 @@
 @code {
     [Parameter]
     public int? StationId { get; set; }
+    private HttpClient? httpClient;
 
     private bool _isPlaying;
     private string? _country;
@@ -158,8 +164,15 @@
     private Station? Station { get; set; }
     private DotNetObjectReference<Player>? thisRef;
     private HistoryRecordEqualityComparer historyRecordEqualityComparer = new HistoryRecordEqualityComparer();
+    private IDialogReference? searchDialogReference;
 
     string AudioUrl => $"{Station?.Stream}-{options?.Value?.GetQuality() ?? "med"}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        httpClient = httpClientFactory.CreateClient("PCRadio.Player.Client");
+        await base.OnInitializedAsync();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -288,10 +301,23 @@
         }
     }
 
+    private async Task OpenSearchPanel()
+    {
+        var content = SearchText ?? string.Empty;
+        var parameters = new DialogParameters<string>()
+        {
+            Content = content,
+            Alignment = HorizontalAlignment.Right,
+            Title = localizer["SearchInZ3FM"],
+            Width = "450px",
+        };
+        searchDialogReference = await dialogService.ShowPanelAsync<SearchList>(content, parameters);
+    }
+
     [JSInvokable]
     public async Task<string> Ping(string name)
     {
-        if (string.IsNullOrWhiteSpace(name) || options?.Value == null)
+        if (httpClient == null || string.IsNullOrWhiteSpace(name) || options?.Value == null)
         {
             return string.Empty;
         }

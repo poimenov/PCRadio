@@ -7,12 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.FluentUI.AspNetCore.Components;
-using Photino.Blazor;
 using PCRadio.Components;
 using PCRadio.DataAccess;
 using PCRadio.DataAccess.Interfaces;
 using PCRadio.Services;
 using PCRadio.Services.Interfaces;
+using Photino.Blazor;
 
 namespace PCRadio;
 
@@ -50,15 +50,9 @@ public class Program
                 options.ResourcesPath = "Resources";
             });
 
-            // Configure HttpClient with timeout
-            builder.Services.AddSingleton(sp =>
+            builder.Services.AddHttpClient("DefaultHttpClient", client =>
             {
-                var handler = new HttpClientHandler();
-                var client = new HttpClient(handler, disposeHandler: true)
-                {
-                    Timeout = TimeSpan.FromSeconds(HTTP_CLIENT_TIMEOUT_SECONDS)
-                };
-                return client;
+                client.Timeout = TimeSpan.FromSeconds(HTTP_CLIENT_TIMEOUT_SECONDS);
             });
 
             // Register services
@@ -76,6 +70,7 @@ public class Program
             builder.Services.AddTransient<ICountries, Countries>();
             builder.Services.AddTransient<IHistoryRecords, HistoryRecords>();
             builder.Services.AddTransient<IOpenDialogService, OpenDialogService>();
+            builder.Services.AddScoped<ISearchService, SearchService>();
             builder.Services.AddSingleton<IAppStateService, AppStateService>();
 
             var app = builder.Build();

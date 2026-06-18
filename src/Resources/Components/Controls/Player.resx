@@ -9,6 +9,9 @@
     <data name="SearchInYoutube" xml:space="preserve">
         <value>Search in Youtube</value>
     </data>
+    <data name="SearchInZ3FM" xml:space="preserve">
+        <value>Search in z3.fm</value>
+    </data>    
     <data name="Volume" xml:space="preserve">
         <value>Volume</value>
     </data> 

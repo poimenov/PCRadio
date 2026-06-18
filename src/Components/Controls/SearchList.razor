@@ -1,0 +1,179 @@
+@using Microsoft.Extensions.Localization
+@using PCRadio.Services.Interfaces;
+@inject ISearchService SearchService
+@inject IStringLocalizer<SearchList> localizer
+@inject IToastService toastService
+@implements IDialogContentComponent<string>
+
+<style>
+    .selected-row {
+        background-color: var(--accent-fill-rest) !important;
+        color: var(--foreground-on-accent-hover) !important;
+        border-left: 4px solid var(--accent-fill-rest);
+    }
+
+    .fluent-data-grid-row {
+        cursor: pointer;
+    }
+
+    .fluent-dialog-body {
+        overflow-y: hidden !important;
+    }
+</style>
+
+<FluentDialogBody>
+    <FluentStack HorizontalAlignment="HorizontalAlignment.Stretch" VerticalAlignment="VerticalAlignment.Center"
+                 Spacing="Spacing.Medium" Style="width: 100%; margin-bottom: 15px; flex-shrink: 0;">
+
+        <FluentTextField @bind-Value="_searchQuery" Placeholder="@localizer["Placeholder"]" @onkeyup="HandleKeyUp"
+                         Style="flex-grow: 1;" />
+
+        <FluentButton Appearance="Appearance.Accent" Disabled="@(isLoading || string.IsNullOrEmpty(_searchQuery))"
+                      @onclick="PerformSearch" Style="flex-shrink: 0;">
+            @localizer["Search"]
+        </FluentButton>
+
+    </FluentStack>
+
+
+    <div
+        style="max-height: calc(100dvh - 200px); overflow-y: auto; overflow-x: hidden; margin-top: 15px; border: 1px solid var(--neutral-stroke-rest);">
+        @if (isLoading)
+        {
+            <div style="padding: 20px; text-align: center;">
+                <FluentProgressRing></FluentProgressRing>
+                <p>@localizer["Loading"]</p>
+            </div>
+        }
+        else
+        {
+            @if (SearchResults == null || !SearchResults.Any())
+            {
+                <p style="padding: 10px; text-align: center;">@localizer["NoResultsFound"]</p>
+            }
+            else
+            {
+                <FluentDataGrid @ref="_myGrid" Items="@SearchResultsQuery" TGridItem="Track" StripedRows="true"
+                                HoveredRows="true" OnRowClick="@HandleRowClick" RowClass="@GetRowClass">
+
+                    <PropertyColumn Property="@(p => p.Artist)" Title="Artist" Width="1.5fr" Sortable="true" />
+                    <PropertyColumn Property="@(p => p.Title)" Title="Title" Width="2fr" Sortable="true" />
+                    <PropertyColumn Property="@(p => p.DisplayDuration)" Title="Duration" Width="80px" Sortable="true" />
+                </FluentDataGrid>
+            }
+        }
+    </div>
+</FluentDialogBody>
+
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent" Disabled="@(_selectedTrack == null || isDownloading)"
+                  OnClick="@DownloadSelectedTrackAsync">
+        @if (isDownloading)
+        {
+            <span>@localizer["Downloading"]</span>
+        }
+        else
+        {
+            <span>@localizer["Download"]</span>
+        }
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Neutral" OnClick="@CloseAsync" Disabled="@isDownloading">
+        @localizer["Close"]
+    </FluentButton>
+</FluentDialogFooter>
+
+@code {
+    [Parameter] public string Content { get; set; } = string.Empty;
+    [CascadingParameter] public FluentDialog Dialog { get; set; } = default!;
+
+    private string _searchQuery = string.Empty;
+    private bool isLoading = true;
+    private bool isDownloading = false;
+
+    private FluentDataGrid<Track>? _myGrid;
+    private IEnumerable<Track> SearchResults = Enumerable.Empty<Track>();
+    private IQueryable<Track> SearchResultsQuery = Enumerable.Empty<Track>().AsQueryable();
+
+    private Track? _selectedTrack;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _searchQuery = Content;
+        await PerformSearch();
+    }
+
+    private async Task PerformSearch()
+    {
+        isLoading = true;
+        _selectedTrack = null;
+        StateHasChanged();
+
+        try
+        {
+            var response = await SearchService.Search(_searchQuery);
+            SearchResults = response?.ToList() ?? new List<Track>();
+            SearchResultsQuery = SearchResults.AsQueryable();
+        }
+        catch (Exception)
+        {
+            SearchResults = Enumerable.Empty<Track>();
+            SearchResultsQuery = SearchResults.AsQueryable();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+
+            if (_myGrid != null)
+            {
+                await _myGrid.RefreshDataAsync();
+            }
+        }
+    }
+
+    private void HandleRowClick(FluentDataGridRow<Track> row)
+    {
+        if (row.Item != null)
+        {
+            _selectedTrack = row.Item;
+        }
+    }
+
+    private string GetRowClass(Track item)
+    {
+        return _selectedTrack != null && _selectedTrack.Id == item.Id ? "selected-row" : string.Empty;
+    }
+
+    private async Task DownloadSelectedTrackAsync()
+    {
+        if (_selectedTrack == null) return;
+
+        try
+        {
+            isDownloading = true;
+            StateHasChanged();
+
+            await SearchService.Download(_selectedTrack);
+            toastService.ShowSuccess($"{localizer["Download"]}: {_selectedTrack.Title} - {localizer["DownloadSuccess"]}");
+        }
+        catch (Exception ex)
+        {
+            toastService.ShowError($"{localizer["DownloadError"]}: {ex.Message}");
+        }
+        finally
+        {
+            isDownloading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !isLoading && !string.IsNullOrEmpty(_searchQuery))
+        {
+            await PerformSearch();
+        }
+    }
+
+    private async Task CloseAsync() => await Dialog.CancelAsync();
+}
