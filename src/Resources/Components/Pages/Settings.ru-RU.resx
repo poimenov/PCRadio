@@ -35,5 +35,11 @@
     </data>  
     <data name="DataBaseUpdateFailed" xml:space="preserve">
         <value>Ошибка обновления базы данных. Подробности в логе. Повторите попытку позже.</value>
-    </data>    
+    </data> 
+    <data name="DownloadPath" xml:space="preserve">
+        <value>Путь для загрузки</value>
+    </data>  
+    <data name="DownloadPathPlaceholder" xml:space="preserve">
+        <value>Путь к существующей папке</value> 
+    </data>
 </root>

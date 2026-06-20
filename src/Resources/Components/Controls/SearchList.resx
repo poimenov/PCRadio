@@ -21,4 +21,7 @@
     <data name="Placeholder" xml:space="preserve">
         <value>Enter track name or artist</value>
     </data> 
+    <data name="DownloadTooltip" xml:space="preserve">
+        <value>Download to folder</value>
+    </data>    
 </root>

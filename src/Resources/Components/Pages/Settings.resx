@@ -10,7 +10,7 @@
         <value>Color</value>
     </data>
     <data name="Language" xml:space="preserve">
-        <value>Language *</value>
+        <value>Language</value>
     </data> 
     <data name="Quality" xml:space="preserve">
         <value>Stream quality</value>
@@ -35,5 +35,11 @@
     </data>  
     <data name="DataBaseUpdateFailed" xml:space="preserve">
         <value>Database update failed. Details in the log. Please try again later.</value>
+    </data>
+    <data name="DownloadPath" xml:space="preserve">
+        <value>Download path</value>
+    </data>
+    <data name="DownloadPathPlaceholder" xml:space="preserve">
+        <value>Path to existing folder</value>
     </data>
 </root>

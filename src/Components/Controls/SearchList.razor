@@ -1,7 +1,9 @@
 @using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
 @using PCRadio.Services.Interfaces;
 @inject ISearchService SearchService
 @inject IStringLocalizer<SearchList> localizer
+@inject IOptions<AppSettings> options
 @inject IToastService toastService
 @implements IDialogContentComponent<string>
 
@@ -67,7 +69,7 @@
 
 <FluentDialogFooter>
     <FluentButton Appearance="Appearance.Accent" Disabled="@(_selectedTrack == null || isDownloading)"
-                  OnClick="@DownloadSelectedTrackAsync">
+                  OnClick="@DownloadSelectedTrackAsync" Title="@downloadButtonTooltip">
         @if (isDownloading)
         {
             <span>@localizer["Downloading"]</span>
@@ -95,6 +97,7 @@
     private IQueryable<Track> SearchResultsQuery = Enumerable.Empty<Track>().AsQueryable();
 
     private Track? _selectedTrack;
+    private string downloadButtonTooltip => $"{localizer["DownloadTooltip"]}: {options.Value.DownloadPath}";
 
     protected override async Task OnInitializedAsync()
     {

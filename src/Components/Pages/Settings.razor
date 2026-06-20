@@ -15,52 +15,84 @@
 
 <div style="min-height: 250px;height: 100%;">
     <FluentGrid>
-        <FluentGridItem>
-            <FluentSelect Label="@localizer["Theme"]" Width="250px" Items="@(Enum.GetValues<DesignThemeModes>())"
-                @bind-SelectedOption="@Mode" />
+        <FluentGridItem lg="3">
+            <FluentSelect Label="@localizer["Theme"]" Items="@(Enum.GetValues<DesignThemeModes>())"
+                          @bind-SelectedOption="@Mode" />
         </FluentGridItem>
 
-        <FluentGridItem>
+        <FluentGridItem lg="3">
             <FluentSelect Label="@localizer["Color"]"
-                Items="@(Enum.GetValues<OfficeColor>().Select(i => (OfficeColor?)i))" Width="250px"
-                @bind-SelectedOption="@OfficeColor">
+                          Items="@(Enum.GetValues<OfficeColor>().Select(i => (OfficeColor?)i))"
+                          @bind-SelectedOption="@OfficeColor">
                 <OptionTemplate>
                     <FluentStack>
                         <FluentIcon Value="@(new Size20.RectangleLandscape())" Color="Color.Custom"
-                            CustomColor="@(@context.ToAttributeValue() != "default" ? context.ToAttributeValue() : "#036ac4")" />
+                                    CustomColor="@(@context.ToAttributeValue() != "default" ? context.ToAttributeValue() : "#036ac4")" />
                         <FluentLabel>@context</FluentLabel>
                     </FluentStack>
                 </OptionTemplate>
             </FluentSelect>
         </FluentGridItem>
 
-        <FluentGridItem>
-            <FluentStack Orientation="Orientation.Vertical">
-                <FluentSelect Label="@localizer["Language"]" Items="@(AppCultures.Cultures)" Width="250px"
-                    @bind-SelectedOption="@Language">
-                    <OptionTemplate>@context!.NativeName
-                    </OptionTemplate>
-                </FluentSelect>
-                <div style="width: 250px;">@localizer["LanguageAnnotation"]</div>
-            </FluentStack>
+        <FluentGridItem lg="6"></FluentGridItem>
+
+        <FluentGridItem lg="3">
+            <FluentSelect Items="@(AppCultures.Cultures)" @bind-SelectedOption="@Language">
+                <LabelTemplate>
+                    <FluentStack Orientation="Orientation.Horizontal" Spacing="Spacing.Small">
+                        <FluentLabel>@localizer["Language"]</FluentLabel>
+                        <FluentLabel>*</FluentLabel>
+                    </FluentStack>
+                </LabelTemplate>
+                <OptionTemplate>@context!.NativeName
+                </OptionTemplate>
+            </FluentSelect>
         </FluentGridItem>
 
-        <FluentGridItem>
-            <FluentSelect Label="@localizer["Quality"]" Items="@(Enum.GetValues<Quality>())" Width="250px"
-                @bind-SelectedOption="@Quality">
+        
+
+        <FluentGridItem lg="3">
+            <FluentSelect Items="@(Enum.GetValues<Quality>())" @bind-SelectedOption="@Quality">
+                <LabelTemplate>
+                    <FluentStack Orientation="Orientation.Horizontal" Spacing="Spacing.Small">
+                        <FluentLabel>@localizer["Quality"]</FluentLabel>
+                        <FluentLabel>*</FluentLabel>
+                    </FluentStack>
+                </LabelTemplate>
                 <OptionTemplate>
                     @localizer[context.ToString()]
                 </OptionTemplate>
             </FluentSelect>
         </FluentGridItem>
 
-        <FluentGridItem>
-            <FluentButton OnClick="Update" Loading="@loading" IconStart="@(new _regular.Size16.ArrowClockwise())">
-                @localizer["DataBaseUpdate"]</FluentButton>
+        <FluentGridItem lg="6"></FluentGridItem>
+
+
+        <FluentGridItem lg="3">
+            <FluentTextField @bind-Value="DownloadPath" Placeholder="@localizer["DownloadPathPlaceholder"]" style="width: 250px">
+                <LabelTemplate>
+                    <FluentStack Orientation="Orientation.Horizontal" Spacing="Spacing.Small">
+                        <FluentLabel>@localizer["DownloadPath"]</FluentLabel>
+                        <FluentLabel>*</FluentLabel>
+                    </FluentStack>
+                </LabelTemplate>
+            </FluentTextField>
         </FluentGridItem>
 
-    </FluentGrid>
-</div>
+
+        <FluentGridItem lg="3">
+            <div style="width: 250px;height: 100%; display: flex; align-items: end;">
+                <FluentButton OnClick="Update" Loading="@loading" IconStart="@(new _regular.Size16.ArrowClockwise())">
+                    @localizer["DataBaseUpdate"]</FluentButton>
+                </div>
+            </FluentGridItem>
+
+            <FluentGridItem lg="6"></FluentGridItem>
+
+            <FluentGridItem lg="12">@localizer["LanguageAnnotation"]</FluentGridItem>
+
+        </FluentGrid>
+    </div>
 
 @code
 {
@@ -77,6 +109,19 @@
             {
                 options.Value.DefaultLanguage = value.ToString();
                 options.Value.NeedsDatabaseUpdate = options.Value.DefaultLanguage != _initialLang;
+                options.Value.Save();
+            }
+        }
+    }
+
+    public string DownloadPath
+    {
+        get => options.Value.DownloadPath ?? Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
+        set
+        {
+            options.Value.DownloadPath = value;
+            if (!string.IsNullOrWhiteSpace(value) && Directory.Exists(value))
+            {
                 options.Value.Save();
             }
         }

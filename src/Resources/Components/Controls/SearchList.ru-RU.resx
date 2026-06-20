@@ -21,4 +21,7 @@
     <data name="Placeholder" xml:space="preserve">
         <value>Введите название трека или исполнителя</value>
     </data>
+    <data name="DownloadTooltip" xml:space="preserve">
+        <value>Загрузить в папку</value>
+    </data>    
 </root>
