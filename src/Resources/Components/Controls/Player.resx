@@ -18,4 +18,7 @@
     <data name="StreamNotAvailable" xml:space="preserve">
         <value>Stream not available</value>
     </data>
+    <data name="CopyUrl" xml:space="preserve">
+        <value>Copy url</value>
+    </data>
 </root>

@@ -166,7 +166,19 @@
     private HistoryRecordEqualityComparer historyRecordEqualityComparer = new HistoryRecordEqualityComparer();
     private IDialogReference? searchDialogReference;
 
-    string AudioUrl => $"{Station?.Stream}-{options?.Value?.GetQuality() ?? "med"}";
+    string AudioUrl
+    {
+        get
+        {
+            if (Station?.Stream.EndsWith("-med") == true)
+            {
+                var quality = options.Value.GetQuality();
+                return Station.Stream.Replace("-med", $"-{quality}");
+            }
+
+            return Station?.Stream ?? string.Empty;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -257,7 +269,12 @@
         if (Station != null)
         {
             var message = $"{localizer["StreamNotAvailable"]}: {Station.Name} ({AudioUrl})";
-            toastService.ShowError(message);
+            toastService.ShowError(message, null, localizer["CopyUrl"],
+                EventCallback.Factory.Create<ToastResult>(this, async () =>
+                {
+                    await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", AudioUrl);
+                }));
+
             _isPlaying = false;
             try
             {
