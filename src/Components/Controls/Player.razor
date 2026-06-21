@@ -3,9 +3,6 @@
 @using Microsoft.Extensions.Localization
 @using Microsoft.Extensions.Options
 @using PCRadio.DataAccess.Interfaces
-@using PCRadio.Services
-@using System.Globalization
-@using System.Text.Json.Serialization
 @using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @using _filled = Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 @using PCRadio.DataAccess.Models
@@ -23,6 +20,7 @@
 @inject IToastService toastService
 @inject ILogger<Player> logger
 @inject IDialogService dialogService
+@inject IMetadataService metadataService
 
 <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" Class="player">
     <img class="logo" src="@Station?.Logo" alt="@Station?.Name" title="@Station?.Description" loading="lazy" />
@@ -76,27 +74,32 @@
 <audio id="audio" src="@AudioUrl" controls style="display: none;" onerror="@ShowMessage" onstalled="@ShowMessage" />
 <script>
     var playerIntervalId;
+    var timeout = 5000;
 
     function setCurrentTrackName(value) {
-        var marquee = document.getElementById("NowPlaying");
-        if (marquee && marquee.innerHTML != value) {
-            marquee.innerHTML = value;
+        var div = document.getElementById("NowPlaying");
+        if (div && div.innerHTML != value) {
+            div.innerHTML = value;
         }
     }
 
     window.setPageRef = (dotNetRef) => {
+        window.initComponent = (titleDelay) => {
+            timeout = titleDelay || timeout;
+        };
+
         window.getCurrentTrackName = () => {
             var player = document.getElementById("audio");
             if (player && player.src) {
                 var name = player.src.split("/")[3];
                 if (name) {
                     name = name.substring(0, name.indexOf("-"));
-                    dotNetRef.invokeMethodAsync('Ping', name).then(result => {
+                    dotNetRef.invokeMethodAsync('GetCurrentTrackNameAsync', name).then(result => {
                         if (result) {
                             setCurrentTrackName(result);
                         }
                     }).catch(error => {
-                        console.error("Error invoking Ping:", error);
+                        console.error("Error invoking GetCurrentTrackNameAsync:", error);
                         setCurrentTrackName("");
                     });
                 }
@@ -105,7 +108,9 @@
                 setCurrentTrackName("");
             }
         };
-        playerIntervalId = setInterval(getCurrentTrackName, 5000);
+
+        initComponent();
+        playerIntervalId = setInterval(getCurrentTrackName, timeout);
     };
 
     window.cleanupPlayer = () => {
@@ -192,8 +197,15 @@
         {
             try
             {
+                var timeout = options?.Value?.TitleDelayMilliseconds ?? 5000;
+                if (timeout < 1000)
+                {
+                    timeout = 5000;
+                }
+
                 thisRef = DotNetObjectReference.Create(this);
                 await JSRuntime.InvokeVoidAsync("setPageRef", thisRef);
+                await JSRuntime.InvokeVoidAsync("initComponent", timeout);
                 logger?.LogInformation("Player initialized");
             }
             catch (Exception ex)
@@ -332,60 +344,52 @@
     }
 
     [JSInvokable]
-    public async Task<string> Ping(string name)
+    public async Task<string> GetCurrentTrackNameAsync(string name)
     {
-        if (httpClient == null || string.IsNullOrWhiteSpace(name) || options?.Value == null)
+        var station = Station;
+
+        if (httpClient == null || string.IsNullOrWhiteSpace(name) || options?.Value == null || station == null)
         {
             return string.Empty;
         }
 
-        try
+        var result = await metadataService.GetTitleAsync(AudioUrl);
+        if (result.IsSuccess && !string.IsNullOrWhiteSpace(result.Title))
         {
-            var url = string.Format(options.Value.CurrentTrackInfoUrl, Uri.EscapeDataString(name));
+            SearchText = result.Title;
+            await AddToHistoryAsync(SearchText, station.Name, DateTime.Now);
+            return SearchText;
+        }
+        else
+        {
+            return string.Empty;
+        }
+    }
 
-            // Use HttpRequestMessage to avoid mutating global headers
-            using var request = new HttpRequestMessage(HttpMethod.Get, url);
-            request.Headers.TryAddWithoutValidation(FileDownloadService.USER_AGENT_HEADER_NAME, FileDownloadService.USER_AGENT);
+    public async Task AddToHistoryAsync(string searchText, string stationName, DateTime startTime,
+        CancellationToken cancellationToken = default)
+    {
+        var lastTrackName = appStateService?.LastHistoryRecord?.TrackName;
+        var lastStartTime = appStateService?.LastHistoryRecord?.StartTime;
+        var record = new HistoryRecord
+        {
+            StartTime = (searchText == lastTrackName) ? lastStartTime ?? startTime : startTime,
+            StationName = stationName,
+            TrackName = searchText
+        };
 
-            var response = await httpClient.SendAsync(request);
-            if (response.IsSuccessStatusCode)
+        if (!historyRecordEqualityComparer.Equals(appStateService?.LastHistoryRecord, record))
+        {
+            try
             {
-                var stream = await response.Content.ReadAsStreamAsync();
-                var currentTrack = await System.Text.Json.JsonSerializer.DeserializeAsync<CurrentTrack>(stream);
-
-                if (currentTrack != null && Station != null)
-                {
-                    SearchText = $"{currentTrack.Artist} - {currentTrack.Title}";
-
-                    if (!string.IsNullOrEmpty(currentTrack.Artist) || !string.IsNullOrEmpty(currentTrack.Title))
-                    {
-                        var record = new HistoryRecord
-                        {
-                            StartTime = currentTrack.DateTime,
-                            StationName = Station.Name,
-                            TrackName = SearchText
-                        };
-
-                        if (!historyRecordEqualityComparer.Equals(appStateService.LastHistoryRecord, record))
-                        {
-                            await historyRecords.AddAsync(record);
-                            appStateService.LastHistoryRecord = record;
-                        }
-                    }
-
-                    return SearchText;
-                }
+                await historyRecords.AddAsync(record, cancellationToken);
+                appStateService?.LastHistoryRecord = record;
             }
-
-            SearchText = string.Empty;
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Error adding history record for: {StationName} - {TrackName}", stationName, searchText);
+            }
         }
-        catch (Exception ex)
-        {
-            logger?.LogError(ex, "Error fetching current track info for: {Name}", name);
-            SearchText = string.Empty;
-        }
-
-        return SearchText;
     }
 
     async ValueTask IAsyncDisposable.DisposeAsync()
@@ -402,38 +406,5 @@
 
         thisRef?.Dispose();
         GC.SuppressFinalize(this);
-    }
-
-    public class CurrentTrack
-    {
-        [JsonPropertyName("artist")]
-        public string Artist { get; set; } = string.Empty;
-
-        [JsonPropertyName("title")]
-        public string Title { get; set; } = string.Empty;
-
-        [JsonPropertyName("time")]
-        public string TimeString { get; set; } = string.Empty;
-
-        [JsonPropertyName("date")]
-        public string DateString { get; set; } = string.Empty;
-
-        public DateTime DateTime
-        {
-            get
-            {
-                if (DateTime.TryParseExact(
-                $"{DateString} {TimeString}",
-                "yyyy-MM-dd HH:mm:ss",
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.None,
-                out DateTime result))
-                {
-                    return result;
-                }
-
-                return DateTime.Now;
-            }
-        }
     }
 }

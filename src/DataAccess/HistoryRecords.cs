@@ -20,19 +20,19 @@ public class HistoryRecords : IHistoryRecords
         }
     }
 
-    public async Task AddAsync(HistoryRecord record)
+    public async Task AddAsync(HistoryRecord record, CancellationToken cancellationToken = default)
     {
         await using (var db = new Database())
         {
-            var existingRecordsCount = await db.HistoryRecords.CountAsync();
+            var existingRecordsCount = await db.HistoryRecords.CountAsync(cancellationToken);
             if (existingRecordsCount >= _historyRecordsCount)
             {
-                var recordsToRemove = await db.HistoryRecords.OrderBy(r => r.StartTime).Take(existingRecordsCount - _historyRecordsCount + 1).ToListAsync();
+                var recordsToRemove = await db.HistoryRecords.OrderBy(r => r.StartTime).Take(existingRecordsCount - _historyRecordsCount + 1).ToListAsync(cancellationToken);
                 db.HistoryRecords.RemoveRange(recordsToRemove);
             }
 
-            await db.HistoryRecords.AddAsync(record);
-            await db.SaveChangesAsync();
+            await db.HistoryRecords.AddAsync(record, cancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
         }
     }
 }

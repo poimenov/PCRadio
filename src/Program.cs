@@ -71,6 +71,7 @@ public class Program
             builder.Services.AddTransient<IHistoryRecords, HistoryRecords>();
             builder.Services.AddTransient<IOpenDialogService, OpenDialogService>();
             builder.Services.AddScoped<ISearchService, SearchService>();
+            builder.Services.AddTransient<IMetadataService, MetadataService>();
             builder.Services.AddSingleton<IAppStateService, AppStateService>();
 
             var app = builder.Build();

@@ -19,7 +19,7 @@ public class AppSettings
     public string? ArchivePassword { get; set; }
     public string TrackSearchUrl { get; set; } = "https://www.youtube.com/results?search_query={0}";
     public string TrackDownloadBaseUrl { get; set; } = "https://m.z3.fm";
-    public string CurrentTrackInfoUrl { get; set; } = "https://meta.pcradio.ru/{0}_current.json";
+    public int TitleDelayMilliseconds { get; set; } = 5000;
     public int PageSize { get; set; } = 50;
     public int HistoryRecordsCount { get; set; } = 100;
     public bool NeedsDatabaseUpdate { get; set; } = false;

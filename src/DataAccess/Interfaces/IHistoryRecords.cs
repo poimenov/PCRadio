@@ -5,5 +5,5 @@ namespace PCRadio.DataAccess.Interfaces;
 public interface IHistoryRecords
 {
     Task<IEnumerable<HistoryRecord>> GetAllAsync();
-    Task AddAsync(HistoryRecord record);
+    Task AddAsync(HistoryRecord record, CancellationToken cancellationToken);
 }
