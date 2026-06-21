@@ -16,6 +16,7 @@ It provides a simple and modern desktop interface for listening to online radio 
 - Manage favorites station list
 - Automatically keeps a history of all stations you've played.
 - Search for the current song on YouTube
+- Search and download the current song from [z3.fm](https://z3.fm/)
 - Open-source and MIT licensed
 
 ## 🛠️ Built With
