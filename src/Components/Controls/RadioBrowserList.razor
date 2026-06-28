@@ -1,0 +1,342 @@
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Logging
+@using Microsoft.Extensions.Options
+@using PCRadio.Extensions
+@using PCRadio.Services.Interfaces
+@using RadioBrowser.Models
+@implements IAsyncDisposable
+@inject IStringLocalizer<RadioBrowserList> localizer
+@inject IRadioBrowserService radioBrowserService
+@inject ILinkOpeningService linkOpeningService
+@inject ILogger<RadioBrowserList> logger
+@inject IOptions<AppSettings> appSettings
+@inject IDialogService dialogService
+@inject IToastService toastService
+@inject IJSRuntime JSRuntime
+
+@if (Stations == null || !Stations.Any())
+{
+    <div class="empty-message" style="height:100%">@localizer["NoStations"]</div>
+}
+else
+{
+    <FluentListbox Items="@Stations" @bind-SelectedOption="@SelectedStation" OptionValue="@(x => x?.StationUuid.ToString())"
+                   Class="station-list">
+        <OptionTemplate>
+            <FluentCard Class="station-card">
+                <img class="logo" src="@(context?.Favicon?.ToString() ?? AppSettings.DEFAULT_IMG_PATH)"
+                     onerror="this.src='@AppSettings.DEFAULT_IMG_PATH'" alt="@context?.Name" loading="lazy" />
+                <div style="max-width: 200px !important;">
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="5"
+                                 Style="font-weight: bold; height: 20px !important;overflow: hidden;">
+                        @context?.GetCountryIcon()
+                        @if (context?.Homepage != null)
+                        {
+                            <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="@context?.Homepage"
+                                          OnClick="@(() => OpenLink(context?.Homepage.ToString() ?? string.Empty))">
+                                @context?.Name
+                            </FluentAnchor>
+                        }
+                        else
+                        {
+                            @context?.Name
+                        }
+                    </FluentStack>
+                    <div>@context?.Codec @context?.Bitrate kbps @string.Join(", ", context?.Language?.ToArray() ?? [])</div>
+                    <div style="height: 40px !important;overflow-y: hidden;"
+                         title="@string.Join(" • ", context?.Tags?.ToArray() ?? [])">
+                        @string.Join(" • ", context?.Tags?.ToArray() ?? [])
+                    </div>
+                </div>
+            </FluentCard>
+        </OptionTemplate>
+    </FluentListbox>
+    <script>
+        window.stationsListModule = {
+            listeners: new Map(),
+
+            addScrollListener: function (componentId, stationListObjectReference) {
+                // Проверяем, не добавлен ли уже листенер для этого компонента
+                if (this.listeners.has(componentId)) {
+                    console.warn("Scroll listener already added for component:", componentId);
+                    // Удаляем старый листенер
+                    this.removeScrollListener(componentId);
+                }
+
+                var stationList = document.querySelector(".station-list");
+                if (stationList === null || stationList.parentElement === null) {
+                    console.error("Station list or its parent element not found");
+                    return;
+                }
+
+                var scrollContainer = stationList.parentElement;
+                var isScrollInProgress = false;
+                var timeoutId = null;
+
+                var scrollHandler = function (event) {
+                    if (isScrollInProgress) {
+                        return;
+                    }
+
+                    // Проверяем, что контейнер существует и имеет размеры
+                    if (!scrollContainer || scrollContainer.scrollHeight === 0) {
+                        return;
+                    }
+
+                    var threshold = 100;
+                    var scrollPosition = scrollContainer.scrollTop + scrollContainer.clientHeight;
+                    var scrollHeight = scrollContainer.scrollHeight;
+
+                    if (scrollHeight - scrollPosition <= threshold) {
+                        isScrollInProgress = true;
+                        console.log("Reached near bottom of scroll container for component:", componentId);
+
+                        stationListObjectReference.invokeMethodAsync("GetNext")
+                            .then(function () {
+                                isScrollInProgress = false;
+                            })
+                            .catch(function (error) {
+                                console.error("Error invoking GetNext:", error);
+                                isScrollInProgress = false;
+                            });
+                    }
+                };
+
+                // Используем throttle для оптимизации
+                var throttledScrollHandler = function (event) {
+                    if (timeoutId) {
+                        return;
+                    }
+                    timeoutId = setTimeout(function () {
+                        scrollHandler(event);
+                        timeoutId = null;
+                    }, 200);
+                };
+
+                scrollContainer.addEventListener("scroll", throttledScrollHandler);
+                this.listeners.set(componentId, {
+                    container: scrollContainer,
+                    handler: throttledScrollHandler,
+                    originalHandler: scrollHandler
+                });
+                console.log("Scroll listener added for component:", componentId);
+            },
+
+            removeScrollListener: function (componentId) {
+                var listener = this.listeners.get(componentId);
+                if (listener) {
+                    listener.container.removeEventListener("scroll", listener.handler);
+                    this.listeners.delete(componentId);
+                    console.log("Scroll listener removed for component:", componentId);
+                    return true;
+                } else {
+                    console.log("No scroll listener found for component:", componentId);
+                    return false;
+                }
+            }
+        };
+    </script>
+}
+
+@code {
+    [Parameter]
+    public AdvancedSearchOptions? SearchOptions { get; set; }
+    private AdvancedSearchOptions? OldSearchOptions { get; set; }
+    private AdvancedSearchOptionsComparer comparer { get; set; } = new AdvancedSearchOptionsComparer();
+    private List<StationInfo> Stations { get; set; } = new List<StationInfo>();
+    private StationInfo? _selectedStation;
+    private DotNetObjectReference<RadioBrowserList>? stationListObjectReference;
+    private AppSettings Settings => appSettings.Value;
+    private bool scrollListenerAdded;
+    private string? ComponentId;
+    private bool GetNextEnabled { get; set; } = true;
+    private bool isLoading = false;
+    private StationInfo? SelectedStation
+    {
+        get => _selectedStation;
+        set
+        {
+            if (_selectedStation != value)
+            {
+                _selectedStation = value;
+                _ = OnStationInfoChangedAsync(value);
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ComponentId = Guid.NewGuid().ToString();
+        stationListObjectReference = DotNetObjectReference.Create(this);
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Stations != null && Stations.Any() && !scrollListenerAdded)
+        {
+            await RemoveScrollListener();
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("stationsListModule.addScrollListener", ComponentId, stationListObjectReference);
+                scrollListenerAdded = true;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Error initializing scroll listener for component {ComponentId}", ComponentId);
+            }
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!comparer.Equals(SearchOptions, OldSearchOptions))
+        {
+            if (scrollListenerAdded)
+            {
+                await RemoveScrollListener();
+            }
+
+            Stations = new List<StationInfo>();
+            GetNextEnabled = true;
+            isLoading = false;
+            ComponentId = Guid.NewGuid().ToString();
+            StateHasChanged();
+            await LoadStationsAsync();
+            OldSearchOptions = SearchOptions;
+        }
+    }
+
+    private async Task LoadStationsAsync()
+    {
+        if (SearchOptions == null || isLoading)
+        {
+            return;
+        }
+
+        try
+        {
+            isLoading = true;
+            SearchOptions.Offset = Convert.ToUInt32(Stations.Count());
+
+            var stationsResult = await radioBrowserService.GetStationsAsync(SearchOptions);
+            if (!stationsResult.Success)
+            {
+                toastService.ShowError($"{localizer["GetStationsListError"]}: {stationsResult.Message}");
+                GetNextEnabled = false;
+            }
+
+            var stations = stationsResult.Result;
+            if (stations == null || !stations.Any())
+            {
+                GetNextEnabled = false;
+            }
+            else
+            {
+                if (stations.Count() < Settings.PageSize)
+                {
+                    GetNextEnabled = false;
+                }
+
+                Stations.AddRange(stations);
+                StateHasChanged();
+            }
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    [JSInvokable]
+    public async Task GetNext()
+    {
+        if (GetNextEnabled && !isLoading)
+        {
+            try
+            {
+                await LoadStationsAsync();
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Error loading next batch of stations");
+            }
+        }
+    }
+
+    private void OpenLink(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return;
+        }
+
+        linkOpeningService.OpenUrl(url);
+    }
+
+    private async Task RemoveScrollListener()
+    {
+        if (!string.IsNullOrEmpty(ComponentId))
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("stationsListModule.removeScrollListener", ComponentId);
+                scrollListenerAdded = false;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogWarning(ex, "Error removing scroll listener for component {ComponentId}", ComponentId);
+            }
+        }
+    }
+
+    private async Task OnStationInfoChangedAsync(StationInfo? station)
+    {
+        if (station is null)
+        {
+            return;
+        }
+        var stationResult = await radioBrowserService.GetDataAccessStation(station);
+        if (!stationResult.Success)
+        {
+            toastService.ShowError($"{localizer["GetStationError"]}: {stationResult.Message}");
+            return;
+        }
+
+        var content = stationResult.Result;
+        if (content is null)
+        {
+            toastService.ShowError($"{localizer["NoExists"]}");
+            return;
+        }
+
+        var parameters = new DialogParameters<PCRadio.DataAccess.Models.Station>()
+        {
+            Content = content,
+            Alignment = HorizontalAlignment.Right,
+            Title = localizer["PanelTitle"],
+            Width = "350px",
+        };
+        var dialogReference = await dialogService.ShowPanelAsync<StationPanel>(content, parameters);
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        try
+        {
+            if (scrollListenerAdded)
+            {
+                await RemoveScrollListener();
+            }
+
+            stationListObjectReference?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Error during component disposal");
+        }
+
+        GC.SuppressFinalize(this);
+    }
+}

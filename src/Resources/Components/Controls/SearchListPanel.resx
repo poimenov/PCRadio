@@ -23,5 +23,8 @@
     </data> 
     <data name="DownloadTooltip" xml:space="preserve">
         <value>Download to folder</value>
-    </data>    
+    </data> 
+    <data name="NoResultsFound" xml:space="preserve">
+        <value>No Results Found</value>
+    </data>       
 </root>

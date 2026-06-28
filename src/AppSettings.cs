@@ -13,6 +13,7 @@ public class AppSettings
 {
     public const string APPLICATION_NAME = "PCRadio";
     public const string JSON_FILE_NAME = "appsettings.json";
+    public const string DEFAULT_IMG_PATH = "/images/radio.svg";
 
     public string? DefaultLanguage { get; set; }
     public string? ArchiveUrl { get; set; }

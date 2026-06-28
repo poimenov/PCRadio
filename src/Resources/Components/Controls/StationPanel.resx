@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="Name" xml:space="preserve">
+        <value>Station Name</value>
+    </data>
+    <data name="Logo" xml:space="preserve">
+        <value>Station Logo</value>
+    </data> 
+    <data name="Stream" xml:space="preserve">
+        <value>Station Stream</value>
+    </data>
+    <data name="Description" xml:space="preserve">
+        <value>Description</value>
+    </data>    
+    <data name="Genres" xml:space="preserve">
+        <value>Genres</value>
+    </data> 
+    <data name="IsFavorite" xml:space="preserve">
+        <value>Is Favorite</value>
+    </data> 
+    <data name="Import" xml:space="preserve">
+        <value>Import</value>
+    </data>
+    <data name="Update" xml:space="preserve">
+        <value>Update</value>
+    </data>
+    <data name="Close" xml:space="preserve">
+        <value>Close</value>
+    </data>    
+    <data name="AddError" xml:space="preserve">
+        <value>Import station error</value>
+    </data> 
+    <data name="UpdateError" xml:space="preserve">
+        <value>Update station error</value>
+    </data>     
+    <data name="Station" xml:space="preserve">
+        <value>The Station</value>
+    </data> 
+    <data name="Added" xml:space="preserve">
+        <value>was succesfully added</value>
+    </data>     
+    <data name="Updated" xml:space="preserve">
+        <value>was succesfully updated</value>
+    </data>     
+</root>

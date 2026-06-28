@@ -14,6 +14,14 @@ public class Genres : IGenres
         }
     }
 
+    public IEnumerable<SubGenre> GetAllSubGenres()
+    {
+        using (var db = new Database())
+        {
+            return db.SubGenres.Include(sg => sg.Genre).ToList();
+        }
+    }
+
     public Genre? GetById(int id)
     {
         using (var db = new Database())

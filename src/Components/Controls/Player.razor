@@ -23,16 +23,21 @@
 @inject IMetadataService metadataService
 
 <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" Class="player">
-    <img class="logo" src="@Station?.Logo" alt="@Station?.Name" title="@Station?.Description" loading="lazy" />
+    <img class="logo" src="@(Station?.Logo ?? AppSettings.DEFAULT_IMG_PATH)" alt="@Station?.Name"
+         onerror="this.src='@AppSettings.DEFAULT_IMG_PATH'" title="@Station?.Description" loading="lazy" />
     <FluentStack Orientation="Orientation.Vertical" VerticalAlignment="VerticalAlignment.Top" VerticalGap="2">
         <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
-            @Station?.GetCountryIcon()
+            @Station?.GetCountryIcon(className: "player-country-flag")
             <FluentButton IconStart="@(Station!.IsFavorite ? new _filled.Size20.Heart() : new _regular.Size20.Heart())"
                           Color="Color.Accent" OnClick="@ToggleFavorite" Title="@localizer["AddToFavorites"]" />
             <b>@Station?.Name</b>
             <span>(@_country @_cities)</span>
         </FluentStack>
-        <i>@_genres @_subgenres</i>
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+            <FluentButton IconStart="@(new _regular.Size20.EditLineHorizontal3())" Color="Color.Accent"
+                          OnClick="@EditStationInfo" Title="@localizer["EditStationInfo"]" />
+            <i>@_genres @_subgenres</i>
+        </FluentStack>
         <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
                      HorizontalGap="2">
             <FluentButton Id="btnSearch" IconStart="@(new _regular.Size20.VideoClip())" Color="Color.Accent"
@@ -91,18 +96,14 @@
         window.getCurrentTrackName = () => {
             var player = document.getElementById("audio");
             if (player && player.src) {
-                var name = player.src.split("/")[3];
-                if (name) {
-                    name = name.substring(0, name.indexOf("-"));
-                    dotNetRef.invokeMethodAsync('GetCurrentTrackNameAsync', name).then(result => {
-                        if (result) {
-                            setCurrentTrackName(result);
-                        }
-                    }).catch(error => {
-                        console.error("Error invoking GetCurrentTrackNameAsync:", error);
-                        setCurrentTrackName("");
-                    });
-                }
+                dotNetRef.invokeMethodAsync('GetCurrentTrackNameAsync').then(result => {
+                    if (result) {
+                        setCurrentTrackName(result);
+                    }
+                }).catch(error => {
+                    console.error("Error invoking GetCurrentTrackNameAsync:", error);
+                    setCurrentTrackName("");
+                });
             }
             else {
                 setCurrentTrackName("");
@@ -340,15 +341,35 @@
             Title = localizer["SearchInZ3FM"],
             Width = "450px",
         };
-        searchDialogReference = await dialogService.ShowPanelAsync<SearchList>(content, parameters);
+        searchDialogReference = await dialogService.ShowPanelAsync<SearchListPanel>(content, parameters);
+    }
+
+    private async Task EditStationInfo()
+    {
+        if (Station is not null)
+        {
+            var parameters = new DialogParameters<PCRadio.DataAccess.Models.Station>()
+            {
+                Content = Station,
+                Alignment = HorizontalAlignment.Right,
+                Title = "Edit radio station",//localizer[""],
+                Width = "350px",
+            };
+            var dialogReference = await dialogService.ShowPanelAsync<StationPanel>(Station, parameters);
+            DialogResult result = await dialogReference.Result;
+            if (!result.Cancelled)
+            {
+                Station = await stations.GetStationAsync(Station.Id);
+            }
+        }
     }
 
     [JSInvokable]
-    public async Task<string> GetCurrentTrackNameAsync(string name)
+    public async Task<string> GetCurrentTrackNameAsync()
     {
         var station = Station;
 
-        if (httpClient == null || string.IsNullOrWhiteSpace(name) || options?.Value == null || station == null)
+        if (httpClient == null || options?.Value == null || station == null)
         {
             return string.Empty;
         }

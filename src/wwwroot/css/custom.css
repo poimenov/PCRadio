@@ -80,6 +80,12 @@ div:has(fluent-listbox.station-list) {
     vertical-align: middle;
 }
 
+.player-country-flag {
+    width: 32px;
+    height: 23px;
+    vertical-align: middle;
+}
+
 fluent-anchor.appName.hypertext::part(control) {
   font-size: 50px;
   font-weight: bolder;

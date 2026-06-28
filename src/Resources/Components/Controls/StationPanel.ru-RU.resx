@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="Name" xml:space="preserve">
+        <value>Название станции</value>
+    </data>
+    <data name="Logo" xml:space="preserve">
+        <value>Логотип</value>
+    </data> 
+    <data name="Stream" xml:space="preserve">
+        <value>Адрес потока</value>
+    </data>
+    <data name="Description" xml:space="preserve">
+        <value>Описание</value>
+    </data>    
+    <data name="Genres" xml:space="preserve">
+        <value>Жанры</value>
+    </data> 
+    <data name="IsFavorite" xml:space="preserve">
+        <value>Избранное</value>
+    </data>     
+    <data name="Import" xml:space="preserve">
+        <value>Импорт</value>
+    </data>
+    <data name="Update" xml:space="preserve">
+        <value>Обновить</value>
+    </data>
+    <data name="Close" xml:space="preserve">
+        <value>Закрыть</value>
+    </data>    
+    <data name="AddError" xml:space="preserve">
+        <value>Ошибка при импорте станции</value>
+    </data> 
+    <data name="UpdateError" xml:space="preserve">
+        <value>Ошибка при обновлении станции</value>
+    </data>     
+    <data name="Station" xml:space="preserve">
+        <value>Станция</value>
+    </data> 
+    <data name="Added" xml:space="preserve">
+        <value>была успешно импортирована</value>
+    </data>     
+    <data name="Updated" xml:space="preserve">
+        <value>была успешно обновлена</value>
+    </data>     
+</root>

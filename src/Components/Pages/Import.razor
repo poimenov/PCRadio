@@ -1,0 +1,117 @@
+@page "/import"
+
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using RadioBrowser.Models
+@using PCRadio.Extensions
+@using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
+@using PCRadio.Services.Interfaces
+@inject IRadioBrowserService radioBrowserService
+@inject IStringLocalizer<Import> localizer
+@inject IOptions<AppSettings> options
+@inject IToastService toastService
+@inject IAppStateService appStateService
+
+<FluentGrid Spacing="1" Style="margin-bottom: 10px;">
+    <FluentGridItem>
+        <FluentTextField Label="@localizer["SearchLabel"]" @bind-Value="@SearchName"
+                         Placeholder="@localizer["SearchPlaceholder"]" Style="width: 170px;" />
+    </FluentGridItem>
+
+    <FluentGridItem>
+        <FluentAutocomplete TOption="NameAndCount" AutoComplete="off" Autofocus="true" Label="@localizer["Tags"]"
+                            Width="200px" MaxAutoHeight="200px" Placeholder="@localizer["Tags"]" OnOptionsSearch="@OnSearchAsync"
+                            MaximumSelectedOptions="3" OptionText="@(item => item.Name)" @bind-SelectedOptions="@SelectedTags">
+            <OptionTemplate>
+                <FluentStack Orientation="Orientation.Horizontal">
+                    <span style="width: 150px;overflow-x: hidden;text-overflow: ellipsis;">@context?.Name</span>
+                    <span style="width: 50px;">@context?.Stationcount</span>
+                </FluentStack>
+            </OptionTemplate>
+        </FluentAutocomplete>
+    </FluentGridItem>
+
+    <FluentGridItem>
+        <FluentSelect TOption="CountryAndCount" Label="@localizer["Countries"]"
+                      OptionValue="@(x => x?.CountryId.ToString())" Items="@Countries" Width="250px" Height="200px"
+                      @bind-SelectedOption="@SearchCountry">
+            <OptionTemplate>
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="2">
+                    <span style="width: 25px;">@context?.GetCountryIcon(false)</span>
+                    <span style="width: 125px;overflow-x: hidden;text-overflow: ellipsis;">
+                        @context?.CountryName</span>
+                        <span style="width: 50px;">@context?.Stationcount</span>
+                    </FluentStack>
+                </OptionTemplate>
+            </FluentSelect>
+        </FluentGridItem>
+
+        <FluentGridItem style="padding-top: 28px;">
+            <FluentButton Disabled="@ButtonDisabled" IconStart="@(new _regular.Size20.Search())" OnClick="PerformSearch">
+            </FluentButton>
+        </FluentGridItem>
+    </FluentGrid>
+
+<PCRadio.Components.Controls.RadioBrowserList SearchOptions="@SearchOptions" />
+
+@code
+{
+    private string? SearchName { get; set; }
+    private List<CountryAndCount> Countries { get; set; } = new List<CountryAndCount>();
+    private IEnumerable<NameAndCount> SelectedTags { get; set; } = Array.Empty<NameAndCount>();
+    private CountryAndCount? SearchCountry { get; set; }
+    private AdvancedSearchOptions? SearchOptions { get; set; }
+    private bool ButtonDisabled { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var countriesResult = await radioBrowserService.GetCountriesAsync();
+        if (!countriesResult.Success)
+        {
+            toastService.ShowError($"{localizer["CountriesError"]}: {countriesResult.Message}");
+            return;
+        }
+        if (countriesResult.Result is not null && countriesResult.Result.Count() > 0)
+        {
+            Countries.AddRange(countriesResult.Result);
+            SearchCountry = countriesResult.Result.First();
+            ButtonDisabled = false;
+        }
+
+        appStateService.Title = localizer["Header"];
+        await base.OnInitializedAsync();
+    }
+
+    private async Task OnSearchAsync(OptionsSearchEventArgs<NameAndCount> e)
+    {
+        var tagsResult = await radioBrowserService.GetTagsAsync(e.Text);
+        if (!tagsResult.Success)
+        {
+            toastService.ShowError($"{localizer["TagsError"]}: {tagsResult.Message}");
+            return;
+        }
+
+        e.Items = tagsResult.Result;
+    }
+
+    private async Task PerformSearch()
+    {
+        var searchOptions = new AdvancedSearchOptions
+        {
+            Name = SearchName,
+            Offset = 0,
+            Limit = Convert.ToUInt32(options.Value.PageSize)
+        };
+
+        if (SearchCountry != null && SearchCountry.CountryId > 0)
+        {
+            searchOptions.Countrycode = SearchCountry.Name.ToUpper();
+        }
+
+        if (SelectedTags != null && SelectedTags.Count() > 0)
+        {
+            searchOptions.TagList = string.Join(',', SelectedTags.Select(t => t.Name).ToArray());
+        }
+        SearchOptions = searchOptions;
+    }
+}

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PCRadio.Common;
 using PCRadio.DataAccess.Interfaces;
 using PCRadio.DataAccess.Models;
 
@@ -194,5 +195,149 @@ public class Stations : IStations
                 await db.SaveChangesAsync();
             }
         }
+    }
+
+    public async Task<OperationResult<Station>> AddStationAsync(Station station)
+    {
+        var retVal = new OperationResult<Station>
+        {
+            Success = false,
+            Result = new Station()
+            {
+                Name = string.Empty,
+                Logo = string.Empty,
+                Stream = string.Empty
+            }
+        };
+
+        await using (var db = new Database())
+        {
+            if (!await db.Stations.AnyAsync(s => s.Stream.ToLower() == station.Stream.ToLower()))
+            {
+                await using (var transaction = await db.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        var stationToAdd = new Station()
+                        {
+                            CountryId = station.CountryId,
+                            Name = station.Name,
+                            Logo = station.Logo ?? string.Empty,
+                            Stream = station.Stream,
+                            Description = station.Description,
+                            IsFavorite = station.IsFavorite,
+                            Created = DateOnly.FromDateTime(DateTime.Now),
+                            Recomended = false,
+                            UId = 0
+                        };
+                        await db.Stations.AddAsync(stationToAdd);
+                        await db.SaveChangesAsync();
+                        var stationId = stationToAdd.Id;
+                        if (station.StationGenres != null && station.StationGenres.Any())
+                        {
+                            foreach (var sg in station.StationGenres)
+                            {
+                                var genre = await db.Genres.FirstOrDefaultAsync(g => g.Id == sg.GenreId);
+                                if (genre is not null)
+                                {
+                                    var stationGenreToAdd = new StationGenre()
+                                    {
+                                        Genre = genre,
+                                        GenreId = genre.Id,
+                                        Station = stationToAdd,
+                                        StationId = stationId
+                                    };
+                                    await db.StationGenres.AddAsync(stationGenreToAdd);
+                                }
+                            }
+                        }
+
+                        if (station.StationSubGenres != null && station.StationSubGenres.Any())
+                        {
+                            foreach (var sg in station.StationSubGenres)
+                            {
+                                var subgenre = await db.SubGenres.FirstOrDefaultAsync(g => g.Id == sg.Id);
+                                if (subgenre is not null)
+                                {
+                                    var stationSubgenreToAdd = new StationSubGenre()
+                                    {
+                                        SubGenre = subgenre,
+                                        SubGenreId = subgenre.Id,
+                                        Station = stationToAdd,
+                                        StationId = stationId
+                                    };
+                                    await db.StationSubGenres.AddAsync(sg);
+                                }
+
+                            }
+                        }
+
+                        await db.SaveChangesAsync();
+                        await transaction.CommitAsync();
+
+                        var newStation = await db.Stations
+                            .Include(s => s.Country)
+                            .Include(s => s.StationGenres)!
+                            .ThenInclude(sg => sg.Genre)
+                            .FirstOrDefaultAsync(s => s.Id == stationId);
+                        retVal.Result = newStation;
+                        retVal.Success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        retVal.Message = ex.Message;
+                        retVal.Exception = ex;
+                    }
+                }
+            }
+            else
+            {
+                retVal.Message = "A station with the same stream already exists";
+            }
+        }
+
+        return retVal;
+    }
+
+    public async Task<OperationResult> UpdateStationAsync(Station station)
+    {
+        var retVal = new OperationResult { Success = false };
+        await using (var db = new Database())
+        {
+            if (await db.Stations.AnyAsync(s => s.Id == station.Id)
+                && !await db.Stations.AnyAsync(s => s.Id != station.Id && s.Stream == station.Stream))
+            {
+                await using (var transaction = await db.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        var existedStation = await db.Stations.FirstAsync(s => s.Id == station.Id);
+                        existedStation.CountryId = station.CountryId;
+                        existedStation.Name = station.Name;
+                        existedStation.Logo = station.Logo;
+                        existedStation.Description = station.Description;
+                        existedStation.IsFavorite = station.IsFavorite;
+                        existedStation.Stream = station.Stream;
+
+                        await db.SaveChangesAsync();
+                        await transaction.CommitAsync();
+                        retVal.Success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        retVal.Message = ex.Message;
+                        retVal.Exception = ex;
+                    }
+                }
+            }
+            else
+            {
+                retVal.Message = "Station not found or station with the same Stream exist";
+            }
+        }
+
+        return retVal;
     }
 }

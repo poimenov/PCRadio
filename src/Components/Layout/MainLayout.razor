@@ -122,6 +122,10 @@
                     TitleIcon = new IconsRegular24.Search();
                     IsExportVisible = false;
                     break;
+                case var uri when uri.EndsWith("import"):
+                    TitleIcon = new IconsRegular24.ArrowImport();
+                    IsExportVisible = false;
+                    break;
                 default:
                     TitleIcon = new IconsRegular24.Home();
                     IsExportVisible = true;

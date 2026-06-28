@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="Header" xml:space="preserve">
+        <value>Поиск станций для импорта из Radio Browser</value>
+    </data>   
+    <data name="SearchLabel" xml:space="preserve">
+        <value>Название станции</value>
+    </data> 
+    <data name="SearchPlaceholder" xml:space="preserve">
+        <value>Название содержит</value>
+    </data>    
+    <data name="Countries" xml:space="preserve">
+        <value>Страны</value>
+    </data>  
+    <data name="Tags" xml:space="preserve">
+        <value>Выберите тег</value>
+    </data>  
+        <data name="CountriesError" xml:space="preserve">
+        <value>Ошибка при получении списка стран</value>
+    </data>  
+        <data name="TagsError" xml:space="preserve">
+        <value>Ошибка при получении списка тегов</value>
+    </data>  
+</root>

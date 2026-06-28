@@ -23,6 +23,9 @@
             <FluentNavLink Href="search" Icon="@(new Size20.Search())" IconColor="Color.Accent">
                 @Localizer["Search"]
             </FluentNavLink>
+            <FluentNavLink Href="import" Icon="@(new Size20.ArrowImport())" IconColor="Color.Accent">
+               @Localizer["Import"] 
+            </FluentNavLink>
             <FluentNavGroup Icon="@(new Size20.MusicNote2())" IconColor="Color.Accent" Title="@Localizer["Genres"]"
                 @bind-Expanded="genresExpanded">
                 @foreach (var genre in genres.GetAll())

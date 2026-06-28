@@ -18,4 +18,7 @@
     <data name="Settings" xml:space="preserve">
         <value>Settings</value>
     </data>
+    <data name="Import" xml:space="preserve">
+        <value>Import</value>
+    </data>
 </root>

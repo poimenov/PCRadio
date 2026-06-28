@@ -1,0 +1,133 @@
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Logging
+@using PCRadio.DataAccess.Interfaces
+@inject IStringLocalizer<StationPanel> localizer
+@inject ILogger<StationPanel> logger
+@inject IGenres genres
+@inject IToastService toastService
+@inject IStations stations
+@implements IDialogContentComponent<PCRadio.DataAccess.Models.Station>
+
+<style>
+    .textBox {
+        width: 300px;
+    }
+</style>
+
+<FluentDialogBody>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
+        <FluentTextField Class="textBox" @bind-Value="@(Content!.Name)">@localizer["Name"]</FluentTextField>
+        <FluentTextField Class="textBox" @bind-Value="@Content!.Logo">@localizer["Logo"]</FluentTextField>
+        <FluentTextField Class="textBox" @bind-Value="@Content!.Stream">@localizer["Stream"]</FluentTextField>
+        <FluentTextArea Class="textBox" @bind-Value="@Content!.Description">@localizer["Description"]</FluentTextArea>
+        @if (Content != null && (Content.StationGenres == null || !Content.StationGenres.Any()))
+        {
+            <FluentSelect TOption="PCRadio.DataAccess.Models.Genre" Label="@localizer["Genres"]" OptionText="@(g => g.Name)"
+                          Class="textBox" @bind-SelectedOption="@SelectedGenre" OptionValue="@(g => g.Id.ToString())" Items="@Genres"
+                          Height="200px" />
+        }
+        <FluentCheckbox Class="textBox" @bind-Value="@(Content!.IsFavorite)">@localizer["IsFavorite"]</FluentCheckbox>
+
+    </FluentStack>
+</FluentDialogBody>
+
+<FluentDialogFooter>
+    @if (Content != null)
+    {
+        @if (Content.Id > 0)
+        {
+            <FluentButton Disabled="@(!IsValid)" Appearance="Appearance.Accent" OnClick="@UpdateAsync">
+                @localizer["Update"]
+            </FluentButton>
+        }
+        else
+        {
+            <FluentButton Disabled="@(!IsValid)" Appearance="Appearance.Accent" OnClick="@ImportAsync">
+                @localizer["Import"]
+            </FluentButton>
+        }
+    }
+
+    <FluentButton Appearance="Appearance.Neutral" OnClick="@CloseAsync">
+        @localizer["Close"]
+    </FluentButton>
+</FluentDialogFooter>
+
+@code {
+    [Parameter] public PCRadio.DataAccess.Models.Station Content { get; set; } = default!;
+    [CascadingParameter] public FluentDialog Dialog { get; set; } = default!;
+
+    private IEnumerable<PCRadio.DataAccess.Models.Genre>? Genres { get; set; }
+    private PCRadio.DataAccess.Models.Genre? SelectedGenre { get; set; }
+    private bool IsValid
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Content.Name))
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(Content.Stream))
+            {
+                return false;
+            }
+
+            return Uri.TryCreate(Content.Stream, UriKind.Absolute, out Uri? _);
+        }
+    }
+    protected override void OnInitialized()
+    {
+        Genres = genres.GetAll();
+        base.OnInitialized();
+    }
+
+    private async Task CloseAsync() => await Dialog.CancelAsync();
+    private async Task ImportAsync()
+    {
+        if (Content != null && Content.Id == 0)
+        {
+            if (SelectedGenre is not null && (Content.StationGenres == null || !Content.StationGenres.Any()))
+            {
+                var stationGenres = new List<DataAccess.Models.StationGenre>();
+                stationGenres.Add(new DataAccess.Models.StationGenre()
+                {
+                    Genre = SelectedGenre,
+                    GenreId = SelectedGenre.Id,
+                    Station = Content,
+                    StationId = Content.Id
+                });
+                Content.StationGenres = stationGenres;
+            }
+            var oResult = await stations.AddStationAsync(Content);
+            if (!oResult.Success)
+            {
+                logger.LogError(oResult.Exception, oResult.Message);
+                toastService.ShowError($"{localizer["AddError"]}: {oResult.Message}");
+                return;
+            }
+
+            if (oResult.Result != null && oResult.Result.Id > 0)
+            {
+                Content = oResult.Result;
+                toastService.ShowSuccess($"{localizer["Station"]} \"{Content.Name}\" {localizer["Added"]}");
+            }
+        }
+    }
+    private async Task UpdateAsync()
+    {
+        if (Content != null && Content.Id > 0)
+        {
+            var oResult = await stations.UpdateStationAsync(Content);
+            if (oResult.Success)
+            {
+                toastService.ShowSuccess($"{localizer["Station"]} \"{Content.Name}\" {localizer["Updated"]}");
+            }
+            else
+            {
+                logger.LogError(oResult.Exception, oResult.Message);
+                toastService.ShowError($"{localizer["UpdateError"]}: {oResult.Message}");
+            }
+        }
+    }
+}

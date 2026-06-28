@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="Next" xml:space="preserve">
+        <value>Next</value>
+    </data>
+    <data name="NoStations" xml:space="preserve">
+        <value>No stations</value>
+    </data>   
+    <data name="PanelTitle" xml:space="preserve">
+        <value>Import Radio Station</value>
+    </data>  
+    <data name="GetStationsListError" xml:space="preserve">
+        <value>Get stations list error</value>
+    </data>  
+    <data name="GetStationError" xml:space="preserve">
+        <value>Get station error</value>
+    </data>  
+    <data name="NoExists" xml:space="preserve">
+        <value>Very strange, but station isn't exists</value>
+    </data>      
+</root>

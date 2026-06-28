@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="Header" xml:space="preserve">
+        <value>Stations search for import from Radio Browser</value>
+    </data>   
+    <data name="SearchLabel" xml:space="preserve">
+        <value>Station name</value>
+    </data>
+    <data name="SearchPlaceholder" xml:space="preserve">
+        <value>Name contains</value>
+    </data>     
+    <data name="Countries" xml:space="preserve">
+        <value>Countries</value>
+    </data>  
+    <data name="Tags" xml:space="preserve">
+        <value>Select a tag</value>
+    </data>   
+    <data name="CountriesError" xml:space="preserve">
+        <value>Get countries list error</value>
+    </data>  
+        <data name="TagsError" xml:space="preserve">
+        <value>Get tags list error</value>
+    </data>  
+</root>

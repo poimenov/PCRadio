@@ -20,5 +20,8 @@
     </data>  
     <data name="CopyUrl" xml:space="preserve">
         <value>Копировать url</value>
-    </data>  
+    </data> 
+    <data name="EditStationInfo" xml:space="preserve">
+        <value>Редактировать информацию о станции</value>
+    </data>      
 </root>

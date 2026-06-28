@@ -23,5 +23,8 @@
     </data>
     <data name="DownloadTooltip" xml:space="preserve">
         <value>Загрузить в папку</value>
-    </data>    
+    </data>  
+    <data name="NoResultsFound" xml:space="preserve">
+        <value>Результаты не найдены</value>
+    </data>       
 </root>

@@ -13,6 +13,7 @@ using PCRadio.DataAccess.Interfaces;
 using PCRadio.Services;
 using PCRadio.Services.Interfaces;
 using Photino.Blazor;
+using RadioBrowser;
 
 namespace PCRadio;
 
@@ -72,6 +73,8 @@ public class Program
             builder.Services.AddTransient<IOpenDialogService, OpenDialogService>();
             builder.Services.AddScoped<ISearchService, SearchService>();
             builder.Services.AddTransient<IMetadataService, MetadataService>();
+            builder.Services.AddTransient<IRadioBrowserService, RadioBrowserService>();
+            builder.Services.AddSingleton<RadioBrowserClient>();
             builder.Services.AddSingleton<IAppStateService, AppStateService>();
 
             var app = builder.Build();

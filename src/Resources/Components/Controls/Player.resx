@@ -21,4 +21,7 @@
     <data name="CopyUrl" xml:space="preserve">
         <value>Copy url</value>
     </data>
+    <data name="EditStationInfo" xml:space="preserve">
+        <value>Edit Station Information</value>
+    </data>    
 </root>

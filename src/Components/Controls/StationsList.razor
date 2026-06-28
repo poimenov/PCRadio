@@ -19,10 +19,11 @@
 else
 {
     <FluentListbox Items="@Stations" @bind-SelectedOption="@SelectedStation" OptionValue="@(x => x?.Id.ToString())"
-        Class="station-list">
+                   Class="station-list">
         <OptionTemplate>
             <FluentCard Class="station-card">
-                <img class="logo" src="@context?.Logo" alt="@context?.Name" loading="lazy" />
+                <img class="logo" src="@(context?.Logo ?? AppSettings.DEFAULT_IMG_PATH)"
+                     onerror="this.src='@AppSettings.DEFAULT_IMG_PATH'" alt="@context?.Name" loading="lazy" />
                 <div style="width: 180px !important;">
                     <div style="font-weight: bold; height: 20px !important;overflow: hidden;">
                         @context?.GetCountryIcon() @context?.Name
