@@ -58,9 +58,12 @@
                 <FluentDataGrid @ref="_myGrid" Items="@SearchResultsQuery" TGridItem="Track" StripedRows="true"
                                 HoveredRows="true" OnRowClick="@HandleRowClick" RowClass="@GetRowClass">
 
-                    <PropertyColumn Property="@(p => p.Artist)" Title="Artist" Width="1.5fr" Sortable="true" />
-                    <PropertyColumn Property="@(p => p.Title)" Title="Title" Width="2fr" Sortable="true" />
-                    <PropertyColumn Property="@(p => p.DisplayDuration)" Title="Duration" Width="80px" Sortable="true" />
+                    <PropertyColumn Property="@(p => p.Artist)" Tooltip="true" TooltipText="@(p => p.Artist)"
+                                    Title="@localizer["Artist"]" Width="1.5fr" Sortable="true" />
+                    <PropertyColumn Property="@(p => p.Title)" Tooltip="true" TooltipText="@(p => p.Title)"
+                                    Title="@localizer["Title"]" Width="2fr" Sortable="true" />
+                    <PropertyColumn Property="@(p => p.DisplayDuration)" Title="@localizer["Duration"]" Width="80px"
+                                    Sortable="true" />
                 </FluentDataGrid>
             }
         }
