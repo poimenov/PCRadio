@@ -61,7 +61,7 @@ public class AdvancedSearchOptionsComparer : IEqualityComparer<AdvancedSearchOpt
 public interface IRadioBrowserService
 {
     Task<OperationResult<IEnumerable<StationInfo>>> GetStationsAsync(AdvancedSearchOptions options);
-    Task<OperationResult<IEnumerable<CountryAndCount>>> GetCountriesAsync(string? filter = null);
+    Task<OperationResult<IEnumerable<CountryAndCount>>> GetCountriesAsync();
     Task<OperationResult<IEnumerable<NameAndCount>>> GetTagsAsync(string? filter = null);
     Task<OperationResult<Station>> GetDataAccessStation(StationInfo? stationInfo);
 }

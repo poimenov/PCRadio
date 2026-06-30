@@ -12,13 +12,14 @@ namespace PCRadio.Services;
 
 public class RadioBrowserService : IRadioBrowserService
 {
-    private readonly RadioBrowserClient _client;
+    private readonly IRadioBrowserClient _client;
     private readonly AppSettings _appSettings;
-    private readonly DataAccess.Interfaces.ICountries _countries;
-    private readonly DataAccess.Interfaces.IGenres _genres;
+    private readonly ICountries _countries;
+    private readonly IGenres _genres;
     private readonly ILogger<IRadioBrowserService> _logger;
+    private static IEnumerable<CountryAndCount>? _countryAndCounts;
 
-    public RadioBrowserService(RadioBrowserClient client, DataAccess.Interfaces.ICountries countries,
+    public RadioBrowserService(IRadioBrowserClient client, ICountries countries,
         IGenres genres, IOptions<AppSettings> options, ILogger<IRadioBrowserService> logger)
     {
         _client = client;
@@ -50,24 +51,29 @@ public class RadioBrowserService : IRadioBrowserService
         return retVal;
     }
 
-    public async Task<OperationResult<IEnumerable<CountryAndCount>>> GetCountriesAsync(string? filter = null)
+    public async Task<OperationResult<IEnumerable<CountryAndCount>>> GetCountriesAsync()
     {
         var retVal = new OperationResult<IEnumerable<CountryAndCount>>() { Success = false };
 
         try
         {
-            var countries = await _client.Lists.GetCountriesCodesAsync(filter);
-            var dbCountries = _countries.GetAll().Select(c => new CountryAndCount
+            if (_countryAndCounts is null)
             {
-                Name = AppCultures.CountryCodes[c.Id],
-                Stationcount = 0,
-                CountryId = c.Id,
-                CountryName = c.Name
-            });
-            var countryAndCountList = dbCountries.Where(dc => countries.Any(c => dc.Name == c.Name.ToLower())).ToList();
-            countryAndCountList.ForEach(dc => dc.Stationcount =
-                countries.First(c => c.Name.ToLower() == dc.Name).Stationcount);
-            retVal.Result = countryAndCountList.OrderByDescending(c => c.Stationcount);
+                var countries = await _client.Lists.GetCountriesCodesAsync();
+                var dbCountries = _countries.GetAll().Select(c => new CountryAndCount
+                {
+                    Name = AppCultures.CountryCodes[c.Id],
+                    Stationcount = 0,
+                    CountryId = c.Id,
+                    CountryName = c.Name
+                });
+                var countryAndCountList = dbCountries.Where(dc => countries.Any(c => dc.Name == c.Name.ToLower())).ToList();
+                countryAndCountList.ForEach(dc => dc.Stationcount =
+                    countries.First(c => c.Name.ToLower() == dc.Name).Stationcount);
+                _countryAndCounts = countryAndCountList.OrderByDescending(c => c.Stationcount);
+            }
+
+            retVal.Result = _countryAndCounts;
             retVal.Success = true;
         }
         catch (Exception ex)
@@ -135,7 +141,7 @@ public class RadioBrowserService : IRadioBrowserService
                 Description = sb.ToString()
             };
 
-            var countriesResult = await GetCountriesAsync(stationInfo.CountryCode);
+            var countriesResult = await GetCountriesAsync();
             if (!countriesResult.Success)
             {
                 retVal.Message = countriesResult.Message;

@@ -6,6 +6,7 @@
 @using PCRadio.Extensions
 @using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @using PCRadio.Services.Interfaces
+@implements IAsyncDisposable
 @inject IRadioBrowserService radioBrowserService
 @inject IStringLocalizer<Import> localizer
 @inject IOptions<AppSettings> options
@@ -62,6 +63,7 @@
     private CountryAndCount? SearchCountry { get; set; }
     private AdvancedSearchOptions? SearchOptions { get; set; }
     private bool ButtonDisabled { get; set; } = true;
+    private Action<bool>? radioBrowserStationsListLoading;
 
     protected override async Task OnInitializedAsync()
     {
@@ -79,6 +81,12 @@
         }
 
         appStateService.Title = localizer["Header"];
+        radioBrowserStationsListLoading = (isLoading) =>
+        {
+            ButtonDisabled = isLoading;
+            StateHasChanged();
+        };
+        appStateService.RadioBrowserStationsListLoadingChanged += radioBrowserStationsListLoading;
         await base.OnInitializedAsync();
     }
 
@@ -113,5 +121,15 @@
             searchOptions.TagList = string.Join(',', SelectedTags.Select(t => t.Name).ToArray());
         }
         SearchOptions = searchOptions;
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (radioBrowserStationsListLoading != null)
+        {
+            appStateService.RadioBrowserStationsListLoadingChanged += radioBrowserStationsListLoading;
+        }
+
+        GC.SuppressFinalize(this);
     }
 }

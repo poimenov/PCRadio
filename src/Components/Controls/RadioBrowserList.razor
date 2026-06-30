@@ -12,6 +12,7 @@
 @inject IOptions<AppSettings> appSettings
 @inject IDialogService dialogService
 @inject IToastService toastService
+@inject IAppStateService appStateService
 @inject IJSRuntime JSRuntime
 
 @if (Stations == null || !Stations.Any())
@@ -141,6 +142,8 @@ else
 @code {
     [Parameter]
     public AdvancedSearchOptions? SearchOptions { get; set; }
+    [Parameter]
+    public EventCallback OnRadioBrowserStationsListLoaded { get; set; }
     private AdvancedSearchOptions? OldSearchOptions { get; set; }
     private AdvancedSearchOptionsComparer comparer { get; set; } = new AdvancedSearchOptionsComparer();
     private List<StationInfo> Stations { get; set; } = new List<StationInfo>();
@@ -218,6 +221,7 @@ else
         try
         {
             isLoading = true;
+            appStateService.IsRadioBrowserStationsListLoading = true;
             SearchOptions.Offset = Convert.ToUInt32(Stations.Count());
 
             var stationsResult = await radioBrowserService.GetStationsAsync(SearchOptions);
@@ -246,6 +250,7 @@ else
         finally
         {
             isLoading = false;
+            appStateService.IsRadioBrowserStationsListLoading = false;
         }
     }
 

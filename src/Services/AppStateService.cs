@@ -67,10 +67,24 @@ public class AppStateService : IAppStateService
             }
         }
     }
+    private bool _isRadioBrowserStationsListLoading;
 
+    public bool IsRadioBrowserStationsListLoading
+    {
+        get => _isRadioBrowserStationsListLoading;
+        set
+        {
+            if (_isRadioBrowserStationsListLoading != value)
+            {
+                _isRadioBrowserStationsListLoading = value;
+                RadioBrowserStationsListLoadingChanged?.Invoke(value);
+            }
+        }
+    }
 
     public event Action<string>? TitleChanged;
     public event Action<int>? CurrentStationIdChanged;
     public event Action<HistoryRecord>? HistoryRecordChanged;
     public event Action<FavoriteStation>? FavoriteStationChanged;
+    public event Action<bool>? RadioBrowserStationsListLoadingChanged;
 }

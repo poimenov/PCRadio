@@ -7,12 +7,14 @@ public interface IAppStateService
 {
     string Title { get; set; }
     int CurrentStationId { get; set; }
+    bool IsRadioBrowserStationsListLoading { get; set; }
     FavoriteStation? FavoriteStation { get; set; }
     HistoryRecord? LastHistoryRecord { get; set; }
     event Action<string>? TitleChanged;
     event Action<int>? CurrentStationIdChanged;
     event Action<HistoryRecord>? HistoryRecordChanged;
     event Action<FavoriteStation>? FavoriteStationChanged;
+    event Action<bool>? RadioBrowserStationsListLoadingChanged;
 }
 
 public class FavoriteStation
