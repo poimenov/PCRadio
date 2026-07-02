@@ -90,6 +90,7 @@ fluent-anchor.appName.hypertext::part(control) {
   font-size: 50px;
   font-weight: bolder;
   color: transparent;
+  text-decoration-line: none;
   -webkit-text-stroke: 1px var(--fill-color);
 }
 
