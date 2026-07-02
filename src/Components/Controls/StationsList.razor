@@ -167,6 +167,13 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (SelectedStation == null && appStateService.CurrentStationId > 0 && Stations != null &&
+            Stations.Any(s => s.Id == appStateService.CurrentStationId))
+        {
+            SelectedStation = Stations.First(s => s.Id == appStateService.CurrentStationId);
+            StateHasChanged();
+        }
+
         if (Stations != null && Stations.Any() && !scrollListenerAdded)
         {
             try
