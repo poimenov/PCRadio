@@ -11,9 +11,12 @@
     </data>
     <data name="Description" xml:space="preserve">
         <value>Description</value>
-    </data>    
-    <data name="Genres" xml:space="preserve">
-        <value>Genres</value>
+    </data>  
+    <data name="Country" xml:space="preserve">
+        <value>Country</value>
+    </data>       
+    <data name="Genre" xml:space="preserve">
+        <value>Genre</value>
     </data> 
     <data name="IsFavorite" xml:space="preserve">
         <value>Is Favorite</value>

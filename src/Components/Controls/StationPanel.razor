@@ -1,11 +1,13 @@
 @using Microsoft.Extensions.Localization
 @using Microsoft.Extensions.Logging
 @using PCRadio.DataAccess.Interfaces
+@using PCRadio.Extensions
 @inject IStringLocalizer<StationPanel> localizer
 @inject ILogger<StationPanel> logger
 @inject IGenres genres
 @inject IToastService toastService
 @inject IStations stations
+@inject ICountries countries
 @implements IDialogContentComponent<PCRadio.DataAccess.Models.Station>
 
 <style>
@@ -20,12 +22,26 @@
         <FluentTextField Class="textBox" @bind-Value="@Content!.Logo">@localizer["Logo"]</FluentTextField>
         <FluentTextField Class="textBox" @bind-Value="@Content!.Stream">@localizer["Stream"]</FluentTextField>
         <FluentTextArea Class="textBox" @bind-Value="@Content!.Description">@localizer["Description"]</FluentTextArea>
+        @if (Content != null && Content.CountryId is null)
+        {
+            <FluentSelect TOption="PCRadio.DataAccess.Models.Country" Label="@localizer["Country"]"
+                          OptionValue="@(x => x?.Id.ToString())" Items="@Countries" Class="textBox" Height="200px"
+                          @bind-SelectedOption="@SelectedCountry">
+                <OptionTemplate>
+                    <FluentStack>
+                        @context?.GetCountryIcon(false)
+                        @context?.Name
+                    </FluentStack>
+                </OptionTemplate>
+            </FluentSelect>
+        }
         @if (Content != null && (Content.StationGenres == null || !Content.StationGenres.Any()))
         {
-            <FluentSelect TOption="PCRadio.DataAccess.Models.Genre" Label="@localizer["Genres"]" OptionText="@(g => g.Name)"
+            <FluentSelect TOption="PCRadio.DataAccess.Models.Genre" Label="@localizer["Genre"]" OptionText="@(g => g.Name)"
                           Class="textBox" @bind-SelectedOption="@SelectedGenre" OptionValue="@(g => g.Id.ToString())" Items="@Genres"
                           Height="200px" />
         }
+
         <FluentCheckbox Class="textBox" @bind-Value="@(Content!.IsFavorite)">@localizer["IsFavorite"]</FluentCheckbox>
 
     </FluentStack>
@@ -58,7 +74,9 @@
     [CascadingParameter] public FluentDialog Dialog { get; set; } = default!;
 
     private IEnumerable<PCRadio.DataAccess.Models.Genre>? Genres { get; set; }
+    private IEnumerable<PCRadio.DataAccess.Models.Country>? Countries { get; set; }
     private PCRadio.DataAccess.Models.Genre? SelectedGenre { get; set; }
+    private PCRadio.DataAccess.Models.Country? SelectedCountry { get; set; }
     private bool IsValid
     {
         get
@@ -79,6 +97,7 @@
     protected override void OnInitialized()
     {
         Genres = genres.GetAll();
+        Countries = countries.GetAll();
         base.OnInitialized();
     }
 
@@ -99,6 +118,12 @@
                 });
                 Content.StationGenres = stationGenres;
             }
+
+            if (SelectedCountry is not null && Content.CountryId is null)
+            {
+                Content.CountryId = SelectedCountry.Id;
+            }
+
             var oResult = await stations.AddStationAsync(Content);
             if (!oResult.Success)
             {

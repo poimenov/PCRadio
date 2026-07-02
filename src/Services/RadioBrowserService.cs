@@ -150,9 +150,9 @@ public class RadioBrowserService : IRadioBrowserService
             }
 
             var countries = countriesResult.Result;
-            if (countries is not null && countries.Any())
+            if (countries is not null && countries.Any(c => c.Name == stationInfo.CountryCode.ToLower()))
             {
-                station.CountryId = countries.First().CountryId;
+                station.CountryId = countries.First(c => c.Name == stationInfo.CountryCode.ToLower()).CountryId;
             }
 
             var subGenres = _genres.GetAllSubGenres();
