@@ -176,10 +176,17 @@
     {
         get
         {
-            if (Station?.Stream.EndsWith("-med") == true)
+            if (Station?.Stream.ToLower().Contains(".pcradio.") == true)
             {
                 var quality = options.Value.GetQuality();
-                return Station.Stream.Replace("-med", $"-{quality}");
+                if (Station?.Stream.EndsWith("-med") == true)
+                {
+                    return Station.Stream.Replace("-med", $"-{quality}");
+                }
+                else
+                {
+                    return $"{Station?.Stream}-{quality}";
+                }
             }
 
             return Station?.Stream ?? string.Empty;
