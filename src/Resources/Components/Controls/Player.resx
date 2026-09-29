@@ -23,5 +23,11 @@
     </data>
     <data name="EditStationInfo" xml:space="preserve">
         <value>Edit Station Information</value>
-    </data>    
+    </data>
+    <data name="StationInfo" xml:space="preserve">
+        <value>Station Info</value>
+    </data> 
+    <data name="Error" xml:space="preserve">
+        <value>Error</value>
+    </data>            
 </root>

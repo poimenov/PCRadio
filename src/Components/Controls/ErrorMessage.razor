@@ -1,0 +1,22 @@
+@implements IToastContentComponent<ErrorData>
+
+<div style="width: 100%">
+    <FluentStack HorizontalAlignment="HorizontalAlignment.Left" VerticalAlignment="VerticalAlignment.Center"
+                 Orientation="Orientation.Horizontal" HorizontalGap="20">
+        <span>@Content.Message</span>
+        @if (Content.ActionIcon != null)
+        {
+            <FluentIcon Value="@(Content.ActionIcon)" Color="Color.Accent" Title="@Content.ActionMessage"
+                        Style="cursor: pointer;"
+                        OnClick="@(async () => await Content.ActionCallback!.Value.InvokeAsync(default))" />
+        }
+    </FluentStack>
+</div>
+
+@code {
+    [CascadingParameter]
+    private FluentToast Toast { get; set; } = default!;
+
+    [Parameter]
+    public ErrorData Content { get; set; } = default!;
+}

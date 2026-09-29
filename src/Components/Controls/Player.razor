@@ -288,12 +288,21 @@
     {
         if (Station != null)
         {
-            var message = $"{localizer["StreamNotAvailable"]}: {Station.Name} ({AudioUrl})";
-            toastService.ShowError(message, null, localizer["CopyUrl"],
-                EventCallback.Factory.Create<ToastResult>(this, async () =>
+            toastService.ShowToast<ErrorMessage, ErrorData>(new ToastParameters<ErrorData>()
+            {
+                Icon = (new _filled.Size20.DismissCircle(), Color.Error),
+                Title = localizer["Error"],
+                Content = new ErrorData
                 {
-                    await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", AudioUrl);
-                }));
+                    Message = $"{localizer["StreamNotAvailable"]}: {Station.Name} ({AudioUrl})",
+                    ActionMessage = localizer["CopyUrl"],
+                    ActionIcon = new _regular.Size28.Copy(),
+                    ActionCallback = EventCallback.Factory.Create<ToastResult>(this, async () =>
+                    {
+                        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", AudioUrl);
+                    })
+                }
+            });
 
             _isPlaying = false;
             try
@@ -359,7 +368,7 @@
             {
                 Content = Station,
                 Alignment = HorizontalAlignment.Right,
-                Title = "Edit radio station",//localizer[""],
+                Title = localizer["StationInfo"],
                 Width = "350px",
             };
             var dialogReference = await dialogService.ShowPanelAsync<StationPanel>(Station, parameters);
