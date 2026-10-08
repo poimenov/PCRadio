@@ -21,4 +21,7 @@
     <data name="Import" xml:space="preserve">
         <value>Импорт</value>
     </data>    
+    <data name="MenuToggle" xml:space="preserve">
+        <value>Развернуть или свернуть меню</value>
+    </data>
 </root>

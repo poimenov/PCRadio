@@ -10,25 +10,91 @@ body {
     overflow: hidden;    
 }
 
+html,
+body {
+    background-color: var(--colorNeutralBackground1);
+}
+
+app {
+    display: block;
+    height: 100%;
+    visibility: hidden;
+}
+
+html.app-ready app {
+    visibility: visible;
+}
+
+.application-layout {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.application-header {
+    flex: 0 0 50px;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    background: var(--colorBrandBackground);
+}
+
+.page-layout {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-heading {
+    flex: 0 0 auto;
+}
+
 .navmenu-icon {
     display: none;
 }
 
 .main {
-    min-height: calc(100dvh - 86px);
-    color: var(--neutral-foreground-rest);
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    color: var(--colorNeutralForeground1);
     align-items: stretch !important;
 }
 
-.body-content {
+.main > .navmenu {
+    flex: 0 0 auto;
+    height: 100% !important;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background: var(--colorNeutralBackground2);
+}
+
+nav.sitenav {
+    flex: 0 0 auto;
+    min-height: 0;
+}
+
+.main > main.body-content {
+    flex: 1 1 0;
     align-self: stretch;
-    height: calc(100dvh - 86px) !important;
+    min-width: 0;
+    min-height: 0;
+    height: auto !important;
     display: flex;
 }
 
 .content {
+    flex: 1 1 auto;
+    display: flex;
     padding: 2px;
     align-self: stretch !important;
+    min-width: 0;
+    min-height: 0;
     width: 100%;
 }
 
@@ -37,14 +103,21 @@ body {
 }
 
 footer {
-    background: var(--neutral-layer-4);
-    color: var(--neutral-foreground-rest);
+    flex: 0 0 auto;
+    display: flex;
+    background: var(--colorNeutralBackground4);
+    color: var(--colorNeutralForeground1);
     align-items: center;
-    padding: 10px 10px;
+    gap: 16px;
+    padding: 10px 16px;
+}
+
+footer .status-links {
+    gap: 16px;
 }
 
 footer a {
-    color: var(--neutral-foreground-rest);
+    color: var(--colorNeutralForeground1);
     text-decoration: none;
 }
 
@@ -58,7 +131,7 @@ footer a:hover {
 }
 
 .alert {
-    border: 1px dashed var(--accent-fill-rest);
+    border: 1px dashed var(--colorBrandBackground);
     padding: 5px;
 }
 

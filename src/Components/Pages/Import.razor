@@ -10,48 +10,61 @@
 @inject IRadioBrowserService radioBrowserService
 @inject IStringLocalizer<Import> localizer
 @inject IOptions<AppSettings> options
-@inject IToastService toastService
+@inject INotificationService notificationService
 @inject IAppStateService appStateService
 
-<FluentGrid Spacing="1" Style="margin-bottom: 10px;">
-    <FluentGridItem>
-        <FluentTextField Label="@localizer["SearchLabel"]" @bind-Value="@SearchName"
+<div class="search-toolbar">
+    <div class="search-toolbar-field">
+        <FluentTextInput Label="@localizer["SearchLabel"]" @bind-Value="@SearchName"
                          Placeholder="@localizer["SearchPlaceholder"]" Style="width: 170px;" />
-    </FluentGridItem>
+    </div>
 
-    <FluentGridItem>
-        <FluentAutocomplete TOption="NameAndCount" AutoComplete="off" Autofocus="true" Label="@localizer["Tags"]"
+    <div class="search-toolbar-field">
+        <FluentAutocomplete TOption="NameAndCount" TValue="string" Autofocus="true" Label="@localizer["Tags"]"
                             Width="200px" MaxAutoHeight="200px" Placeholder="@localizer["Tags"]" OnOptionsSearch="@OnSearchAsync"
-                            MaximumSelectedOptions="3" OptionText="@(item => item.Name)" @bind-SelectedOptions="@SelectedTags">
+                            MaximumSelectedOptions="1" OptionText="@(item => item.Name)" OptionValue="@(item => item.Name)"
+                            @bind-SelectedItems="@SelectedTags">
             <OptionTemplate>
-                <FluentStack Orientation="Orientation.Horizontal">
+                <span slot="checked-indicator" style="display: none"></span>
+                <span class="dropdown-option-content">
                     <span style="width: 150px;overflow-x: hidden;text-overflow: ellipsis;">@context?.Name</span>
                     <span style="width: 50px;">@context?.Stationcount</span>
-                </FluentStack>
+                </span>
             </OptionTemplate>
         </FluentAutocomplete>
-    </FluentGridItem>
+    </div>
 
-    <FluentGridItem>
-        <FluentSelect TOption="CountryAndCount" Label="@localizer["Countries"]"
-                      OptionValue="@(x => x?.CountryId.ToString())" Items="@Countries" Width="250px" Height="200px"
-                      @bind-SelectedOption="@SearchCountry">
-            <OptionTemplate>
-                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="2">
-                    <span style="width: 25px;">@context?.GetCountryIcon(false)</span>
-                    <span style="width: 125px;overflow-x: hidden;text-overflow: ellipsis;">
-                        @context?.CountryName</span>
-                        <span style="width: 50px;">@context?.Stationcount</span>
-                    </FluentStack>
-                </OptionTemplate>
-            </FluentSelect>
-        </FluentGridItem>
-
-        <FluentGridItem style="padding-top: 28px;">
-            <FluentButton Disabled="@ButtonDisabled" IconStart="@(new _regular.Size20.Search())" OnClick="PerformSearch">
+    <div class="search-toolbar-field">
+        <div class="dropdown-with-icon country-dropdown">
+            <span class="selected-country-icon">
+                @if (SearchCountry != null)
+                {
+                    @SearchCountry.GetCountryIcon(false)
+                }
+            </span>
+            <FluentSelect TOption="CountryAndCount" TValue="CountryAndCount" Label="@localizer["Countries"]"
+                          OptionValue="@(x => x)" OptionText="@(x => x.CountryName ?? string.Empty)" Items="@Countries"
+                          Width="250px" Height="200px" Class="search-filter" ControlStyle="padding-inline-start: 30px;"
+                          @bind-Value="@SearchCountry">
+                <OptionTemplate>
+                    <span slot="checked-indicator" style="display: none"></span>
+                    <span class="dropdown-option-content">
+                        <span style="width: 25px;">@context?.GetCountryIcon(false)</span>
+                        <span style="width: 125px;overflow-x: hidden;text-overflow: ellipsis;">
+                            @context?.CountryName</span>
+                            <span style="width: 50px;">@context?.Stationcount</span>
+                        </span>
+                    </OptionTemplate>
+                </FluentSelect>
+            </div>
+        </div>
+        <div class="search-toolbar-button">
+            <FluentButton Disabled="@ButtonDisabled" OnClick="PerformSearch" Title="@localizer["SearchButton"]"
+                          AriaLabel="@localizer["SearchButton"]">
+                <FluentIcon Value="@(new _regular.Size20.Search())" Color="Color.Primary" Style="margin-top: 5px;" />
             </FluentButton>
-        </FluentGridItem>
-    </FluentGrid>
+        </div>
+    </div>
 
 <PCRadio.Components.Controls.RadioBrowserList SearchOptions="@SearchOptions" />
 
@@ -70,7 +83,7 @@
         var countriesResult = await radioBrowserService.GetCountriesAsync();
         if (!countriesResult.Success)
         {
-            toastService.ShowError($"{localizer["CountriesError"]}: {countriesResult.Message}");
+            await notificationService.ShowErrorToastAsync($"{localizer["CountriesError"]}: {countriesResult.Message}");
             return;
         }
         if (countriesResult.Result is not null && countriesResult.Result.Count() > 0)
@@ -95,7 +108,7 @@
         var tagsResult = await radioBrowserService.GetTagsAsync(e.Text);
         if (!tagsResult.Success)
         {
-            toastService.ShowError($"{localizer["TagsError"]}: {tagsResult.Message}");
+            await notificationService.ShowErrorToastAsync($"{localizer["TagsError"]}: {tagsResult.Message}");
             return;
         }
 
@@ -127,7 +140,7 @@
     {
         if (radioBrowserStationsListLoading != null)
         {
-            appStateService.RadioBrowserStationsListLoadingChanged += radioBrowserStationsListLoading;
+            appStateService.RadioBrowserStationsListLoadingChanged -= radioBrowserStationsListLoading;
         }
 
         GC.SuppressFinalize(this);

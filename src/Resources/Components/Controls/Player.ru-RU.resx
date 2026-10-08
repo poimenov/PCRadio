@@ -25,7 +25,7 @@
         <value>Редактировать информацию о станции</value>
     </data> 
     <data name="StationInfo" xml:space="preserve">
-        <value>Инф-ция о станции</value>
+        <value>Информация о станции</value>
     </data>   
     <data name="Error" xml:space="preserve">
         <value>Ошибка</value>

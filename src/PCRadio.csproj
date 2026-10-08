@@ -2,13 +2,13 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
-    <Version>1.0.6</Version>
+    <Version>1.0.7</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <NoDefaultLaunchSettingsFile>True</NoDefaultLaunchSettingsFile>
     <PublishSingleFile>true</PublishSingleFile>
     <ApplicationIcon>wwwroot/favicon.ico</ApplicationIcon>
-    <SQLitePCLRawBundleVersion>3.0.3</SQLitePCLRawBundleVersion>
+    <SQLitePCLRawBundleVersion>3.0.5</SQLitePCLRawBundleVersion>
   </PropertyGroup>
   <ItemGroup>
     <Content Update="wwwroot\**">
@@ -27,13 +27,13 @@
     </PackageReference>
     <PackageReference Include="RadioBrowser" Version="0.7.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.*" />
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.*" />
     <PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.*" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Photino.Blazor" Version="4.0.13" />
-    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.*-*" />
-    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.*-*" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="5.0.0" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="10.0.0" />
     <PackageReference Include="PSC.CSharp.Library.CountryData" Version="8.0.9" />
     <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />

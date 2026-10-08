@@ -2,53 +2,157 @@
 @using Microsoft.Extensions.Localization
 @using PCRadio.DataAccess.Interfaces
 @inject IGenres genres
+@inject NavigationManager navigationManager
 
 @inject IStringLocalizer<NavMenu> Localizer
 
-<div id="body-navmenu" class="navmenu body-content"
-    style="overflow-y: auto;overflow-x: hidden;@(expanded ? (genresExpanded ? MAX_WIDTH_STYLE : MED_WIDTH_STYLE) : MIN_WIDTH_STYLE)">
-    <input type="checkbox" title="Menu expand/collapse toggle" id="navmenu-toggle" class="navmenu-icon" />
+<div id="body-navmenu" class="navmenu body-content" style="overflow-x: hidden;@(GetNavMenuWidthStyle())">
+    <input type="checkbox" title="@Localizer["MenuToggle"]" id="navmenu-toggle" class="navmenu-icon" @bind="expanded" />
     <label for="navmenu-toggle" class="navmenu-icon">
-        <FluentIcon Value="@(new Size20.Navigation())" Color="Color.Fill" />
+        <FluentIcon Value="@(new Size20.Navigation())" Color="Color.Default" />
     </label>
+    <FluentButton Class="nav-collapse-toggle" Appearance="ButtonAppearance.Transparent"
+                  IconStart="@(new Size20.Navigation())" Title="@Localizer["MenuToggle"]" AriaLabel="@Localizer["MenuToggle"]"
+                  OnClick="@ToggleExpanded" />
     <nav class="sitenav" aria-labelledby="main-menu">
-        <FluentNavMenu Id="main-menu" Collapsible="true" Width="200" Title="Navigation menu" @bind-Expanded="expanded"
-            CustomToggle="true">
-            <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Size20.Home())" IconColor="Color.Accent">
-                @Localizer["Home"]
-            </FluentNavLink>
-            <FluentNavLink Href="favorites" Icon="@(new Size20.Star())" IconColor="Color.Accent">
-                @Localizer["Favorites"]
-            </FluentNavLink>
-            <FluentNavLink Href="search" Icon="@(new Size20.Search())" IconColor="Color.Accent">
-                @Localizer["Search"]
-            </FluentNavLink>
-            <FluentNavLink Href="import" Icon="@(new Size20.ArrowImport())" IconColor="Color.Accent">
-               @Localizer["Import"] 
-            </FluentNavLink>
-            <FluentNavGroup Icon="@(new Size20.MusicNote2())" IconColor="Color.Accent" Title="@Localizer["Genres"]"
-                @bind-Expanded="genresExpanded">
+        <FluentNav Id="main-menu" Width="@($"{GetNavWidth()}px")">
+            <FluentNavItem Href="/" Match="NavLinkMatch.All" IconRest="@(new Size20.Home())"
+                           Tooltip="@Localizer["Home"]">
+                @if (expanded)
+                {
+                    @Localizer["Home"]
+                }
+            </FluentNavItem>
+            <FluentNavItem Href="favorites" IconRest="@(new Size20.Star())" Tooltip="@Localizer["Favorites"]">
+                @if (expanded)
+                {
+                    @Localizer["Favorites"]
+                }
+            </FluentNavItem>
+            <FluentNavItem Href="search" IconRest="@(new Size20.Search())" Tooltip="@Localizer["Search"]">
+                @if (expanded)
+                {
+                    @Localizer["Search"]
+                }
+            </FluentNavItem>
+            <FluentNavItem Href="import" IconRest="@(new Size20.ArrowImport())" Tooltip="@Localizer["Import"]">
+                @if (expanded)
+                {
+                    @Localizer["Import"]
+                }
+            </FluentNavItem>
+            <button type="button" class="fluent-navcategoryitem" aria-expanded="@genresExpanded"
+                    aria-label="@Localizer["Genres"]" @onclick="ToggleGenres">
+                <FluentIcon Value="@(new Size20.MusicNote2())" Tooltip="@Localizer["Genres"]" />
+                @if (expanded)
+                {
+                    <span>@Localizer["Genres"]</span>
+                }
+                <span class="genre-expander @(genresExpanded ? "expanded" : null)" aria-hidden="true"></span>
+            </button>
+            @if (genresExpanded)
+            {
                 @foreach (var genre in genres.GetAll())
                 {
-                    <FluentNavLink Href="@($"genre/{genre.Id}")" Icon="@(new Size20.MusicNote1())" IconColor="Color.Accent"
-                        Tooltip="@genre.Name">
-                        @genre.Name
-                    </FluentNavLink>
+                    <FluentNavItem Href="@($"genre/{genre.Id}")" IconRest="@(new Size20.MusicNote1())" Tooltip="@genre.Name"
+                                   Class="genre-navitem">
+                        @if (expanded)
+                        {
+                            <span class="genre-navitem-label">@genre.Name</span>
+                        }
+                    </FluentNavItem>
                 }
-            </FluentNavGroup>
-            <FluentNavLink Href="history" Icon="@(new Size20.Clock())" IconColor="Color.Accent">
-                @Localizer["History"]
-            </FluentNavLink>
-            <FluentNavLink Href="settings" Icon="@(new Size20.Settings())" IconColor="Color.Accent">
-                @Localizer["Settings"]
-            </FluentNavLink>
-        </FluentNavMenu>
+            }
+            <FluentNavItem Href="history" IconRest="@(new Size20.Clock())" Tooltip="@Localizer["History"]">
+                @if (expanded)
+                {
+                    @Localizer["History"]
+                }
+            </FluentNavItem>
+            <FluentNavItem Href="settings" IconRest="@(new Size20.Settings())" Tooltip="@Localizer["Settings"]">
+                @if (expanded)
+                {
+                    @Localizer["Settings"]
+                }
+            </FluentNavItem>
+        </FluentNav>
     </nav>
 </div>
 @code {
-    private const string MAX_WIDTH_STYLE = "min-width: 220px;max-width: 220px;";
-    private const string MED_WIDTH_STYLE = "min-width: 200px;max-width: 200px;";
-    private const string MIN_WIDTH_STYLE = "min-width: 40px;max-width: 40px;";
     private bool expanded = true;
     private bool genresExpanded = false;
+    private enum NavMenuState
+    {
+        Expanded = 200,
+        Collapsed = 55,
+        ExpandedWithGenres = 220,
+        CollapsedWithGenres = 75
+    }
+
+    protected override void OnInitialized()
+    {
+        genresExpanded = IsGenrePage(navigationManager.Uri);
+        navigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private static bool IsGenrePage(string uri) =>
+        uri.Contains("/genre/", StringComparison.OrdinalIgnoreCase);
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        if (IsGenrePage(args.Location) && !genresExpanded)
+        {
+            genresExpanded = true;
+            _ = InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void ToggleGenres()
+    {
+        genresExpanded = !genresExpanded;
+    }
+
+    private void ToggleExpanded()
+    {
+        expanded = !expanded;
+    }
+
+    private int GetNavWidth()
+    {
+        if (expanded)
+        {
+            return (int)NavMenuState.Expanded;
+        }
+        else
+        {
+            return (int)NavMenuState.Collapsed;
+        }
+
+    }
+
+    private int GetNavMenuWidth()
+    {
+        if (expanded && genresExpanded)
+        {
+            return (int)NavMenuState.ExpandedWithGenres;
+        }
+        else if (expanded && !genresExpanded)
+        {
+            return (int)NavMenuState.Expanded;
+        }
+        else if (!expanded && genresExpanded)
+        {
+            return (int)NavMenuState.CollapsedWithGenres;
+        }
+        else
+        {
+            return (int)NavMenuState.Collapsed;
+        }
+    }
+
+    private string GetNavMenuWidthStyle()
+    {
+        var width = GetNavMenuWidth();
+        return $"min-width: {width}px;max-width: {width}px;";
+    }
 }

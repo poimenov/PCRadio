@@ -13,64 +13,69 @@
 @inject IOpenDialogService openDialogService
 @inject NavigationManager navigationManager
 @inject IStations stations
-<FluentLayout>
-    <FluentHeader>
+@inject IJSRuntime JSRuntime
+<div class="application-layout">
+    <header class="application-header">
         <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Left"
                      VerticalAlignment="VerticalAlignment.Center">
             <img src="favicon.ico" style="height: 50px;" />
-            <FluentAnchor Href="#" Appearance="Appearance.Hypertext" Class="appName"
-                          title="@($"{AppSettings.APPLICATION_NAME} v{typeof(AppSettings).Assembly.GetName().Version}")"
-                          OnClick="@(()=>OpenLink("https://pcradio.ru"))">
-                @AppSettings.APPLICATION_NAME</FluentAnchor>
-            </FluentStack>
-        </FluentHeader>
-        <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
-            <NavMenu />
-            <FluentBodyContent Class="body-content">
-                <div class="content">
-                    <FluentLayout>
-                        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Left"
-                                     Spacing="Spacing.Medium" VerticalAlignment="VerticalAlignment.Center">
-                            <FluentIcon Value="@TitleIcon" />
-                            <FluentLabel Typo="Typography.H2">@Title</FluentLabel>
-                            @if (IsExportVisible)
-                            {
-                                <FluentSpacer />
-                                <FluentButton
-                                    IconStart="@(new Microsoft.FluentUI.AspNetCore.Components.Icons.Regular.Size16.ArrowDownload())"
-                                    title="@localizer["ExportTitle"]" OnClick="@ExportStationsAsync"
-                                    Loading="@IsExportProcessing">@localizer["Export"]
-                                </FluentButton>
-                            }
-                        </FluentStack>
-                        @Body
-                        @if (SelectedStationId.HasValue)
-                        {
-                            <PCRadio.Components.Controls.Player StationId="@SelectedStationId" />
-                        }
-                    </FluentLayout>
-                </div>
-            </FluentBodyContent>
+            <FluentLink Href="#" Appearance="LinkAppearance.Default" Class="appName"
+                        title="@($"{AppSettings.APPLICATION_NAME} v{typeof(AppSettings).Assembly.GetName().Version}")"
+                        OnClick="@(()=>OpenLink("https://pcradio.app"))">
+                @AppSettings.APPLICATION_NAME
+            </FluentLink>
         </FluentStack>
-        <FluentFooter>
-            <FluentStack Orientation="Orientation.Horizontal">
-                <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="https://www.tryphotino.io"
-                              OnClick="@(()=>OpenLink("https://www.tryphotino.io"))">@localizer["Photino"]
-                </FluentAnchor>
-                <FluentAnchor Href="#" Appearance="Appearance.Hypertext"
-                              title="https://learn.microsoft.com/en-us/aspnet/core/blazor"
-                              OnClick="@(()=>OpenLink("https://learn.microsoft.com/en-us/aspnet/core/blazor"))">@localizer["Blazor"]
-                </FluentAnchor>
-            </FluentStack>
-            <FluentSpacer />
-            <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Right">
-                <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="https://www.fluentui-blazor.net"
-                              OnClick="@(()=>OpenLink("https://www.fluentui-blazor.net"))">@localizer["FluentUI"]</FluentAnchor>
-                <FluentAnchor Href="#" Appearance="Appearance.Hypertext" title="https://github.com/poimenov/PCRadio"
-                              OnClick="@(()=>OpenLink("https://github.com/poimenov/PCRadio"))">@localizer["SourceCode"]</FluentAnchor>
-            </FluentStack>
-        </FluentFooter>
-    </FluentLayout>
+    </header>
+    <div class="main" style="width: 100%;">
+        <NavMenu />
+        <main class="body-content">
+            <div class="content">
+                <div class="page-layout">
+                    <FluentStack Class="page-heading" Orientation="Orientation.Horizontal"
+                                 HorizontalAlignment="HorizontalAlignment.Left" Spacing="Spacing.Medium"
+                                 VerticalAlignment="VerticalAlignment.Center">
+                        <FluentIcon Value="@TitleIcon" Color="Color.Primary" />
+                        <FluentLabel Typo="Typography.H2" Style="font-size: 24px; line-height: 1.3;">@Title
+                        </FluentLabel>
+                        @if (IsExportVisible)
+                        {
+                            <FluentSpacer />
+                            <FluentButton
+                                IconStart="@(new Microsoft.FluentUI.AspNetCore.Components.Icons.Regular.Size16.ArrowDownload())"
+                                Size="ButtonSize.Small" title="@localizer["ExportTitle"]" OnClick="@ExportStationsAsync"
+                                Loading="@IsExportProcessing">@localizer["Export"]
+                            </FluentButton>
+                        }
+                    </FluentStack>
+                    @Body
+                    @if (SelectedStationId.HasValue)
+                    {
+                        <PCRadio.Components.Controls.Player StationId="@SelectedStationId" />
+                    }
+                </div>
+            </div>
+        </main>
+    </div>
+    <footer>
+        <FluentStack Orientation="Orientation.Horizontal" Class="status-links">
+            <FluentLink Href="#" Appearance="LinkAppearance.Default" title="https://www.tryphotino.io"
+                        OnClick="@(()=>OpenLink("https://www.tryphotino.io"))">@localizer["Photino"]
+            </FluentLink>
+            <FluentLink Href="#" Appearance="LinkAppearance.Default"
+                        title="https://learn.microsoft.com/en-us/aspnet/core/blazor"
+                        OnClick="@(()=>OpenLink("https://learn.microsoft.com/en-us/aspnet/core/blazor"))">@localizer["Blazor"]
+            </FluentLink>
+        </FluentStack>
+        <FluentSpacer />
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Right"
+                     Class="status-links">
+            <FluentLink Href="#" Appearance="LinkAppearance.Default" title="https://www.fluentui-blazor.net"
+                        OnClick="@(()=>OpenLink("https://www.fluentui-blazor.net"))">@localizer["FluentUI"]</FluentLink>
+            <FluentLink Href="#" Appearance="LinkAppearance.Default" title="https://github.com/poimenov/PCRadio"
+                        OnClick="@(()=>OpenLink("https://github.com/poimenov/PCRadio"))">@localizer["SourceCode"]</FluentLink>
+        </FluentStack>
+    </footer>
+</div>
 
 @code
 {
@@ -134,6 +139,17 @@
             StateHasChanged();
         });
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("markAppReady");
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
     private void OpenLink(string url)
     {
         linkOpeningService.OpenUrl(url);

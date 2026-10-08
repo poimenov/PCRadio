@@ -1,4 +1,5 @@
-@implements IToastContentComponent<ErrorData>
+@namespace PCRadio.Components.Controls
+@using Microsoft.FluentUI.AspNetCore.Components
 
 <div style="width: 100%">
     <FluentStack HorizontalAlignment="HorizontalAlignment.Left" VerticalAlignment="VerticalAlignment.Center"
@@ -6,17 +7,14 @@
         <span>@Content.Message</span>
         @if (Content.ActionIcon != null)
         {
-            <FluentIcon Value="@(Content.ActionIcon)" Color="Color.Accent" Title="@Content.ActionMessage"
-                        Style="cursor: pointer;"
+            <FluentIcon Value="@(Content.ActionIcon)" Color="Color.Primary" Title="@Content.ActionMessage"
+                        Style="cursor: pointer; font-size: 28px; width: 28px; height: 28px; flex: 0 0 28px;"
                         OnClick="@(async () => await Content.ActionCallback!.Value.InvokeAsync(default))" />
         }
     </FluentStack>
 </div>
 
 @code {
-    [CascadingParameter]
-    private FluentToast Toast { get; set; } = default!;
-
     [Parameter]
     public ErrorData Content { get; set; } = default!;
 }

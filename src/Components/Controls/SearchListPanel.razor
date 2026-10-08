@@ -4,14 +4,14 @@
 @inject ISearchService SearchService
 @inject IStringLocalizer<SearchListPanel> localizer
 @inject IOptions<AppSettings> options
-@inject IToastService toastService
-@implements IDialogContentComponent<string>
+@inject INotificationService notificationService
+@inherits FluentDialogInstance
 
 <style>
     .selected-row {
-        background-color: var(--accent-fill-rest) !important;
-        color: var(--foreground-on-accent-hover) !important;
-        border-left: 4px solid var(--accent-fill-rest);
+        background-color: var(--colorBrandBackground) !important;
+        color: var(--colorNeutralForegroundOnBrand) !important;
+        border-left: 4px solid var(--colorBrandBackground);
     }
 
     .fluent-data-grid-row {
@@ -25,13 +25,14 @@
 
 <FluentDialogBody>
     <FluentStack HorizontalAlignment="HorizontalAlignment.Stretch" VerticalAlignment="VerticalAlignment.Center"
-                 Spacing="Spacing.Medium" Style="width: 100%; margin-bottom: 15px; flex-shrink: 0;">
+                 Spacing="Spacing.Medium" HorizontalGap="8" Style="width: 100%; margin-bottom: 15px; flex-shrink: 0;">
 
-        <FluentTextField @bind-Value="_searchQuery" Placeholder="@localizer["Placeholder"]" @onkeyup="HandleKeyUp"
+        <FluentTextInput @bind-Value="_searchQuery" Placeholder="@localizer["Placeholder"]" @onkeyup="HandleKeyUp"
                          Style="flex-grow: 1;" />
 
-        <FluentButton Appearance="Appearance.Accent" Disabled="@(isLoading || string.IsNullOrEmpty(_searchQuery))"
-                      @onclick="PerformSearch" Style="flex-shrink: 0;">
+        <FluentButton Appearance="ButtonAppearance.Primary"
+                      Disabled="@(isLoading || string.IsNullOrEmpty(_searchQuery))" @onclick="PerformSearch"
+                      Style="flex-shrink: 0;">
             @localizer["Search"]
         </FluentButton>
 
@@ -39,11 +40,11 @@
 
 
     <div
-        style="max-height: calc(100dvh - 200px); overflow-y: auto; overflow-x: hidden; margin-top: 15px; border: 1px solid var(--neutral-stroke-rest);">
+        style="max-height: calc(100dvh - 195px); overflow-y: auto; overflow-x: hidden; margin-top: 15px; border: 1px solid var(--colorNeutralStroke1);">
         @if (isLoading)
         {
             <div style="padding: 20px; text-align: center;">
-                <FluentProgressRing></FluentProgressRing>
+                <FluentSpinner />
                 <p>@localizer["Loading"]</p>
             </div>
         }
@@ -55,41 +56,23 @@
             }
             else
             {
-                <FluentDataGrid @ref="_myGrid" Items="@SearchResultsQuery" TGridItem="Track" StripedRows="true"
-                                HoveredRows="true" OnRowClick="@HandleRowClick" RowClass="@GetRowClass">
+                <FluentDataGrid @ref="_myGrid" Items="@SearchResultsQuery" TGridItem="Track" StripedRows="true" AutoFit="true"
+                                GenerateHeader="DataGridGeneratedHeaderType.Sticky" RowSize="DataGridRowSize.Smaller" HoveredRows="true"
+                                OnRowClick="@HandleRowClick" RowClass="@GetRowClass">
 
                     <PropertyColumn Property="@(p => p.Artist)" Tooltip="true" TooltipText="@(p => p.Artist)"
-                                    Title="@localizer["Artist"]" Width="1.5fr" Sortable="true" />
+                                    Title="@localizer["Artist"]" Sortable="true" />
                     <PropertyColumn Property="@(p => p.Title)" Tooltip="true" TooltipText="@(p => p.Title)"
-                                    Title="@localizer["Title"]" Width="2fr" Sortable="true" />
-                    <PropertyColumn Property="@(p => p.DisplayDuration)" Title="@localizer["Duration"]" Width="80px"
-                                    Sortable="true" />
+                                    Title="@localizer["Title"]" Sortable="true" />
+                    <PropertyColumn Property="@(p => p.DisplayDuration)" Title="@localizer["Duration"]" Sortable="true" />
                 </FluentDataGrid>
             }
         }
     </div>
 </FluentDialogBody>
 
-<FluentDialogFooter>
-    <FluentButton Appearance="Appearance.Accent" Disabled="@(_selectedTrack == null || isDownloading)"
-                  OnClick="@DownloadSelectedTrackAsync" Title="@downloadButtonTooltip">
-        @if (isDownloading)
-        {
-            <span>@localizer["Downloading"]</span>
-        }
-        else
-        {
-            <span>@localizer["Download"]</span>
-        }
-    </FluentButton>
-    <FluentButton Appearance="Appearance.Neutral" OnClick="@CloseAsync" Disabled="@isDownloading">
-        @localizer["Close"]
-    </FluentButton>
-</FluentDialogFooter>
-
 @code {
     [Parameter] public string Content { get; set; } = string.Empty;
-    [CascadingParameter] public FluentDialog Dialog { get; set; } = default!;
 
     private string _searchQuery = string.Empty;
     private bool isLoading = true;
@@ -102,10 +85,31 @@
     private Track? _selectedTrack;
     private string downloadButtonTooltip => $"{localizer["DownloadTooltip"]}: {options.Value.DownloadPath}";
 
+    protected override void OnInitializeDialog(DialogOptionsHeader header, DialogOptionsFooter footer)
+    {
+        footer.PrimaryFirst = true;
+        footer.PrimaryAction.Label = localizer["Download"];
+        footer.PrimaryAction.Disabled = true;
+        footer.SecondaryAction.Label = localizer["Close"];
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
         _searchQuery = Content;
         await PerformSearch();
+    }
+
+    protected override async Task OnActionClickedAsync(bool primary)
+    {
+        if (primary)
+        {
+            await DownloadSelectedTrackAsync();
+        }
+        else
+        {
+            await CloseDialogAsync();
+        }
     }
 
     private async Task PerformSearch()
@@ -142,7 +146,16 @@
         if (row.Item != null)
         {
             _selectedTrack = row.Item;
+            UpdateDownloadActionState();
+            StateHasChanged();
         }
+    }
+
+    private Task CloseDialogAsync() => DialogInstance.CancelAsync();
+
+    private void UpdateDownloadActionState()
+    {
+        DialogInstance.Options.Footer.PrimaryAction.Disabled = _selectedTrack is null || isDownloading;
     }
 
     private string GetRowClass(Track item)
@@ -152,23 +165,25 @@
 
     private async Task DownloadSelectedTrackAsync()
     {
-        if (_selectedTrack == null) return;
+        if (_selectedTrack == null || isDownloading) return;
 
         try
         {
             isDownloading = true;
+            UpdateDownloadActionState();
             StateHasChanged();
 
             await SearchService.Download(_selectedTrack);
-            toastService.ShowSuccess($"{localizer["Download"]}: {_selectedTrack.Title} - {localizer["DownloadSuccess"]}");
+            await notificationService.ShowSuccessToastAsync($"{localizer["Download"]}: {_selectedTrack.Title} - {localizer["DownloadSuccess"]}");
         }
         catch (Exception ex)
         {
-            toastService.ShowError($"{localizer["DownloadError"]}: {ex.Message}");
+            await notificationService.ShowErrorToastAsync($"{localizer["DownloadError"]}: {ex.Message}");
         }
         finally
         {
             isDownloading = false;
+            UpdateDownloadActionState();
             StateHasChanged();
         }
     }
@@ -181,5 +196,4 @@
         }
     }
 
-    private async Task CloseAsync() => await Dialog.CancelAsync();
 }

@@ -5,28 +5,34 @@
 @inject IStringLocalizer<StationPanel> localizer
 @inject ILogger<StationPanel> logger
 @inject IGenres genres
-@inject IToastService toastService
+@inject INotificationService notificationService
 @inject IStations stations
 @inject ICountries countries
-@implements IDialogContentComponent<PCRadio.DataAccess.Models.Station>
+@inherits FluentDialogInstance
 
 <style>
     .textBox {
-        width: 300px;
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        margin-block-end: -12px;
     }
 </style>
 
 <FluentDialogBody>
-    <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
-        <FluentTextField Class="textBox" @bind-Value="@(Content!.Name)">@localizer["Name"]</FluentTextField>
-        <FluentTextField Class="textBox" @bind-Value="@Content!.Logo">@localizer["Logo"]</FluentTextField>
-        <FluentTextField Class="textBox" @bind-Value="@Content!.Stream">@localizer["Stream"]</FluentTextField>
-        <FluentTextArea Class="textBox" @bind-Value="@Content!.Description">@localizer["Description"]</FluentTextArea>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="0px">
+        <FluentTextInput Class="textBox" Label="@localizer["Name"]" @bind-Value="@(Content!.Name)"
+                         @bind-Value:after="UpdateSaveActionState" />
+        <FluentTextInput Class="textBox" Label="@localizer["Logo"]" @bind-Value="@Content!.Logo" />
+        <FluentTextInput Class="textBox" Label="@localizer["Stream"]" @bind-Value="@Content!.Stream"
+                         @bind-Value:after="UpdateSaveActionState" />
+        <FluentTextArea Class="textBox" Label="@localizer["Description"]" @bind-Value="@Content!.Description"
+                        Height="150px" />
         @if (Content != null && Content.CountryId is null)
         {
-            <FluentSelect TOption="PCRadio.DataAccess.Models.Country" Label="@localizer["Country"]"
-                          OptionValue="@(x => x?.Id.ToString())" Items="@Countries" Class="textBox" Height="200px"
-                          @bind-SelectedOption="@SelectedCountry">
+            <FluentSelect TOption="PCRadio.DataAccess.Models.Country" TValue="PCRadio.DataAccess.Models.Country"
+                          Label="@localizer["Country"]" OptionValue="@(x => x)" Items="@Countries" Class="textBox" Height="200px"
+                          @bind-Value="@SelectedCountry">
                 <OptionTemplate>
                     <FluentStack>
                         @context?.GetCountryIcon(false)
@@ -37,9 +43,9 @@
         }
         @if (Content != null && (Content.StationGenres == null || !Content.StationGenres.Any()))
         {
-            <FluentSelect TOption="PCRadio.DataAccess.Models.Genre" Label="@localizer["Genre"]" OptionText="@(g => g.Name)"
-                          Class="textBox" @bind-SelectedOption="@SelectedGenre" OptionValue="@(g => g.Id.ToString())" Items="@Genres"
-                          Height="200px" />
+            <FluentSelect TOption="PCRadio.DataAccess.Models.Genre" TValue="PCRadio.DataAccess.Models.Genre"
+                          Label="@localizer["Genre"]" OptionText="@(g => g.Name)" Class="textBox" @bind-Value="@SelectedGenre"
+                          OptionValue="@(g => g)" Items="@Genres" Height="200px" />
         }
 
         <FluentCheckbox Class="textBox" @bind-Value="@(Content!.IsFavorite)">@localizer["IsFavorite"]</FluentCheckbox>
@@ -47,36 +53,14 @@
     </FluentStack>
 </FluentDialogBody>
 
-<FluentDialogFooter>
-    @if (Content != null)
-    {
-        @if (Content.Id > 0)
-        {
-            <FluentButton Disabled="@(!IsValid)" Appearance="Appearance.Accent" OnClick="@UpdateAsync">
-                @localizer["Update"]
-            </FluentButton>
-        }
-        else
-        {
-            <FluentButton Disabled="@(!IsValid)" Appearance="Appearance.Accent" OnClick="@ImportAsync">
-                @localizer["Import"]
-            </FluentButton>
-        }
-    }
-
-    <FluentButton Appearance="Appearance.Neutral" OnClick="@CloseAsync">
-        @localizer["Close"]
-    </FluentButton>
-</FluentDialogFooter>
-
 @code {
     [Parameter] public PCRadio.DataAccess.Models.Station Content { get; set; } = default!;
-    [CascadingParameter] public FluentDialog Dialog { get; set; } = default!;
 
     private IEnumerable<PCRadio.DataAccess.Models.Genre>? Genres { get; set; }
     private IEnumerable<PCRadio.DataAccess.Models.Country>? Countries { get; set; }
     private PCRadio.DataAccess.Models.Genre? SelectedGenre { get; set; }
     private PCRadio.DataAccess.Models.Country? SelectedCountry { get; set; }
+    private bool IsSaving { get; set; }
     private bool IsValid
     {
         get
@@ -94,14 +78,72 @@
             return Uri.TryCreate(Content.Stream, UriKind.Absolute, out Uri? _);
         }
     }
+
+    protected override void OnInitializeDialog(DialogOptionsHeader header, DialogOptionsFooter footer)
+    {
+        footer.PrimaryFirst = true;
+        footer.PrimaryAction.Label = Content.Id > 0 ? localizer["Update"] : localizer["Import"];
+        footer.PrimaryAction.Disabled = !IsValid;
+        footer.SecondaryAction.Label = localizer["Close"];
+    }
+
     protected override void OnInitialized()
     {
         Genres = genres.GetAll();
         Countries = countries.GetAll();
+        if (Content.StationGenres == null || !Content.StationGenres.Any())
+        {
+            SelectedGenre = Genres.FirstOrDefault();
+        }
         base.OnInitialized();
     }
 
-    private async Task CloseAsync() => await Dialog.CancelAsync();
+    protected override async Task OnActionClickedAsync(bool primary)
+    {
+        if (primary)
+        {
+            await SaveAsync();
+        }
+        else
+        {
+            await CloseDialogAsync();
+        }
+    }
+
+    private Task CloseDialogAsync() => DialogInstance.CancelAsync();
+
+    private async Task SaveAsync()
+    {
+        if (IsSaving || !IsValid)
+        {
+            return;
+        }
+
+        IsSaving = true;
+        UpdateSaveActionState();
+        try
+        {
+            if (Content.Id > 0)
+            {
+                await UpdateAsync();
+            }
+            else
+            {
+                await ImportAsync();
+            }
+        }
+        finally
+        {
+            IsSaving = false;
+            UpdateSaveActionState();
+        }
+    }
+
+    private void UpdateSaveActionState()
+    {
+        DialogInstance.Options.Footer.PrimaryAction.Disabled = IsSaving || !IsValid;
+    }
+
     private async Task ImportAsync()
     {
         if (Content != null && Content.Id == 0)
@@ -128,14 +170,16 @@
             if (!oResult.Success)
             {
                 logger.LogError(oResult.Exception, oResult.Message);
-                toastService.ShowError($"{localizer["AddError"]}: {oResult.Message}");
+                await notificationService.ShowErrorToastAsync($"{localizer["AddError"]}: {oResult.Message}");
                 return;
             }
 
             if (oResult.Result != null && oResult.Result.Id > 0)
             {
                 Content = oResult.Result;
-                toastService.ShowSuccess($"{localizer["Station"]} \"{Content.Name}\" {localizer["Added"]}");
+                await notificationService.ShowSuccessToastAsync($"{localizer["Station"]} \"{Content.Name}\" {localizer["Added"]}");
+                DialogInstance.Options.Footer.PrimaryAction.Label = localizer["Update"];
+                UpdateSaveActionState();
             }
         }
     }
@@ -146,12 +190,12 @@
             var oResult = await stations.UpdateStationAsync(Content);
             if (oResult.Success)
             {
-                toastService.ShowSuccess($"{localizer["Station"]} \"{Content.Name}\" {localizer["Updated"]}");
+                await notificationService.ShowSuccessToastAsync($"{localizer["Station"]} \"{Content.Name}\" {localizer["Updated"]}");
             }
             else
             {
                 logger.LogError(oResult.Exception, oResult.Message);
-                toastService.ShowError($"{localizer["UpdateError"]}: {oResult.Message}");
+                await notificationService.ShowErrorToastAsync($"{localizer["UpdateError"]}: {oResult.Message}");
             }
         }
     }

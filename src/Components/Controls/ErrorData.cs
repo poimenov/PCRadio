@@ -1,9 +1,7 @@
-
 using Microsoft.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components;
 
 namespace PCRadio.Components.Controls;
-
 
 public class ErrorData
 {
@@ -11,5 +9,4 @@ public class ErrorData
     public Icon? ActionIcon { get; set; }
     public string? ActionMessage { get; set; }
     public EventCallback<ToastResult>? ActionCallback { get; set; }
-    
 }

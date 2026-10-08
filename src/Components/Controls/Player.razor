@@ -17,7 +17,7 @@
 @inject IHttpClientFactory httpClientFactory
 @inject IHistoryRecords historyRecords
 @inject IAppStateService appStateService
-@inject IToastService toastService
+@inject INotificationService notificationService
 @inject ILogger<Player> logger
 @inject IDialogService dialogService
 @inject IMetadataService metadataService
@@ -25,122 +25,62 @@
 <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" Class="player">
     <img class="logo" src="@(Station?.Logo ?? AppSettings.DEFAULT_IMG_PATH)" alt="@Station?.Name"
          onerror="this.src='@AppSettings.DEFAULT_IMG_PATH'" title="@Station?.Description" loading="lazy" />
-    <FluentStack Orientation="Orientation.Vertical" VerticalAlignment="VerticalAlignment.Top" VerticalGap="2">
-        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+    <FluentStack Orientation="Orientation.Vertical" VerticalAlignment="VerticalAlignment.Top" VerticalGap="4"
+                 Class="player-info">
+        <div class="player-station-identity">
             @Station?.GetCountryIcon(className: "player-country-flag")
             <FluentButton IconStart="@(Station!.IsFavorite ? new _filled.Size20.Heart() : new _regular.Size20.Heart())"
-                          Color="Color.Accent" OnClick="@ToggleFavorite" Title="@localizer["AddToFavorites"]" />
-            <b>@Station?.Name</b>
-            <span>(@_country @_cities)</span>
-        </FluentStack>
-        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
-            <FluentButton IconStart="@(new _regular.Size20.EditLineHorizontal3())" Color="Color.Accent"
-                          OnClick="@EditStationInfo" Title="@localizer["EditStationInfo"]" />
+                          Color="var(--colorBrandForeground1)" OnClick="@ToggleFavorite" Title="@localizer["AddToFavorites"]"
+                          Appearance="ButtonAppearance.Transparent" />
+            <b class="player-station-name">@Station?.Name</b>
+            <span class="player-station-location">(@_country @_cities)</span>
+        </div>
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
+                     HorizontalGap="8">
+            <FluentButton IconStart="@(new _regular.Size20.EditLineHorizontal3())" Color="var(--colorBrandForeground1)"
+                          OnClick="@EditStationInfo" Title="@localizer["EditStationInfo"]"
+                          Appearance="ButtonAppearance.Transparent" />
             <i>@_genres @_subgenres</i>
         </FluentStack>
         <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
-                     HorizontalGap="2">
-            <FluentButton Id="btnSearch" IconStart="@(new _regular.Size20.VideoClip())" Color="Color.Accent"
-                          OnClick="@Search" Disabled="@(string.IsNullOrEmpty(SearchText))"
-                          Title="@localizer["SearchInYoutube"]" />
-            <FluentButton Id="btnSearch" IconStart="@(new _regular.Size20.Search())" Color="Color.Accent"
-                          OnClick="@OpenSearchPanel" Disabled="@(string.IsNullOrEmpty(SearchText))"
-                          Title="@localizer["SearchInZ3FM"]" />
+                     HorizontalGap="8">
+            <FluentButton Id="btnSearch" IconStart="@(new _regular.Size20.VideoClip())"
+                          Color="var(--colorBrandForeground1)" OnClick="@Search" Disabled="@(string.IsNullOrEmpty(SearchText))"
+                          Title="@localizer["SearchInYoutube"]" Appearance="ButtonAppearance.Transparent" />
+            <FluentButton Id="btnSearch" IconStart="@(new _regular.Size20.Search())"
+                          Color="var(--colorBrandForeground1)" OnClick="@OpenSearchPanel"
+                          Disabled="@(string.IsNullOrEmpty(SearchText))" Title="@localizer["SearchInZ3FM"]"
+                          Appearance="ButtonAppearance.Transparent" />
             <div id="NowPlaying"
-                 style="color:var(--accent-fill-rest);font-size: 12px;@(string.IsNullOrEmpty(SearchText) ? "display: none;" : "")">
+                 style="color:var(--colorBrandBackground);font-size: 12px;@(string.IsNullOrEmpty(SearchText) ? "display: none;" : "")">
             </div>
         </FluentStack>
     </FluentStack>
     <FluentSpacer />
     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
-                 HorizontalAlignment="HorizontalAlignment.Right" style="width: 130px;">
+                 HorizontalAlignment="HorizontalAlignment.Right" style="width: 112px;" Class="player-controls">
         <FluentButton Id="popoverButton" Class="player-button" IconStart="@(new _regular.Size48.Speaker2())"
-                      Color="Color.Accent" OnClick="@(() => _isPopoverVisible = !_isPopoverVisible)"
+                      Color="var(--colorBrandForeground1)" OnClick="@(() => _isPopoverVisible = !_isPopoverVisible)"
                       Title="@localizer["Volume"]" />
         <FluentButton Class="player-button"
-                      IconStart="@(_isPlaying ? new _regular.Size48.Pause() : new _regular.Size48.Play())" Color="Color.Accent"
-                      OnClick="@Play" Title="@localizer["PlayStop"]" />
+                      IconStart="@(_isPlaying ? new _regular.Size48.Pause() : new _regular.Size48.Play())"
+                      Color="var(--colorBrandForeground1)" OnClick="@Play" Title="@localizer["PlayStop"]" />
     </FluentStack>
 </FluentStack>
-<FluentPopover AnchorId="popoverButton" @bind-Open="_isPopoverVisible" Style="width: 90px; height: 260px;"
-               VerticalPosition="VerticalPosition.Top" HorizontalPosition="HorizontalPosition.Left">
-
-    <Body>
-        <FluentSlider Orientation="Orientation.Vertical" Min="0.0" Max="1.0" Step="0.01" ValueChanged="@SetVolume"
-                      Value="@(1.0 - _volume)" TValue="double" Style="width: 30px; height: 200px;">
-            <FluentSliderLabel Position="1.0">0%</FluentSliderLabel>
-            <FluentSliderLabel Position="0.75">25%</FluentSliderLabel>
-            <FluentSliderLabel Position="0.5">50%</FluentSliderLabel>
-            <FluentSliderLabel Position="0.25">75%</FluentSliderLabel>
-            <FluentSliderLabel Position="0.0">100%</FluentSliderLabel>
-        </FluentSlider>
-    </Body>
+<FluentPopover AnchorId="popoverButton" @bind-Opened="_isPopoverVisible" Style="width: 90px; height: 260px;">
+    <div class="volume-control">
+        <input id="volumeSlider" type="range" class="volume-slider" min="0" max="1" step="any" value="@_volume"
+               aria-label="@localizer["Volume"]" />
+        <div class="volume-graduation">
+            <span>100%</span>
+            <span>75%</span>
+            <span>50%</span>
+            <span>25%</span>
+            <span>0%</span>
+        </div>
+    </div>
 </FluentPopover>
 <audio id="audio" src="@AudioUrl" controls style="display: none;" onerror="@ShowMessage" onstalled="@ShowMessage" />
-<script>
-    var playerIntervalId;
-    var timeout = 5000;
-
-    function setCurrentTrackName(value) {
-        var div = document.getElementById("NowPlaying");
-        if (div && div.innerHTML != value) {
-            div.innerHTML = value;
-        }
-    }
-
-    window.setPageRef = (dotNetRef) => {
-        window.initComponent = (titleDelay) => {
-            timeout = titleDelay || timeout;
-        };
-
-        window.getCurrentTrackName = () => {
-            var player = document.getElementById("audio");
-            if (player && player.src) {
-                dotNetRef.invokeMethodAsync('GetCurrentTrackNameAsync').then(result => {
-                    if (result) {
-                        setCurrentTrackName(result);
-                    }
-                }).catch(error => {
-                    console.error("Error invoking GetCurrentTrackNameAsync:", error);
-                    setCurrentTrackName("");
-                });
-            }
-            else {
-                setCurrentTrackName("");
-            }
-        };
-
-        initComponent();
-        playerIntervalId = setInterval(getCurrentTrackName, timeout);
-    };
-
-    window.cleanupPlayer = () => {
-        if (playerIntervalId) {
-            clearInterval(playerIntervalId);
-            playerIntervalId = null;
-        }
-    };
-
-    function playAudio(isPlaying) {
-        var player = document.getElementById("audio");
-        if (player) {
-            if (isPlaying && player.paused) {
-                player.play().catch(error => {
-                    console.error("Error playing audio:", error);
-                });
-            } else if (!isPlaying && !player.paused) {
-                player.pause();
-            }
-        }
-    }
-
-    function setVolume(volume) {
-        var player = document.getElementById("audio");
-        if (player) {
-            player.volume = volume;
-        }
-    }
-</script>
 
 @code {
     [Parameter]
@@ -170,8 +110,6 @@
     private Station? Station { get; set; }
     private DotNetObjectReference<Player>? thisRef;
     private HistoryRecordEqualityComparer historyRecordEqualityComparer = new HistoryRecordEqualityComparer();
-    private IDialogReference? searchDialogReference;
-
     string AudioUrl
     {
         get
@@ -219,6 +157,19 @@
             catch (Exception ex)
             {
                 logger?.LogError(ex, "Error initializing player");
+            }
+        }
+
+        if (firstRender)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("initVolumeControl");
+                await JSRuntime.InvokeVoidAsync("setVolume", _volume);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Error setting initial volume");
             }
         }
 
@@ -270,39 +221,27 @@
         }
     }
 
-    private async Task SetVolume(double volume)
-    {
-        // Inverted because slider goes from top (1.0) to bottom (0.0)
-        _volume = 1.0 - volume;
-        try
-        {
-            await JSRuntime.InvokeVoidAsync("setVolume", _volume);
-        }
-        catch (Exception ex)
-        {
-            logger?.LogError(ex, "Error setting volume");
-        }
-    }
-
     private async Task ShowMessage()
     {
         if (Station != null)
         {
-            toastService.ShowToast<ErrorMessage, ErrorData>(new ToastParameters<ErrorData>()
+            var options = new ToastOptions
             {
-                Icon = (new _filled.Size20.DismissCircle(), Color.Error),
-                Title = localizer["Error"],
-                Content = new ErrorData
+                Intent = ToastIntent.Error,
+                Title = localizer["Error"]
+            };
+            options.Parameters["Content"] = new ErrorData
+            {
+                Message = $"{localizer["StreamNotAvailable"]}: {Station.Name}",
+                ActionMessage = localizer["CopyUrl"],
+                ActionIcon = new _regular.Size28.Copy(),
+                ActionCallback = EventCallback.Factory.Create<ToastResult>(this, async () =>
                 {
-                    Message = $"{localizer["StreamNotAvailable"]}: {Station.Name} ({AudioUrl})",
-                    ActionMessage = localizer["CopyUrl"],
-                    ActionIcon = new _regular.Size28.Copy(),
-                    ActionCallback = EventCallback.Factory.Create<ToastResult>(this, async () =>
-                    {
-                        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", AudioUrl);
-                    })
-                }
-            });
+                    await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", AudioUrl);
+                })
+            };
+
+            await notificationService.ShowToastAsync<ErrorMessage>(options);
 
             _isPlaying = false;
             try
@@ -350,29 +289,28 @@
     private async Task OpenSearchPanel()
     {
         var content = SearchText ?? string.Empty;
-        var parameters = new DialogParameters<string>()
+        var options = new DialogOptions
         {
-            Content = content,
-            Alignment = HorizontalAlignment.Right,
-            Title = localizer["SearchInZ3FM"],
-            Width = "450px",
+            Alignment = DialogAlignment.End,
+            Width = "450px"
         };
-        searchDialogReference = await dialogService.ShowPanelAsync<SearchListPanel>(content, parameters);
+        options.Header.Title = localizer["SearchInZ3FM"];
+        options.Parameters.Add(nameof(SearchListPanel.Content), content);
+        await dialogService.ShowDialogAsync<SearchListPanel>(options);
     }
 
     private async Task EditStationInfo()
     {
         if (Station is not null)
         {
-            var parameters = new DialogParameters<PCRadio.DataAccess.Models.Station>()
+            var options = new DialogOptions
             {
-                Content = Station,
-                Alignment = HorizontalAlignment.Right,
-                Title = localizer["StationInfo"],
-                Width = "350px",
+                Alignment = DialogAlignment.End,
+                Width = "350px"
             };
-            var dialogReference = await dialogService.ShowPanelAsync<StationPanel>(Station, parameters);
-            DialogResult result = await dialogReference.Result;
+            options.Header.Title = localizer["StationInfo"];
+            options.Parameters.Add(nameof(StationPanel.Content), Station);
+            DialogResult result = await dialogService.ShowDialogAsync<StationPanel>(options);
             if (!result.Cancelled)
             {
                 Station = await stations.GetStationAsync(Station.Id);

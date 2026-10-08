@@ -6,6 +6,15 @@
     <data name="Theme" xml:space="preserve">
         <value>Theme</value>
     </data>
+    <data name="ThemeModeSystem" xml:space="preserve">
+        <value>System</value>
+    </data>
+    <data name="ThemeModeLight" xml:space="preserve">
+        <value>Light</value>
+    </data>
+    <data name="ThemeModeDark" xml:space="preserve">
+        <value>Dark</value>
+    </data>
     <data name="Color" xml:space="preserve">
         <value>Color</value>
     </data>
@@ -28,7 +37,7 @@
         <value>Update stations list</value>
     </data>              
     <data name="LanguageAnnotation" xml:space="preserve">
-        <value>* changes will take effect after restart program</value>
+        <value>* changes will take effect after restarting the program</value>
     </data>  
     <data name="DataBaseUpdateSuccess" xml:space="preserve">
         <value>Database update completed successfully.</value>

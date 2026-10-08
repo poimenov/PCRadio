@@ -12,40 +12,56 @@
 @inject IOptions<AppSettings> options
 @inject IGenres genres
 @inject ICountries countries
-@inject IGenres genres
 @inject IAppStateService appStateService
 
-<FluentGrid Style="margin-bottom: 10px;">
-    <FluentGridItem>
-        <FluentTextField Label="@localizer["SearchLabel"]" @bind-Value="@SearchName"
-            Placeholder="@localizer["SearchPlaceholder"]" Style="width: 210px;" />
-    </FluentGridItem>
+<div class="search-toolbar">
+    <div class="search-toolbar-field">
+        <FluentTextInput Label="@localizer["SearchLabel"]" @bind-Value="@SearchName" Class="search-filter"
+                         Placeholder="@localizer["SearchPlaceholder"]" />
+    </div>
 
-    <FluentGridItem>
-        <FluentSelect TOption="_models.Genre" Label="@localizer["Genres"]" OptionValue="@(x => x?.Id.ToString())"
-            Items="@Genres" Width="200px" Height="200px" @bind-SelectedOption="@SearchGenre">
-            <OptionTemplate>@context?.Name</OptionTemplate>
-        </FluentSelect>
-    </FluentGridItem>
-
-    <FluentGridItem>
-        <FluentSelect TOption="_models.Country" Label="@localizer["Countries"]" OptionValue="@(x => x?.Id.ToString())"
-            Items="@Countries" Width="150px" Height="200px" @bind-SelectedOption="@SearchCountry">
+    <div class="search-toolbar-field">
+        <FluentSelect TOption="_models.Genre" TValue="_models.Genre" Label="@localizer["Genres"]"
+                      OptionValue="@(x => x)" OptionText="@(x => x.Name)" Items="@Genres" Class="search-filter"
+                      @bind-Value="@SearchGenre">
             <OptionTemplate>
-                <FluentStack>
-                    @context?.GetCountryIcon(false)
-                    @context?.Name
-                </FluentStack>
+                <span slot="checked-indicator" style="display: none"></span>
+                @context?.Name
             </OptionTemplate>
         </FluentSelect>
-    </FluentGridItem>
-    <FluentGridItem style="padding-top: 36px;">
-        <FluentButton IconStart="@(new _regular.Size20.Search())" OnClick="PerformSearch"></FluentButton>
-    </FluentGridItem>
-</FluentGrid>
+    </div>
+
+    <div class="search-toolbar-field">
+        <div class="dropdown-with-icon country-dropdown">
+            <span class="selected-country-icon">
+                @if (SearchCountry != null)
+                {
+                    @SearchCountry.GetCountryIcon(false)
+                }
+            </span>
+            <FluentSelect TOption="_models.Country" TValue="_models.Country" Label="@localizer["Countries"]"
+                          OptionValue="@(x => x)" OptionText="@(x => x.Name)" Items="@Countries" Class="search-filter"
+                          ControlStyle="padding-inline-start: 30px;" @bind-Value="@SearchCountry">
+                <OptionTemplate>
+                    <span slot="checked-indicator" style="display: none"></span>
+                    <span class="dropdown-option-content">
+                        @context?.GetCountryIcon(false)
+                        @context?.Name
+                    </span>
+                </OptionTemplate>
+            </FluentSelect>
+        </div>
+    </div>
+    <div class="search-toolbar-button">
+        <FluentButton OnClick="PerformSearch" Title="@localizer["SearchButton"]" AriaLabel="@localizer["SearchButton"]"
+                      IconOnly="true" Disabled="@(!_searchEnabled)">
+            <FluentIcon Value="@(new _regular.Size20.Search())" Color="Color.Primary" />
+        </FluentButton>
+    </div>
+</div>
 
 <PCRadio.Components.Controls.StationsList Count="@_result?.TotalCount" PageSize="@PageSize"
-    Stations="@_result?.Stations.ToList()" GetStations="@((skip, take) => stations.SearchAsync(_params, skip, take))" />
+                                          Stations="@_result?.Stations.ToList()" GetStations="@((skip, take) => stations.SearchAsync(_params, skip, take))" />
 
 
 @code
@@ -84,7 +100,7 @@
     private _models.Genre? SearchGenre { get; set; }
     private StationsResult? _result = default!;
     private SearchParams? _params = default!;
-    private bool _searchEnabled => !string.IsNullOrEmpty(SearchName);
+    private bool _searchEnabled { get; set; } = true;
 
     protected override void OnInitialized()
     {
@@ -95,9 +111,11 @@
 
     private async Task PerformSearch()
     {
+        _searchEnabled = false;
         _params = new SearchParams { Name = SearchName, CountryId = SearchCountry?.Id ?? 0, GenreId = SearchGenre?.Id ?? 0 };
         _result = await stations.SearchAsync(_params, 0, PageSize);
         var title = _result.TotalCount > 0 ? $"{localizer["Header"]} ({_result.TotalCount})" : localizer["Header"];
         appStateService.Title = title;
+        _searchEnabled = true;
     }
 }

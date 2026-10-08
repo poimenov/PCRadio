@@ -18,27 +18,25 @@
 }
 else
 {
-    <FluentListbox Items="@Stations" @bind-SelectedOption="@SelectedStation" OptionValue="@(x => x?.Id.ToString())"
-                   Class="station-list">
+    <FluentListbox TOption="Station" TValue="Station" Items="@Stations" @bind-Value="@SelectedStation"
+                   OptionValue="@(x => x)" Class="station-list">
         <OptionTemplate>
-            <FluentCard Class="station-card">
+            <span slot="checked-indicator" style="display: none"></span>
+            <FluentCard Class="station-card" @onclick="@(() => SelectedStation = context)">
                 <img class="logo" src="@(context?.Logo ?? AppSettings.DEFAULT_IMG_PATH)"
                      onerror="this.src='@AppSettings.DEFAULT_IMG_PATH'" alt="@context?.Name" loading="lazy" />
-                <div style="width: 180px !important;">
-                    <div style="font-weight: bold; height: 20px !important;overflow: hidden;">
-                        @context?.GetCountryIcon() @context?.Name
+                <div class="station-info">
+                    <div class="station-title" title="@context?.Name">
+                        @context?.GetCountryIcon()
+                        <span class="station-name">@context?.Name</span>
                     </div>
-                    <div style="height: 60px !important;overflow: hidden;" title="@context?.Description">
+                    <div style="height:73px;" title="@context?.Description">
                         @if (context != null)
                         {
-                            if (context.IsFavorite)
-                            {
-                                <FluentIcon Value="@(new _filled.Size16.Heart())" Color="Color.Accent" Class="favorite-icon" />
-                            }
-                            else
-                            {
-                                <FluentIcon Value="@(new _regular.Size16.Heart())" Color="Color.Accent" Class="favorite-icon" />
-                            }
+                            var iconValue = context.IsFavorite ? new _filled.Size16.Heart() as Icon : new
+                                _regular.Size16.Heart() as Icon;
+                            <FluentIcon Value="@iconValue" Color="Color.Primary" Class="favorite-icon"
+                                        Style="margin-right: 10px;" />
                         }
                         @context?.Description
                     </div>
@@ -56,13 +54,13 @@ else
                     return;
                 }
 
-                var stationList = document.querySelector(".station-list");
+                var stationList = document.querySelector(".station-list fluent-listbox");
                 if (stationList === null || stationList.parentElement === null) {
                     console.error("Station list or its parent element not found");
                     return;
                 }
 
-                var scrollContainer = stationList.parentElement;
+                var scrollContainer = stationList;
                 var isScrollInProgress = false;
 
                 var scrollHandler = (event) => {

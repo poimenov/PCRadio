@@ -21,15 +21,15 @@ else
 {
     <div style="height:100%;overflow:auto;">
         <FluentDataGrid Items="@RecordsQuery" StripedRows="true" HoveredRows="true"
-            SelectionMode="DataGridSelectionMode.None">
+                        SelectionMode="DataGridSelectionMode.None" GenerateHeader="DataGridGeneratedHeaderType.Sticky">
             <PropertyColumn Property="@(p => p.StartTime)" Title="@localizer["StartTime"]" width="180px"
-                Format="yyyy-MM-dd HH:mm:ss" />
+                            Format="yyyy-MM-dd HH:mm:ss" />
             <PropertyColumn Property="@(p => p.StationName)" Title="@localizer["Station"]" width="180px" />
             <TemplateColumn Title="@localizer["Track"]">
-                <FluentAnchor Href="#" Appearance="Appearance.Hypertext" OnClick="@(() => OpenLink(@context.TrackName))"
-                    title="@context.TrackName" class="historyLink">
+                <a href="#" @onclick="() => OpenLink(context.TrackName)" @onclick:preventDefault="true"
+                   @onclick:stopPropagation="true" title="@context.TrackName" class="historyLink">
                     @context.TrackName
-                </FluentAnchor>
+                </a>
             </TemplateColumn>
         </FluentDataGrid>
     </div>

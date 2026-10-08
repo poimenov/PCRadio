@@ -6,6 +6,15 @@
     <data name="Theme" xml:space="preserve">
         <value>Тема</value>
     </data>
+    <data name="ThemeModeSystem" xml:space="preserve">
+        <value>Системная</value>
+    </data>
+    <data name="ThemeModeLight" xml:space="preserve">
+        <value>Светлая</value>
+    </data>
+    <data name="ThemeModeDark" xml:space="preserve">
+        <value>Тёмная</value>
+    </data>
     <data name="Color" xml:space="preserve">
         <value>Цвет</value>
     </data>
@@ -28,7 +37,7 @@
         <value>Обновить список станций</value>
     </data>                    
     <data name="LanguageAnnotation" xml:space="preserve">
-        <value>* изменения вступят вступят силу после перезапуска программы</value>
+        <value>* изменения вступят в силу после перезапуска программы</value>
     </data> 
     <data name="DataBaseUpdateSuccess" xml:space="preserve">
         <value>Обновление базы данных успешно завершено.</value>

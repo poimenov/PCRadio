@@ -9,6 +9,9 @@
     <data name="Downloading" xml:space="preserve">
         <value>Downloading</value>
     </data>     
+    <data name="Download" xml:space="preserve">
+        <value>Download</value>
+    </data>
     <data name="Close" xml:space="preserve">
         <value>Close</value>
     </data> 

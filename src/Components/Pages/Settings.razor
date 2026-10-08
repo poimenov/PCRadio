@@ -2,103 +2,117 @@
 @using Microsoft.Extensions.Localization
 @using Microsoft.Extensions.Options
 @using Microsoft.FluentUI.AspNetCore.Components.Extensions
-@using Microsoft.FluentUI.AspNetCore.Components.Icons.Filled
 @using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @using PCRadio.Services.Interfaces
+@using System.Text.Json
 @inject PCRadio.Services.Interfaces.IDbUpdateService dbUpdateService
 @inject IOptions<AppSettings> options
 @inject IStringLocalizer<Settings> localizer
 @inject IAppStateService appStateService
-@inject IToastService toastService
+@inject INotificationService notificationService
+@inject IThemeService themeService
+@inject IJSRuntime JSRuntime
 
-<FluentDesignTheme @bind-Mode="@Mode" @bind-OfficeColor="@OfficeColor" StorageName="theme" />
+<div class="settings-page">
+    <div class="settings-grid">
+        <div class="settings-field">
+            <FluentSelect TOption="ThemeMode" TValue="ThemeMode" Label="@localizer["Theme"]"
+                          Items="@(Enum.GetValues<ThemeMode>())" OptionValue="@(mode => mode)"
+                          OptionText="@(mode => localizer[$"ThemeMode{mode}"].Value)" @bind-Value="Mode"
+                          @bind-Value:after="ApplyThemeAsync" Width="100%" />
+        </div>
 
-<div style="min-height: 250px;height: 100%;">
-    <FluentGrid>
-        <FluentGridItem lg="3">
-            <FluentSelect Label="@localizer["Theme"]" Items="@(Enum.GetValues<DesignThemeModes>())"
-                          @bind-SelectedOption="@Mode" />
-        </FluentGridItem>
+        <div class="settings-field">
+            <div class="dropdown-with-icon theme-color-dropdown">
+                <span class="theme-color-swatch selected-theme-color"
+                      style="background-color: @(SelectedThemeColor?.HexColor ?? "#0f6cbd");"></span>
+                <FluentSelect TOption="ThemeColorOption" TValue="string" Label="@localizer["Color"]"
+                              Items="@ThemeColors" OptionValue="@(color => color.Name)" OptionText="@(color => color.Name)"
+                              Height="320px" Class="theme-color-select" OptionClass="theme-color-option"
+                              ControlStyle="padding-inline-start: 30px;" @bind-Value="ThemeColor"
+                              @bind-Value:after="ApplyThemeAsync" Width="100%">
+                    <OptionTemplate>
+                        <span slot="checked-indicator" style="display: none"></span>
+                        <span class="dropdown-option-content">
+                            <span class="theme-color-swatch"
+                                  style="background-color: @(context.HexColor ?? "#0f6cbd");"></span>
+                            @context.Name
+                        </span>
+                    </OptionTemplate>
+                </FluentSelect>
+            </div>
+        </div>
 
-        <FluentGridItem lg="3">
-            <FluentSelect Label="@localizer["Color"]"
-                          Items="@(Enum.GetValues<OfficeColor>().Select(i => (OfficeColor?)i))"
-                          @bind-SelectedOption="@OfficeColor">
-                <OptionTemplate>
-                    <FluentStack>
-                        <FluentIcon Value="@(new Size20.RectangleLandscape())" Color="Color.Custom"
-                                    CustomColor="@(@context.ToAttributeValue() != "default" ? context.ToAttributeValue() : "#036ac4")" />
-                        <FluentLabel>@context</FluentLabel>
-                    </FluentStack>
-                </OptionTemplate>
-            </FluentSelect>
-        </FluentGridItem>
+        <div class="settings-field">
+            <FluentSelect TOption="System.Globalization.CultureInfo" TValue="System.Globalization.CultureInfo"
+                          Label="@localizer["Language"]" Items="@AppCultures.Cultures" OptionValue="@(culture => culture)"
+                          OptionText="@(culture => culture.NativeName)" @bind-Value="Language" Width="100%" />
+        </div>
 
-        <FluentGridItem lg="6"></FluentGridItem>
+        <div class="settings-field">
+            <FluentSelect TOption="Quality" TValue="Quality" Label="@localizer["Quality"]" Width="100%"
+                          Items="@(Enum.GetValues<Quality>())" OptionValue="@(quality => quality)"
+                          OptionText="@(quality => localizer[quality.ToString()].Value)" @bind-Value="Quality" />
+        </div>
 
-        <FluentGridItem lg="3">
-            <FluentSelect Items="@(AppCultures.Cultures)" @bind-SelectedOption="@Language">
-                <LabelTemplate>
-                    <FluentStack Orientation="Orientation.Horizontal" Spacing="Spacing.Small">
-                        <FluentLabel>@localizer["Language"]</FluentLabel>
-                        <FluentLabel>*</FluentLabel>
-                    </FluentStack>
-                </LabelTemplate>
-                <OptionTemplate>@context!.NativeName
-                </OptionTemplate>
-            </FluentSelect>
-        </FluentGridItem>
-
-        
-
-        <FluentGridItem lg="3">
-            <FluentSelect Items="@(Enum.GetValues<Quality>())" @bind-SelectedOption="@Quality">
-                <LabelTemplate>
-                    <FluentStack Orientation="Orientation.Horizontal" Spacing="Spacing.Small">
-                        <FluentLabel>@localizer["Quality"]</FluentLabel>
-                        <FluentLabel>*</FluentLabel>
-                    </FluentStack>
-                </LabelTemplate>
-                <OptionTemplate>
-                    @localizer[context.ToString()]
-                </OptionTemplate>
-            </FluentSelect>
-        </FluentGridItem>
-
-        <FluentGridItem lg="6"></FluentGridItem>
-
-
-        <FluentGridItem lg="3">
-            <FluentTextField @bind-Value="DownloadPath" Placeholder="@localizer["DownloadPathPlaceholder"]" style="width: 250px">
+        <div class="settings-field settings-download-path">
+            <FluentTextInput @bind-Value="DownloadPath" Placeholder="@localizer["DownloadPathPlaceholder"]" Width="100%"
+                             Class="download-path-input">
                 <LabelTemplate>
                     <FluentStack Orientation="Orientation.Horizontal" Spacing="Spacing.Small">
                         <FluentLabel>@localizer["DownloadPath"]</FluentLabel>
                         <FluentLabel>*</FluentLabel>
                     </FluentStack>
                 </LabelTemplate>
-            </FluentTextField>
-        </FluentGridItem>
+            </FluentTextInput>
+        </div>
 
+        <div class="settings-field settings-update">
+            <FluentButton OnClick="Update" Loading="@loading" IconStart="@(new _regular.Size16.ArrowClockwise())"
+                          Style="margin-bottom:15px;">
+                @localizer["DataBaseUpdate"]
+            </FluentButton>
+        </div>
 
-        <FluentGridItem lg="3">
-            <div style="width: 250px;height: 100%; display: flex; align-items: end;">
-                <FluentButton OnClick="Update" Loading="@loading" IconStart="@(new _regular.Size16.ArrowClockwise())">
-                    @localizer["DataBaseUpdate"]</FluentButton>
-                </div>
-            </FluentGridItem>
-
-            <FluentGridItem lg="6"></FluentGridItem>
-
-            <FluentGridItem lg="12">@localizer["LanguageAnnotation"]</FluentGridItem>
-
-        </FluentGrid>
+        <div class="settings-annotation">@localizer["LanguageAnnotation"]</div>
     </div>
+</div>
 
-@code
-{
+@code {
+    private sealed record ThemeColorOption(string Name, string? HexColor);
+
+    private static readonly ThemeColorOption[] ThemeColors =
+    [
+        new("Default", "#0f6cbd"),
+        new("Access", "#a4373a"),
+        new("Booking", "#00a99d"),
+        new("Excel", "#217346"),
+        new("GroupMe", "#00bcf2"),
+        new("Office", "#d83b01"),
+        new("OneNote", "#7719aa"),
+        new("Outlook", "#0f6cbd"),
+        new("PowerApps", "#742774"),
+        new("PowerBI", "#f2c811"),
+        new("PowerPoint", "#b7472a"),
+        new("Project", "#31752f"),
+        new("Publisher", "#077568"),
+        new("Stream", "#bc1948"),
+        new("Sway", "#008272"),
+        new("Teams", "#6264a7"),
+        new("Visio", "#3955a3"),
+        new("Windows", "#0078d4"),
+        new("Word", "#2b579a"),
+        new("Yammer", "#106ebe")
+    ];
+
     private string _initialLang = string.Empty;
-    private bool loading = false;
+    private bool loading;
     private System.Globalization.CultureInfo? _language;
+
+    private ThemeMode Mode { get; set; } = ThemeMode.System;
+    private string ThemeColor { get; set; } = "Default";
+    private ThemeColorOption? SelectedThemeColor => ThemeColors.FirstOrDefault(color => color.Name == ThemeColor);
+
     public System.Globalization.CultureInfo? Language
     {
         get => _language;
@@ -127,8 +141,6 @@
         }
     }
 
-    public DesignThemeModes Mode { get; set; }
-    public OfficeColor? OfficeColor { get; set; }
     public Quality Quality
     {
         get => options.Value.Quality;
@@ -139,11 +151,11 @@
         }
     }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         _initialLang = options.Value.DefaultLanguage ?? string.Empty;
         if (!string.IsNullOrEmpty(options.Value.DefaultLanguage) &&
-        AppCultures.Cultures.Select(x => x.ToString()).Contains(options.Value.DefaultLanguage))
+            AppCultures.Cultures.Select(x => x.ToString()).Contains(options.Value.DefaultLanguage))
         {
             Language = AppCultures.Cultures.First(x => x.TextInfo.CultureName == options.Value.DefaultLanguage);
         }
@@ -153,7 +165,33 @@
         }
 
         Quality = options.Value.Quality;
+        var themeSettings = await JSRuntime.InvokeAsync<JsonElement?>("Blazor.theme.getThemeSettings");
+        if (themeSettings is { ValueKind: JsonValueKind.Object } settings)
+        {
+            if (settings.TryGetProperty("mode", out var mode) &&
+                mode.ValueKind == JsonValueKind.String &&
+                Enum.TryParse(mode.GetString(), ignoreCase: true, out ThemeMode parsedMode))
+            {
+                Mode = parsedMode;
+            }
+
+            if (settings.TryGetProperty("color", out var color) &&
+                color.ValueKind == JsonValueKind.String &&
+                color.GetString() is { } hexColor)
+            {
+                ThemeColor = ThemeColors.FirstOrDefault(option =>
+                    string.Equals(option.HexColor?.TrimStart('#'), hexColor.TrimStart('#'), StringComparison.OrdinalIgnoreCase))
+                    ?.Name ?? "Default";
+            }
+        }
+
         appStateService.Title = localizer["Header"];
+    }
+
+    private async Task ApplyThemeAsync()
+    {
+        var selectedColor = ThemeColors.Single(color => color.Name == ThemeColor).HexColor!;
+        await themeService.SetThemeAsync(new ThemeSettings(selectedColor, Mode: Mode));
     }
 
     private async Task Update()
@@ -161,14 +199,13 @@
         loading = true;
         if (await dbUpdateService.UpdateDatabaseAsync())
         {
-            toastService.ShowSuccess(localizer["DataBaseUpdateSuccess"]);
+            await notificationService.ShowSuccessToastAsync(localizer["DataBaseUpdateSuccess"]);
         }
         else
         {
-            toastService.ShowError(localizer["DataBaseUpdateFailed"]);
+            await notificationService.ShowErrorToastAsync(localizer["DataBaseUpdateFailed"]);
         }
 
         loading = false;
     }
-
 }

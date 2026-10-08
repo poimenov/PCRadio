@@ -30,7 +30,10 @@ public class Program
             var builder = PhotinoBlazorAppBuilder.CreateDefault(args);
 
             // Add services to the container.
-            builder.Services.AddFluentUIComponents();
+            builder.Services.AddFluentUIComponents(configuration =>
+            {
+                configuration.Toast.Position = ToastPosition.TopStart;
+            });
             builder.Services.AddLogging(logging =>
             {
                 logging.ClearProviders().AddLog4Net();

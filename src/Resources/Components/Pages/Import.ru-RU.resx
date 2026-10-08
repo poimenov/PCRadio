@@ -6,6 +6,9 @@
     <data name="SearchLabel" xml:space="preserve">
         <value>Название станции</value>
     </data> 
+    <data name="SearchButton" xml:space="preserve">
+        <value>Поиск</value>
+    </data>
     <data name="SearchPlaceholder" xml:space="preserve">
         <value>Название содержит</value>
     </data>    
