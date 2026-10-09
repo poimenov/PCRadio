@@ -43,7 +43,9 @@
                             <FluentButton
                                 IconStart="@(new Microsoft.FluentUI.AspNetCore.Components.Icons.Regular.Size16.ArrowDownload())"
                                 Size="ButtonSize.Small" title="@localizer["ExportTitle"]" OnClick="@ExportStationsAsync"
-                                Loading="@IsExportProcessing">@localizer["Export"]
+                                Loading="@IsExportProcessing" Style="margin-right: 12px;"
+                                Color="var(--colorBrandForeground1)">
+                                @localizer["Export"]
                             </FluentButton>
                         }
                     </FluentStack>
