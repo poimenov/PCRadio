@@ -45,14 +45,28 @@
 
         <div class="settings-field">
             <FluentSelect TOption="System.Globalization.CultureInfo" TValue="System.Globalization.CultureInfo"
-                          Label="@localizer["Language"]" Items="@AppCultures.Cultures" OptionValue="@(culture => culture)"
-                          OptionText="@(culture => culture.NativeName)" @bind-Value="Language" Width="100%" />
+                          Items="@AppCultures.Cultures" OptionValue="@(culture => culture)"
+                          OptionText="@(culture => culture.NativeName)" @bind-Value="Language" Width="100%">
+                <LabelTemplate>
+                    <FluentStack Orientation="Orientation.Horizontal" Spacing="Spacing.Small">
+                        <FluentLabel>@localizer["Language"]</FluentLabel>
+                        <FluentLabel>*</FluentLabel>
+                    </FluentStack>
+                </LabelTemplate>
+            </FluentSelect>
         </div>
 
         <div class="settings-field">
-            <FluentSelect TOption="Quality" TValue="Quality" Label="@localizer["Quality"]" Width="100%"
-                          Items="@(Enum.GetValues<Quality>())" OptionValue="@(quality => quality)"
-                          OptionText="@(quality => localizer[quality.ToString()].Value)" @bind-Value="Quality" />
+            <FluentSelect TOption="Quality" TValue="Quality" Width="100%" Items="@(Enum.GetValues<Quality>())"
+                          OptionValue="@(quality => quality)" OptionText="@(quality => localizer[quality.ToString()].Value)"
+                          @bind-Value="Quality">
+                <LabelTemplate>
+                    <FluentStack Orientation="Orientation.Horizontal" Spacing="Spacing.Small">
+                        <FluentLabel>@localizer["Quality"]</FluentLabel>
+                        <FluentLabel>*</FluentLabel>
+                    </FluentStack>
+                </LabelTemplate>
+            </FluentSelect>
         </div>
 
         <div class="settings-field settings-download-path">
