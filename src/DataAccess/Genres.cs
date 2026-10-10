@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PCRadio.DataAccess.Interfaces;
 using PCRadio.DataAccess.Models;
 
@@ -6,11 +7,26 @@ namespace PCRadio.DataAccess;
 
 public class Genres : IGenres
 {
+    private readonly ILogger<Genres> _logger;
+
+    public Genres(ILogger<Genres> logger)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
     public IEnumerable<Genre> GetAll()
     {
-        using (var db = new Database())
+        try
         {
-            return db.Genres.Include(g => g.SubGenres).ToList();
+            using (var db = new Database())
+            {
+                return db.Genres.Include(g => g.SubGenres).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while fetching all genres.");
+            return Enumerable.Empty<Genre>();
         }
     }
 

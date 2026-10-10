@@ -35,9 +35,18 @@
     </data> 
     <data name="DataBaseUpdate" xml:space="preserve">
         <value>Update stations list</value>
-    </data>              
+    </data>
+    <data name="DataBaseUpdateHint" xml:space="preserve">
+        <value>Update stations list from the internet</value>
+    </data>
+    <data name="LoadFromFile" xml:space="preserve">
+        <value>Load from file</value>
+    </data>                    
+    <data name="LoadFromFileHint" xml:space="preserve">
+        <value>Load stations list from a local file</value>
+    </data>      
     <data name="LanguageAnnotation" xml:space="preserve">
-        <value>* changes will take effect after restarting the program</value>
+        <value>* language changes apply immediately; station data is updated when you reload the database or restart the application</value>
     </data>  
     <data name="DataBaseUpdateSuccess" xml:space="preserve">
         <value>Database update completed successfully.</value>
@@ -50,5 +59,11 @@
     </data>
     <data name="DownloadPathPlaceholder" xml:space="preserve">
         <value>Path to existing folder</value>
+    </data>
+    <data name="SelectZipFile" xml:space="preserve">
+        <value>Select zip archive file</value>
+    </data>
+    <data name="InvalidZipFile" xml:space="preserve">
+        <value>Invalid zip file. Please select a valid file.</value>
     </data>
 </root>

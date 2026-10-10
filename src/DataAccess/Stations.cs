@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PCRadio.Common;
 using PCRadio.DataAccess.Interfaces;
 using PCRadio.DataAccess.Models;
@@ -15,6 +16,13 @@ public class Stations : IStations
     SELECT sg2.Name FROM StationSubGenres ssg
     JOIN SubGenres sg2 ON ssg.SubGenreId = sg2.Id
     WHERE ssg.StationId = {0}";
+
+    private readonly ILogger<Stations> _logger;
+
+    public Stations(ILogger<Stations> logger)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
     private async Task<IEnumerable<string>> GetStationGenresAsync(Database db, int stationId)
     {
@@ -70,19 +78,27 @@ public class Stations : IStations
 
     public async Task<IEnumerable<StationInfo>> ExportRecommendedAsync()
     {
-        await using (var db = new Database())
+        try
         {
-            var retVal = await db.Stations.Where(s => s.Recomended).Select(s => new StationInfo
+            await using (var db = new Database())
             {
-                Id = s.Id,
-                Name = s.Name,
-                Url = s.Stream,
-                LogoUrl = s.Logo,
-                Genres = Enumerable.Empty<string>()
-            }).ToListAsync();
+                var retVal = await db.Stations.Where(s => s.Recomended).Select(s => new StationInfo
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Url = s.Stream,
+                    LogoUrl = s.Logo,
+                    Genres = Enumerable.Empty<string>()
+                }).ToListAsync();
 
-            retVal.ForEach(async s => s.Genres = await GetStationGenresAsync(db, s.Id));
-            return retVal;
+                retVal.ForEach(async s => s.Genres = await GetStationGenresAsync(db, s.Id));
+                return retVal;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while exporting recommended stations.");
+            return Enumerable.Empty<StationInfo>();
         }
     }
 
@@ -118,15 +134,27 @@ public class Stations : IStations
 
     public async Task<StationsResult> GetRecommendedAsync(int skip, int take)
     {
-        await using (var db = new Database())
+        try
         {
-            var query = db.Stations.Where(s => s.Recomended);
-            var totalCount = await query.CountAsync();
-            var stations = await query.Skip(skip).Take(take).ToListAsync();
+            await using (var db = new Database())
+            {
+                var query = db.Stations.Where(s => s.Recomended);
+                var totalCount = await query.CountAsync();
+                var stations = await query.Skip(skip).Take(take).ToListAsync();
+                return new StationsResult
+                {
+                    Stations = stations,
+                    TotalCount = totalCount
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while fetching recommended stations.");
             return new StationsResult
             {
-                Stations = stations,
-                TotalCount = totalCount
+                Stations = Enumerable.Empty<Station>(),
+                TotalCount = 0
             };
         }
     }

@@ -1,20 +1,26 @@
 using PCRadio.Components.Pages;
 using PCRadio.DataAccess.Models;
+using System.Globalization;
 
 namespace PCRadio.Services.Interfaces;
 
 public interface IAppStateService
 {
+    string InitialLanguage { get; }
     string Title { get; set; }
     int CurrentStationId { get; set; }
     bool IsRadioBrowserStationsListLoading { get; set; }
     FavoriteStation? FavoriteStation { get; set; }
     HistoryRecord? LastHistoryRecord { get; set; }
+    void NotifyGenresChanged();
+    void NotifyCultureChanged(CultureInfo culture);
     event Action<string>? TitleChanged;
     event Action<int>? CurrentStationIdChanged;
     event Action<HistoryRecord>? HistoryRecordChanged;
     event Action<FavoriteStation>? FavoriteStationChanged;
     event Action<bool>? RadioBrowserStationsListLoadingChanged;
+    event Action? GenresChanged;
+    event Action<CultureInfo>? CultureChanged;
 }
 
 public class FavoriteStation

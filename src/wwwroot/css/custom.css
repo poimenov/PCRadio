@@ -35,7 +35,8 @@ fluent-drawer[fuib] fluent-drawer-body[fuib] > div[slot="footer"] > fluent-butto
     background-color: var(--colorBrandBackground2);
 }
 
-.page-layout > .station-list {
+.page-layout > .station-list,
+.localized-content > .station-list {
     flex: 1 1 0;
     min-height: 0;
     height: auto !important;
@@ -523,7 +524,7 @@ fluent-drawer[fuib] fluent-drawer-body[fuib] > div[slot="footer"] > fluent-butto
 }
 
 .settings-download-path {
-    grid-column: span 3;
+    grid-column: span 2;
 }
 
 .settings-update {

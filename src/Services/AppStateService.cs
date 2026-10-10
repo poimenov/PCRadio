@@ -1,10 +1,21 @@
 using PCRadio.DataAccess.Models;
 using PCRadio.Services.Interfaces;
+using System.Globalization;
+using Microsoft.Extensions.Options;
 
 namespace PCRadio.Services;
 
 public class AppStateService : IAppStateService
 {
+    private readonly string _initialLanguage;
+
+    public AppStateService(IOptions<AppSettings> options)
+    {
+        _initialLanguage = options.Value.DefaultLanguage ?? string.Empty;
+    }
+
+    public string InitialLanguage => _initialLanguage;
+
     private HistoryRecordEqualityComparer historyRecordEqualityComparer = new HistoryRecordEqualityComparer();
     private FavoriteStationEqualityComparer favoriteStationEqualityComparer = new FavoriteStationEqualityComparer();
     private FavoriteStation? _favoriteStation;
@@ -82,9 +93,14 @@ public class AppStateService : IAppStateService
         }
     }
 
+    public void NotifyGenresChanged() => GenresChanged?.Invoke();
+    public void NotifyCultureChanged(CultureInfo culture) => CultureChanged?.Invoke(culture);
+
     public event Action<string>? TitleChanged;
     public event Action<int>? CurrentStationIdChanged;
     public event Action<HistoryRecord>? HistoryRecordChanged;
     public event Action<FavoriteStation>? FavoriteStationChanged;
     public event Action<bool>? RadioBrowserStationsListLoadingChanged;
+    public event Action? GenresChanged;    
+    public event Action<CultureInfo>? CultureChanged;
 }

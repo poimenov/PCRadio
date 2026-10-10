@@ -1,8 +1,6 @@
 @page "/settings"
 @using Microsoft.Extensions.Localization
 @using Microsoft.Extensions.Options
-@using Microsoft.FluentUI.AspNetCore.Components.Extensions
-@using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @using PCRadio.Services.Interfaces
 @using System.Text.Json
 @inject PCRadio.Services.Interfaces.IDbUpdateService dbUpdateService
@@ -12,6 +10,7 @@
 @inject INotificationService notificationService
 @inject IThemeService themeService
 @inject IJSRuntime JSRuntime
+@inject IOpenDialogService openDialogService
 
 <div class="settings-page">
     <div class="settings-grid">
@@ -46,7 +45,8 @@
         <div class="settings-field">
             <FluentSelect TOption="System.Globalization.CultureInfo" TValue="System.Globalization.CultureInfo"
                           Items="@AppCultures.Cultures" OptionValue="@(culture => culture)"
-                          OptionText="@(culture => culture.NativeName)" @bind-Value="Language" Width="100%">
+                          OptionText="@(culture => culture.NativeName)" @bind-Value="Language"
+                          @bind-Value:after="ApplyLanguageAsync" Width="100%">
                 <LabelTemplate>
                     <FluentStack Orientation="Orientation.Horizontal" Spacing="Spacing.Small">
                         <FluentLabel>@localizer["Language"]</FluentLabel>
@@ -59,31 +59,26 @@
         <div class="settings-field">
             <FluentSelect TOption="Quality" TValue="Quality" Width="100%" Items="@(Enum.GetValues<Quality>())"
                           OptionValue="@(quality => quality)" OptionText="@(quality => localizer[quality.ToString()].Value)"
-                          @bind-Value="Quality">
-                <LabelTemplate>
-                    <FluentStack Orientation="Orientation.Horizontal" Spacing="Spacing.Small">
-                        <FluentLabel>@localizer["Quality"]</FluentLabel>
-                        <FluentLabel>*</FluentLabel>
-                    </FluentStack>
-                </LabelTemplate>
+                          @bind-Value="Quality" Label="@localizer["Quality"]">
             </FluentSelect>
         </div>
 
         <div class="settings-field settings-download-path">
             <FluentTextInput @bind-Value="DownloadPath" Placeholder="@localizer["DownloadPathPlaceholder"]" Width="100%"
-                             Class="download-path-input">
-                <LabelTemplate>
-                    <FluentStack Orientation="Orientation.Horizontal" Spacing="Spacing.Small">
-                        <FluentLabel>@localizer["DownloadPath"]</FluentLabel>
-                        <FluentLabel>*</FluentLabel>
-                    </FluentStack>
-                </LabelTemplate>
+                             Class="download-path-input" Label="@localizer["DownloadPath"]">
             </FluentTextInput>
         </div>
 
         <div class="settings-field settings-update">
-            <FluentButton OnClick="Update" Loading="@loading" IconStart="@(new _regular.Size16.ArrowClockwise())"
-                          Style="margin-bottom:15px;">
+            <FluentButton OnClick="UpdateFromFile" Disabled="@loading" Style="margin-bottom:15px;width:100%;"
+                          Title="@localizer["LoadFromFileHint"]">
+                @localizer["LoadFromFile"]
+            </FluentButton>
+        </div>
+
+        <div class="settings-field settings-update">
+            <FluentButton OnClick="Update" Disabled="@loading" Style="margin-bottom:15px;width:100%;"
+                          Title="@localizer["DataBaseUpdateHint"]">
                 @localizer["DataBaseUpdate"]
             </FluentButton>
         </div>
@@ -119,7 +114,6 @@
         new("Yammer", "#106ebe")
     ];
 
-    private string _initialLang = string.Empty;
     private bool loading;
     private System.Globalization.CultureInfo? _language;
 
@@ -130,16 +124,7 @@
     public System.Globalization.CultureInfo? Language
     {
         get => _language;
-        set
-        {
-            _language = value;
-            if (value != null)
-            {
-                options.Value.DefaultLanguage = value.ToString();
-                options.Value.NeedsDatabaseUpdate = options.Value.DefaultLanguage != _initialLang;
-                options.Value.Save();
-            }
-        }
+        set => _language = value;
     }
 
     public string DownloadPath
@@ -148,10 +133,7 @@
         set
         {
             options.Value.DownloadPath = value;
-            if (!string.IsNullOrWhiteSpace(value) && Directory.Exists(value))
-            {
-                options.Value.Save();
-            }
+            options.Value.Save();
         }
     }
 
@@ -167,16 +149,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _initialLang = options.Value.DefaultLanguage ?? string.Empty;
-        if (!string.IsNullOrEmpty(options.Value.DefaultLanguage) &&
-            AppCultures.Cultures.Select(x => x.ToString()).Contains(options.Value.DefaultLanguage))
-        {
-            Language = AppCultures.Cultures.First(x => x.TextInfo.CultureName == options.Value.DefaultLanguage);
-        }
-        else
-        {
-            Language = AppCultures.DefaultCulture;
-        }
+        _language = AppCultures.Cultures.FirstOrDefault(x => x.Name == options.Value.DefaultLanguage)
+            ?? AppCultures.DefaultCulture;
 
         Quality = options.Value.Quality;
         var themeSettings = await JSRuntime.InvokeAsync<JsonElement?>("Blazor.theme.getThemeSettings");
@@ -208,11 +182,32 @@
         await themeService.SetThemeAsync(new ThemeSettings(selectedColor, Mode: Mode));
     }
 
+    private Task ApplyLanguageAsync()
+    {
+        if (_language is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        options.Value.DefaultLanguage = _language.Name;
+        options.Value.NeedsDatabaseUpdate = options.Value.DefaultLanguage != appStateService.InitialLanguage;
+        options.Value.Save();
+
+        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = _language;
+        System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = _language;
+        System.Globalization.CultureInfo.CurrentCulture = _language;
+        System.Globalization.CultureInfo.CurrentUICulture = _language;
+        appStateService.NotifyCultureChanged(_language);
+
+        return Task.CompletedTask;
+    }
+
     private async Task Update()
     {
         loading = true;
         if (await dbUpdateService.UpdateDatabaseAsync())
         {
+            appStateService.NotifyGenresChanged();
             await notificationService.ShowSuccessToastAsync(localizer["DataBaseUpdateSuccess"]);
         }
         else
@@ -220,6 +215,36 @@
             await notificationService.ShowErrorToastAsync(localizer["DataBaseUpdateFailed"]);
         }
 
+        loading = false;
+    }
+
+    private async Task UpdateFromFile()
+    {
+        loading = true;
+        var filePathes = openDialogService.OpenFile(
+            title: localizer["SelectZipFile"],
+            multiSelect: false,
+            filters: new[] { ("ZIP files (*.zip)", new[] { "*.zip" }) }
+        );
+
+        var filePath = filePathes.FirstOrDefault();
+        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+        {
+            await notificationService.ShowErrorToastAsync(localizer["InvalidZipFile"]);
+            loading = false;
+            return;
+        }
+
+        if (await dbUpdateService.UpdateDatabaseFromFileAsync(filePath))
+        {
+            appStateService.NotifyGenresChanged();
+            await notificationService.ShowSuccessToastAsync(localizer["DataBaseUpdateSuccess"]);
+        }
+        else
+        {
+            await notificationService.ShowErrorToastAsync(localizer["DataBaseUpdateFailed"]);
+        }
+        
         loading = false;
     }
 }

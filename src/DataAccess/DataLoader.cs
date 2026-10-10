@@ -30,7 +30,7 @@ public class DataLoader : IDataLoader
         var sql = string.Empty;
         var filePath = Path.Combine(_appSettings.AppDataPath, Database.DB_FILE_NAME);
         var bakFilePath = Path.Combine(_appSettings.AppDataPath, Database.DB_FILE_NAME + ".bak");
-        if (File.Exists(filePath))
+        if (File.Exists(filePath) && await HasMigrationHistoryTableAsync(filePath))
         {
             // backup database
             File.Copy(filePath, bakFilePath, true);
@@ -186,5 +186,19 @@ public class DataLoader : IDataLoader
         }
 
         return success;
+    }
+
+    private static async Task<bool> HasMigrationHistoryTableAsync(string filePath)
+    {
+        await using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = filePath,
+            Mode = SqliteOpenMode.ReadOnly
+        }.ToString());
+        await connection.OpenAsync();
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = '__EFMigrationsHistory' LIMIT 1;";
+        return await command.ExecuteScalarAsync() is not null;
     }
 }

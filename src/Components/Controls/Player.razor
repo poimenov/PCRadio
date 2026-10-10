@@ -133,8 +133,19 @@
 
     protected override async Task OnInitializedAsync()
     {
+        appStateService.CultureChanged += OnCultureChanged;
         httpClient = httpClientFactory.CreateClient("PCRadio.Player.Client");
         await base.OnInitializedAsync();
+    }
+
+    private void OnCultureChanged(System.Globalization.CultureInfo culture)
+    {
+        _ = InvokeAsync(() =>
+        {
+            System.Globalization.CultureInfo.CurrentCulture = culture;
+            System.Globalization.CultureInfo.CurrentUICulture = culture;
+            StateHasChanged();
+        });
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -369,6 +380,7 @@
 
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
+        appStateService.CultureChanged -= OnCultureChanged;
         try
         {
             // Clean up JavaScript resources

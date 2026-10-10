@@ -51,6 +51,15 @@ public class DbUpdateService : IDbUpdateService
             return false;
         }
 
+        // Select language/culture
+        var culture = AppCultures.Cultures.FirstOrDefault(x => x.ToString() == _settings.DefaultLanguage);
+        if (culture == null)
+        {
+            _logger.LogInformation("Language {Language} not found, using default culture {DefaultCulture}",
+                _settings.DefaultLanguage, AppCultures.DefaultCulture);
+            culture = AppCultures.DefaultCulture;
+        }
+
         try
         {
             // Ensure app data directory exists
@@ -62,13 +71,50 @@ public class DbUpdateService : IDbUpdateService
             return false;
         }
 
-        // Select language/culture
-        var culture = AppCultures.Cultures.FirstOrDefault(x => x.ToString() == _settings.DefaultLanguage);
-        if (culture == null)
+        var filePath = Path.Combine(_settings.AppDataPath, FILE_NAME);
+
+        // Download archive file            
+        var downloadUrl = string.Format(_settings.ArchiveUrl, culture.TwoLetterISOLanguageName);
+        _logger.LogInformation("Downloading archive from: {Url}", downloadUrl);
+
+        if (!await _fileDownloadService.DownloadFileAsync(downloadUrl, filePath))
         {
-            _logger.LogInformation("Language {Language} not found, using default culture {DefaultCulture}",
-                _settings.DefaultLanguage, AppCultures.DefaultCulture);
-            culture = AppCultures.DefaultCulture;
+            _logger.LogError("Failed to download archive file from: {Url}", downloadUrl);
+            return false;
+        }
+
+        _logger.LogInformation("Archive downloaded successfully: {Path}", filePath);
+
+        return await UpdateDatabaseFromFileAsync(filePath);
+    }
+
+    public async Task<bool> UpdateDatabaseFromFileAsync(string localFilePath)
+    {
+        if (string.IsNullOrWhiteSpace(localFilePath) || !File.Exists(localFilePath))
+        {
+            _logger.LogWarning("Invalid file path provided for database update: {Path}", localFilePath);
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(_settings.ArchivePassword))
+        {
+            _logger.LogWarning("ArchivePassword is not set");
+        }
+
+        if (string.IsNullOrWhiteSpace(_settings.AppDataPath))
+        {
+            _logger.LogWarning("AppDataPath is not set");
+            return false;
+        }
+
+        try
+        {
+            // Ensure app data directory exists
+            Directory.CreateDirectory(_settings.AppDataPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create AppDataPath directory: {Path}", _settings.AppDataPath);
+            return false;
         }
 
         var filePath = Path.Combine(_settings.AppDataPath, FILE_NAME);
@@ -76,17 +122,13 @@ public class DbUpdateService : IDbUpdateService
 
         try
         {
-            // Download archive file            
-            var downloadUrl = string.Format(_settings.ArchiveUrl, culture.TwoLetterISOLanguageName);
-            _logger.LogInformation("Downloading archive from: {Url}", downloadUrl);
 
-            if (!await _fileDownloadService.DownloadFileAsync(downloadUrl, filePath))
+            if (localFilePath != filePath)
             {
-                _logger.LogError("Failed to download archive file from: {Url}", downloadUrl);
-                return false;
+                // Copy the provided local file to the expected location
+                File.Copy(localFilePath, filePath, overwrite: true);
+                _logger.LogInformation("Copied local file to: {Path}", filePath);
             }
-
-            _logger.LogInformation("Archive downloaded successfully: {Path}", filePath);
 
             // Extract archive
             _logger.LogInformation("Extracting archive: {Path}", filePath);

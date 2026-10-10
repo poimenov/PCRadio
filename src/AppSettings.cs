@@ -35,11 +35,8 @@ public class AppSettings
     public void Save()
     {
         string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, JSON_FILE_NAME);
-        if (File.Exists(filePath))
-        {
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            string jsonString = JsonSerializer.Serialize(this, options);
-            File.WriteAllText(filePath, jsonString);
-        }
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        string jsonString = JsonSerializer.Serialize(this, options);
+        File.WriteAllText(filePath, jsonString);
     }
 }

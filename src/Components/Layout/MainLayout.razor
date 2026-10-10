@@ -6,6 +6,7 @@
 @using PCRadio.Extensions
 @using PCRadio.Services.Interfaces
 @inherits LayoutComponentBase
+@implements IDisposable
 @inject ILinkOpeningService linkOpeningService
 @inject IStringLocalizer<MainLayout> localizer
 @inject IAppStateService appStateService
@@ -31,25 +32,27 @@
         <main class="body-content">
             <div class="content">
                 <div class="page-layout">
-                    <FluentStack Class="page-heading" Orientation="Orientation.Horizontal"
-                                 HorizontalAlignment="HorizontalAlignment.Left" Spacing="Spacing.Medium"
-                                 VerticalAlignment="VerticalAlignment.Center">
-                        <FluentIcon Value="@TitleIcon" Color="Color.Primary" />
-                        <FluentLabel Typo="Typography.H2" Style="font-size: 24px; line-height: 1.3;">@Title
-                        </FluentLabel>
-                        @if (IsExportVisible)
-                        {
-                            <FluentSpacer />
-                            <FluentButton
-                                IconStart="@(new Microsoft.FluentUI.AspNetCore.Components.Icons.Regular.Size16.ArrowDownload())"
-                                Size="ButtonSize.Small" title="@localizer["ExportTitle"]" OnClick="@ExportStationsAsync"
-                                Loading="@IsExportProcessing" Style="margin-right: 12px;"
-                                Color="var(--colorBrandForeground1)">
-                                @localizer["Export"]
-                            </FluentButton>
-                        }
-                    </FluentStack>
-                    @Body
+                    <div class="localized-content" @key="cultureName">
+                        <FluentStack Class="page-heading" Orientation="Orientation.Horizontal"
+                                     HorizontalAlignment="HorizontalAlignment.Left" Spacing="Spacing.Medium"
+                                     VerticalAlignment="VerticalAlignment.Center">
+                            <FluentIcon Value="@TitleIcon" Color="Color.Primary" />
+                            <FluentLabel Typo="Typography.H2" Style="font-size: 24px; line-height: 1.3;">@Title
+                            </FluentLabel>
+                            @if (IsExportVisible)
+                            {
+                                <FluentSpacer />
+                                <FluentButton
+                                    IconStart="@(new Microsoft.FluentUI.AspNetCore.Components.Icons.Regular.Size16.ArrowDownload())"
+                                    Size="ButtonSize.Small" title="@localizer["ExportTitle"]" OnClick="@ExportStationsAsync"
+                                    Loading="@IsExportProcessing" Style="margin-right: 12px;"
+                                    Color="var(--colorBrandForeground1)">
+                                    @localizer["Export"]
+                                </FluentButton>
+                            }
+                        </FluentStack>
+                        @Body
+                    </div>
                     @if (SelectedStationId.HasValue)
                     {
                         <PCRadio.Components.Controls.Player StationId="@SelectedStationId" />
@@ -86,10 +89,30 @@
     bool IsExportVisible { get; set; } = true;
     bool IsExportProcessing { get; set; } = false;
     int? SelectedStationId { get; set; }
+    string cultureName = System.Globalization.CultureInfo.CurrentUICulture.Name;
 
     protected override void OnInitialized()
     {
-        appStateService.TitleChanged += (title) => InvokeAsync(() =>
+        appStateService.TitleChanged += OnTitleChanged;
+        appStateService.CurrentStationIdChanged += OnCurrentStationIdChanged;
+        appStateService.CultureChanged += OnCultureChanged;
+        navigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnCultureChanged(System.Globalization.CultureInfo culture)
+    {
+        _ = InvokeAsync(() =>
+        {
+            System.Globalization.CultureInfo.CurrentCulture = culture;
+            System.Globalization.CultureInfo.CurrentUICulture = culture;
+            cultureName = culture.Name;
+            StateHasChanged();
+        });
+    }
+
+    private void OnTitleChanged(string title)
+    {
+        _ = InvokeAsync(() =>
         {
             if (Title != title)
             {
@@ -97,7 +120,11 @@
                 StateHasChanged();
             }
         });
-        appStateService.CurrentStationIdChanged += (stationId) => InvokeAsync(() =>
+    }
+
+    private void OnCurrentStationIdChanged(int stationId)
+    {
+        _ = InvokeAsync(() =>
         {
             if (SelectedStationId != stationId)
             {
@@ -105,7 +132,11 @@
                 StateHasChanged();
             }
         });
-        navigationManager.LocationChanged += (sender, args) => InvokeAsync(() =>
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        _ = InvokeAsync(() =>
         {
             switch (navigationManager.Uri)
             {
@@ -156,6 +187,15 @@
     {
         linkOpeningService.OpenUrl(url);
     }
+
+    public void Dispose()
+    {
+        appStateService.TitleChanged -= OnTitleChanged;
+        appStateService.CurrentStationIdChanged -= OnCurrentStationIdChanged;
+        appStateService.CultureChanged -= OnCultureChanged;
+        navigationManager.LocationChanged -= OnLocationChanged;
+    }
+
     private async Task ExportStationsAsync()
     {
         var currentUri = navigationManager.Uri;

@@ -8,21 +8,12 @@ namespace PCRadio.Services;
 public class SearchService : ISearchService
 {
     private const string BASE_URL = "https://m.z3.fm";
-    private readonly string _downloadPath;
+    private readonly IOptions<AppSettings> _options;
     private readonly string _baseUrl;
     private readonly HttpClient _httpClient;
     public SearchService(IOptions<AppSettings> options, IHttpClientFactory httpClientFactory)
     {
-        var configPath = options.Value.DownloadPath;
-        if (string.IsNullOrWhiteSpace(configPath) || !Directory.Exists(configPath))
-        {
-            _downloadPath = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
-        }
-        else
-        {
-            _downloadPath = configPath;
-        }
-        Directory.CreateDirectory(_downloadPath);
+        _options = options;
 
         _baseUrl = options.Value.TrackDownloadBaseUrl;
         if (string.IsNullOrWhiteSpace(_baseUrl) || !Uri.IsWellFormedUriString(_baseUrl, UriKind.Absolute))
@@ -54,7 +45,9 @@ public class SearchService : ISearchService
             fileName = track.FileName;
         }
 
-        var filePath = Path.Combine(_downloadPath, fileName);
+        var downloadPath = GetDownloadPath();
+        Directory.CreateDirectory(downloadPath);
+        var filePath = Path.Combine(downloadPath, fileName);
 
         using var networkStream = await response.Content.ReadAsStreamAsync();
         using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true);
@@ -67,6 +60,14 @@ public class SearchService : ISearchService
         var escapedKeyword = Uri.EscapeDataString(keyword);
         var result = await _httpClient.GetFromJsonAsync<IEnumerable<Track>>($"mp3/search?keywords={escapedKeyword}", default);
         return result ?? Enumerable.Empty<Track>();
+    }
+
+    private string GetDownloadPath()
+    {
+        var configuredPath = _options.Value.DownloadPath;
+        return !string.IsNullOrWhiteSpace(configuredPath)
+            ? configuredPath
+            : Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
     }
 
 }
