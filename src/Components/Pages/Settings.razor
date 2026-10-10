@@ -44,15 +44,9 @@
 
         <div class="settings-field">
             <FluentSelect TOption="System.Globalization.CultureInfo" TValue="System.Globalization.CultureInfo"
-                          Items="@AppCultures.Cultures" OptionValue="@(culture => culture)"
+                          Items="@AppCultures.Cultures" OptionValue="@(culture => culture)" Disabled="@loading"
                           OptionText="@(culture => culture.NativeName)" @bind-Value="Language"
-                          @bind-Value:after="ApplyLanguageAsync" Width="100%">
-                <LabelTemplate>
-                    <FluentStack Orientation="Orientation.Horizontal" Spacing="Spacing.Small">
-                        <FluentLabel>@localizer["Language"]</FluentLabel>
-                        <FluentLabel>*</FluentLabel>
-                    </FluentStack>
-                </LabelTemplate>
+                          @bind-Value:after="ApplyLanguageAsync" Width="100%" Label="@localizer["Language"]">
             </FluentSelect>
         </div>
 
@@ -82,8 +76,6 @@
                 @localizer["DataBaseUpdate"]
             </FluentButton>
         </div>
-
-        <div class="settings-annotation">@localizer["LanguageAnnotation"]</div>
     </div>
 </div>
 
@@ -182,11 +174,11 @@
         await themeService.SetThemeAsync(new ThemeSettings(selectedColor, Mode: Mode));
     }
 
-    private Task ApplyLanguageAsync()
+    private async Task ApplyLanguageAsync()
     {
         if (_language is null)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         options.Value.DefaultLanguage = _language.Name;
@@ -199,7 +191,7 @@
         System.Globalization.CultureInfo.CurrentUICulture = _language;
         appStateService.NotifyCultureChanged(_language);
 
-        return Task.CompletedTask;
+        await Update();
     }
 
     private async Task Update()

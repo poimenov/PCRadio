@@ -44,10 +44,7 @@
     </data>                    
     <data name="LoadFromFileHint" xml:space="preserve">
         <value>Load stations list from a local file</value>
-    </data>      
-    <data name="LanguageAnnotation" xml:space="preserve">
-        <value>* language changes apply immediately; station data is updated when you reload the database or restart the application</value>
-    </data>  
+    </data>        
     <data name="DataBaseUpdateSuccess" xml:space="preserve">
         <value>Database update completed successfully.</value>
     </data>  

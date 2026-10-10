@@ -45,9 +45,6 @@
     <data name="LoadFromFileHint" xml:space="preserve">
         <value>Загрузить список станций из локального файла</value>
     </data>                       
-    <data name="LanguageAnnotation" xml:space="preserve">
-        <value>* язык интерфейса меняется сразу; список станций обновляется при обновлении базы данных или после перезапуска приложения</value>
-    </data> 
     <data name="DataBaseUpdateSuccess" xml:space="preserve">
         <value>Обновление базы данных успешно завершено.</value>
     </data>  
