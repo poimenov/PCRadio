@@ -23,7 +23,6 @@ public class AppSettings
     public int TitleDelayMilliseconds { get; set; } = 5000;
     public int PageSize { get; set; } = 50;
     public int HistoryRecordsCount { get; set; } = 100;
-    public bool NeedsDatabaseUpdate { get; set; } = false;
     public Quality Quality { get; set; } = Quality.Medium;
     public string DownloadPath { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
     private string _appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), APPLICATION_NAME);

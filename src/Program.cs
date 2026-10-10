@@ -147,7 +147,7 @@ public class Program
 
             // Initialize or update database if needed
             var dbPath = Path.Combine(settings.AppDataPath, Database.DB_FILE_NAME);
-            if (!File.Exists(dbPath) || settings.NeedsDatabaseUpdate)
+            if (!File.Exists(dbPath))
             {
                 logger.LogInformation("Database initialization/update required");
                 InitializeDatabaseAsync(app, logger, settings, dbPath);
@@ -197,12 +197,10 @@ public class Program
             if (success)
             {
                 logger.LogInformation("Database update completed successfully in {ElapsedMilliseconds}ms", stopwatch.ElapsedMilliseconds);
-                settings.NeedsDatabaseUpdate = false;
             }
             else
             {
                 logger.LogError("Database update failed after {ElapsedMilliseconds}ms", stopwatch.ElapsedMilliseconds);
-                settings.NeedsDatabaseUpdate = true;
             }
 
             try

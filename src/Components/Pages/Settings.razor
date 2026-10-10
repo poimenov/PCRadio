@@ -182,7 +182,6 @@
         }
 
         options.Value.DefaultLanguage = _language.Name;
-        options.Value.NeedsDatabaseUpdate = options.Value.DefaultLanguage != appStateService.InitialLanguage;
         options.Value.Save();
 
         System.Globalization.CultureInfo.DefaultThreadCurrentCulture = _language;
