@@ -58,23 +58,26 @@
         </div>
 
         <div class="settings-field settings-download-path">
-            <FluentTextInput @bind-Value="DownloadPath" Placeholder="@localizer["DownloadPathPlaceholder"]" Width="100%"
-                             Class="download-path-input" Label="@localizer["DownloadPath"]">
+            <FluentTextInput @bind-Value="DownloadPath" Width="100%" Label="@localizer["DownloadPath"]">
             </FluentTextInput>
         </div>
 
-        <div class="settings-field settings-update">
-            <FluentButton OnClick="UpdateFromFile" Disabled="@loading" Style="margin-bottom:15px;width:100%;"
-                          Title="@localizer["LoadFromFileHint"]">
-                @localizer["LoadFromFile"]
-            </FluentButton>
-        </div>
-
-        <div class="settings-field settings-update">
-            <FluentButton OnClick="Update" Disabled="@loading" Style="margin-bottom:15px;width:100%;"
-                          Title="@localizer["DataBaseUpdateHint"]">
-                @localizer["DataBaseUpdate"]
-            </FluentButton>
+        <div class="settings-field settings-download-path">
+            <FluentMenu>
+                <FluentMenuButton Disabled="@loading" Style="margin-top:35px;" Label="@localizer["Load"]"
+                                  Title="@localizer["LoadHint"]"></FluentMenuButton>
+                <FluentMenuList>
+                    <FluentMenuItem Disabled="@loading" Id="loadFromFile" Title="@localizer["LoadFromFileHint"]"
+                                    OnClick="UpdateFromFile">
+                        @localizer["LoadFromFile"]
+                    </FluentMenuItem>
+                    <FluentMenuItem Disabled="@loading" Id="loadFromInternet" Title="@localizer["LoadFromInternetHint"]"
+                                    OnClick="Update">
+                        @localizer["LoadFromInternet"]
+                    </FluentMenuItem>
+                </FluentMenuList>
+                
+            </FluentMenu>
         </div>
     </div>
 </div>
@@ -181,6 +184,7 @@
             return;
         }
 
+        await Update();
         options.Value.DefaultLanguage = _language.Name;
         options.Value.Save();
 
@@ -189,53 +193,76 @@
         System.Globalization.CultureInfo.CurrentCulture = _language;
         System.Globalization.CultureInfo.CurrentUICulture = _language;
         appStateService.NotifyCultureChanged(_language);
-
-        await Update();
     }
 
     private async Task Update()
     {
-        loading = true;
-        if (await dbUpdateService.UpdateDatabaseAsync())
+        if (loading)
         {
-            appStateService.NotifyGenresChanged();
-            await notificationService.ShowSuccessToastAsync(localizer["DataBaseUpdateSuccess"]);
-        }
-        else
-        {
-            await notificationService.ShowErrorToastAsync(localizer["DataBaseUpdateFailed"]);
+            return;
         }
 
-        loading = false;
+        loading = true;
+        try
+        {
+            if (await dbUpdateService.UpdateDatabaseAsync())
+            {
+                appStateService.NotifyGenresChanged();
+                await notificationService.ShowSuccessToastAsync(localizer["DataBaseUpdateSuccess"]);
+            }
+            else
+            {
+                await notificationService.ShowErrorToastAsync(localizer["DataBaseUpdateFailed"]);
+            }
+        }
+        finally
+        {
+            loading = false;
+        }
     }
 
     private async Task UpdateFromFile()
     {
-        loading = true;
+        if (loading)
+        {
+            return;
+        }
+
         var filePathes = openDialogService.OpenFile(
             title: localizer["SelectZipFile"],
             multiSelect: false,
             filters: new[] { ("ZIP files (*.zip)", new[] { "*.zip" }) }
         );
 
+        if (filePathes == null || !filePathes.Any())
+        {
+            return;
+        }
+
         var filePath = filePathes.FirstOrDefault();
         if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
         {
             await notificationService.ShowErrorToastAsync(localizer["InvalidZipFile"]);
-            loading = false;
             return;
         }
 
-        if (await dbUpdateService.UpdateDatabaseFromFileAsync(filePath))
+        loading = true;
+        try
         {
-            appStateService.NotifyGenresChanged();
-            await notificationService.ShowSuccessToastAsync(localizer["DataBaseUpdateSuccess"]);
+            if (await dbUpdateService.UpdateDatabaseFromFileAsync(filePath))
+            {
+                appStateService.NotifyGenresChanged();
+                await notificationService.ShowSuccessToastAsync(localizer["DataBaseUpdateSuccess"]);
+            }
+            else
+            {
+                await notificationService.ShowErrorToastAsync(localizer["DataBaseUpdateFailed"]);
+            }
         }
-        else
+        finally
         {
-            await notificationService.ShowErrorToastAsync(localizer["DataBaseUpdateFailed"]);
+            loading = false;
         }
-        
-        loading = false;
     }
+
 }

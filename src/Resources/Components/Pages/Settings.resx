@@ -33,14 +33,20 @@
     <data name="High" xml:space="preserve">
         <value>High</value>
     </data> 
-    <data name="DataBaseUpdate" xml:space="preserve">
-        <value>Update stations list</value>
+    <data name="Load" xml:space="preserve">
+        <value>Load stations list</value>
     </data>
-    <data name="DataBaseUpdateHint" xml:space="preserve">
-        <value>Update stations list from the internet</value>
+    <data name="LoadHint" xml:space="preserve">
+        <value>Load stations list</value>
+    </data>
+    <data name="LoadFromInternet" xml:space="preserve">
+        <value>From internet</value>
+    </data>
+    <data name="LoadFromInternetHint" xml:space="preserve">
+        <value>Load stations list from the internet</value>
     </data>
     <data name="LoadFromFile" xml:space="preserve">
-        <value>Load from file</value>
+        <value>From file</value>
     </data>                    
     <data name="LoadFromFileHint" xml:space="preserve">
         <value>Load stations list from a local file</value>
@@ -52,10 +58,7 @@
         <value>Database update failed. Details in the log. Please try again later.</value>
     </data>
     <data name="DownloadPath" xml:space="preserve">
-        <value>Download path</value>
-    </data>
-    <data name="DownloadPathPlaceholder" xml:space="preserve">
-        <value>Path to existing folder</value>
+        <value>Download path for audio files</value>
     </data>
     <data name="SelectZipFile" xml:space="preserve">
         <value>Select zip archive file</value>

@@ -32,15 +32,21 @@
     </data>
     <data name="High" xml:space="preserve">
         <value>Высокое</value>
-    </data>   
-    <data name="DataBaseUpdate" xml:space="preserve">
-        <value>Обновить список станций</value>
+    </data>  
+    <data name="Load" xml:space="preserve">
+        <value>Загрузить список станций</value>
+    </data>
+    <data name="LoadHint" xml:space="preserve">
+        <value>Загрузить список станций</value>
+    </data>     
+    <data name="LoadFromInternet" xml:space="preserve">
+        <value>Из интернета</value>
     </data> 
-    <data name="DataBaseUpdateHint" xml:space="preserve">
-        <value>Обновить список станций из интернета</value>
+    <data name="LoadFromInternetHint" xml:space="preserve">
+        <value>Загрузить список станций из интернета</value>
     </data>    
     <data name="LoadFromFile" xml:space="preserve">
-        <value>Загрузить из файла</value>
+        <value>Из файла</value>
     </data>                    
     <data name="LoadFromFileHint" xml:space="preserve">
         <value>Загрузить список станций из локального файла</value>
@@ -52,11 +58,8 @@
         <value>Ошибка обновления базы данных. Подробности в логе. Повторите попытку позже.</value>
     </data> 
     <data name="DownloadPath" xml:space="preserve">
-        <value>Путь для загрузки</value>
+        <value>Путь для загрузки аудио файлов</value>
     </data>  
-    <data name="DownloadPathPlaceholder" xml:space="preserve">
-        <value>Путь к существующей папке</value> 
-    </data>
     <data name="SelectZipFile" xml:space="preserve">
         <value>Выбрать zip архив</value>
     </data>
