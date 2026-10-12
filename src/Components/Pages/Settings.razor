@@ -183,10 +183,10 @@
         {
             return;
         }
-
-        await Update();
+        
         options.Value.DefaultLanguage = _language.Name;
         options.Value.Save();
+        await Update();
 
         System.Globalization.CultureInfo.DefaultThreadCurrentCulture = _language;
         System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = _language;
