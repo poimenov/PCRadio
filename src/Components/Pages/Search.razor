@@ -22,8 +22,8 @@
 
     <div class="search-toolbar-field">
         <FluentSelect TOption="_models.Genre" TValue="_models.Genre" Label="@localizer["Genres"]"
-                      OptionValue="@(x => x)" OptionText="@(x => x.Name)" Items="@Genres" Class="search-filter"
-                      @bind-Value="@SearchGenre">
+                      OptionValue="@(x => x)" OptionText="@(x => x.Name)" Items="@Genres"
+                      Height="200px" @bind-Value="@SearchGenre">
             <OptionTemplate>
                 <span slot="checked-indicator" style="display: none"></span>
                 @context?.Name
@@ -32,7 +32,7 @@
     </div>
 
     <div class="search-toolbar-field">
-        <div class="dropdown-with-icon country-dropdown">
+        <div class="dropdown-with-icon">
             <span class="selected-country-icon">
                 @if (SearchCountry != null)
                 {
@@ -40,7 +40,8 @@
                 }
             </span>
             <FluentSelect TOption="_models.Country" TValue="_models.Country" Label="@localizer["Countries"]"
-                          OptionValue="@(x => x)" OptionText="@(x => x.Name)" Items="@Countries" Class="search-filter"
+                          OptionValue="@(x => x)" OptionText="@(x => x.Name)" Items="@Countries"
+                          Height="200px"
                           ControlStyle="padding-inline-start: 30px;" @bind-Value="@SearchCountry">
                 <OptionTemplate>
                     <span slot="checked-indicator" style="display: none"></span>

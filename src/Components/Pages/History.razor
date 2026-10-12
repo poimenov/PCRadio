@@ -5,7 +5,6 @@
 @using PCRadio.DataAccess.Models
 @using PCRadio.DataAccess.Interfaces
 @using Microsoft.FluentUI.AspNetCore.Components
-@using Microsoft.FluentUI.AspNetCore.Components.DataGrid
 @using System.Linq
 @inject IStringLocalizer<History> localizer
 @inject IOptions<AppSettings> options
@@ -15,7 +14,7 @@
 
 @if (Records == null || !Records.Any())
 {
-    <div class="empty-message" style="height:100%">@localizer["NoHistory"]</div>
+    <div class="empty-message">@localizer["NoHistory"]</div>
 }
 else
 {

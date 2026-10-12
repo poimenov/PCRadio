@@ -17,13 +17,12 @@
 
 @if (Stations == null || !Stations.Any())
 {
-    <div class="empty-message" style="height:100%">@localizer["NoStations"]</div>
+    <div class="empty-message">@localizer["NoStations"]</div>
 }
 else
 {
     <FluentListbox TOption="StationInfo" TValue="StationInfo" Items="@Stations" @bind-Value="@SelectedStation"
-                   OptionValue="@(x => x)"
-                   Class="station-list">
+                   OptionValue="@(x => x)" Class="station-list">
         <OptionTemplate>
             <span slot="checked-indicator" style="display: none"></span>
             <FluentCard Class="station-card" @onclick="@(() => SelectedStation = context)">
