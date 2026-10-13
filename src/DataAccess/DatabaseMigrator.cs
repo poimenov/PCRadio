@@ -45,11 +45,11 @@ public class DatabaseMigrator : IDatabaseMigrator
                 throw;
             }
 
-            var dbPath = Path.Combine(_settings.AppDataPath, Database.DB_FILE_NAME);
+            var dbPath = Database.GetDatabasePath(_settings.AppDataPath);
             var dbExists = File.Exists(dbPath);
 
             // Run migrations asynchronously
-            await using (var database = new Database())
+            await using (var database = new Database(dbPath))
             {
                 try
                 {

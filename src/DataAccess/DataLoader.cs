@@ -28,15 +28,15 @@ public class DataLoader : IDataLoader
         var historyRecords = Enumerable.Empty<HistoryRecord>();
         var success = false;
         var sql = string.Empty;
-        var filePath = Path.Combine(_appSettings.AppDataPath, Database.DB_FILE_NAME);
-        var bakFilePath = Path.Combine(_appSettings.AppDataPath, Database.DB_FILE_NAME + ".bak");
+        var filePath = Database.GetDatabasePath(_appSettings.AppDataPath);
+        var bakFilePath = filePath + ".bak";
         if (File.Exists(filePath) && await HasMigrationHistoryTableAsync(filePath))
         {
             // backup database
             File.Copy(filePath, bakFilePath, true);
 
             // select favorites, history and delete database
-            await using (var db = new Database())
+            await using (var db = new Database(filePath))
             {
                 try
                 {
@@ -72,7 +72,7 @@ public class DataLoader : IDataLoader
         await _databaseMigrator.MigrateDatabaseAsync();
         Debug.WriteLine($"Database migrated ({DateTime.Now - start})");
 
-        await using (var db = new Database())
+        await using (var db = new Database(filePath))
         {
             await using (var transaction = await db.Database.BeginTransactionAsync())
             {

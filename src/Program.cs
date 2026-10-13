@@ -144,7 +144,7 @@ public class Program
             }
 
             // Initialize or update database if needed
-            var dbPath = Path.Combine(settings.AppDataPath, Database.DB_FILE_NAME);
+            var dbPath = Database.GetDatabasePath(settings.AppDataPath);
             if (!File.Exists(dbPath))
             {
                 logger.LogInformation("Database initialization/update required");

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PCRadio.Common;
 using PCRadio.DataAccess.Interfaces;
 using PCRadio.DataAccess.Models;
@@ -18,10 +19,12 @@ public class Stations : IStations
     WHERE ssg.StationId = {0}";
 
     private readonly ILogger<Stations> _logger;
+    private readonly string _databasePath;
 
-    public Stations(ILogger<Stations> logger)
+    public Stations(ILogger<Stations> logger, IOptions<AppSettings> options)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _databasePath = Database.GetDatabasePath(options.Value.AppDataPath);
     }
 
     private async Task<IEnumerable<string>> GetStationGenresAsync(Database db, int stationId)
@@ -36,7 +39,7 @@ public class Stations : IStations
             return Enumerable.Empty<StationInfo>();
         }
 
-        await using (var db = new Database())
+        await using (var db = new Database(_databasePath))
         {
             if (!await db.Genres.AnyAsync(g => g.Id == id))
             {
@@ -60,7 +63,7 @@ public class Stations : IStations
 
     public async Task<IEnumerable<StationInfo>> ExportFavoritesAsync()
     {
-        await using (var db = new Database())
+        await using (var db = new Database(_databasePath))
         {
             var retVal = await db.Stations.Where(s => s.IsFavorite).Select(s => new StationInfo
             {
@@ -80,7 +83,7 @@ public class Stations : IStations
     {
         try
         {
-            await using (var db = new Database())
+            await using (var db = new Database(_databasePath))
             {
                 var retVal = await db.Stations.Where(s => s.Recomended).Select(s => new StationInfo
                 {
@@ -104,7 +107,7 @@ public class Stations : IStations
 
     public async Task<StationsResult> GetByGenreAsync(int id, int skip, int take)
     {
-        await using (var db = new Database())
+        await using (var db = new Database(_databasePath))
         {
             var query = db.Stations.Where(s => s.StationGenres!.Select(sg => sg.GenreId).Contains(id));
             var totalCount = await query.CountAsync();
@@ -119,7 +122,7 @@ public class Stations : IStations
 
     public async Task<StationsResult> GetFavoritesAsync(int skip, int take)
     {
-        await using (var db = new Database())
+        await using (var db = new Database(_databasePath))
         {
             var query = db.Stations.Where(s => s.IsFavorite);
             var totalCount = await query.CountAsync();
@@ -136,7 +139,7 @@ public class Stations : IStations
     {
         try
         {
-            await using (var db = new Database())
+            await using (var db = new Database(_databasePath))
             {
                 var query = db.Stations.Where(s => s.Recomended);
                 var totalCount = await query.CountAsync();
@@ -160,7 +163,7 @@ public class Stations : IStations
     }
     public async Task<Station?> GetStationAsync(int id)
     {
-        await using (var db = new Database())
+        await using (var db = new Database(_databasePath))
         {
             return await db.Stations
                 .Include(s => s.Country)
@@ -184,7 +187,7 @@ public class Stations : IStations
                 TotalCount = 0
             };
         }
-        await using (var db = new Database())
+        await using (var db = new Database(_databasePath))
         {
             var query = db.Stations.AsQueryable();
             if (!string.IsNullOrWhiteSpace(searchParams.Name))
@@ -214,7 +217,7 @@ public class Stations : IStations
 
     public async Task SetFavoriteAsync(int stationId, bool isFavorite)
     {
-        await using (var db = new Database())
+        await using (var db = new Database(_databasePath))
         {
             var station = await db.Stations.FirstOrDefaultAsync(s => s.Id == stationId);
             if (station != null)
@@ -238,7 +241,7 @@ public class Stations : IStations
             }
         };
 
-        await using (var db = new Database())
+        await using (var db = new Database(_databasePath))
         {
             if (!await db.Stations.AnyAsync(s => s.Stream.ToLower() == station.Stream.ToLower()))
             {
@@ -331,7 +334,7 @@ public class Stations : IStations
     public async Task<OperationResult> UpdateStationAsync(Station station)
     {
         var retVal = new OperationResult { Success = false };
-        await using (var db = new Database())
+        await using (var db = new Database(_databasePath))
         {
             if (await db.Stations.AnyAsync(s => s.Id == station.Id)
                 && !await db.Stations.AnyAsync(s => s.Id != station.Id && s.Stream == station.Stream))

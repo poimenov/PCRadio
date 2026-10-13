@@ -8,13 +8,17 @@ namespace PCRadio.DataAccess;
 public class HistoryRecords : IHistoryRecords
 {
     private readonly int _historyRecordsCount;
+    private readonly string _databasePath;
+
     public HistoryRecords(IOptions<AppSettings> options)
     {
         _historyRecordsCount = options.Value.HistoryRecordsCount;
+        _databasePath = Database.GetDatabasePath(options.Value.AppDataPath);
     }
+
     public async Task<IEnumerable<HistoryRecord>> GetAllAsync()
     {
-        await using (var db = new Database())
+        await using (var db = new Database(_databasePath))
         {
             return await db.HistoryRecords.OrderByDescending(r => r.StartTime).ToListAsync();
         }
@@ -22,7 +26,7 @@ public class HistoryRecords : IHistoryRecords
 
     public async Task AddAsync(HistoryRecord record, CancellationToken cancellationToken = default)
     {
-        await using (var db = new Database())
+        await using (var db = new Database(_databasePath))
         {
             var existingRecordsCount = await db.HistoryRecords.CountAsync(cancellationToken);
             if (existingRecordsCount >= _historyRecordsCount)
