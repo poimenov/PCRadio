@@ -134,7 +134,7 @@ public class Stations : IStations
         {
             var query = db.Stations.Where(s => s.StationGenres!.Select(sg => sg.GenreId).Contains(id));
             var totalCount = await query.CountAsync();
-            var stations = await query.Skip(skip).Take(take).ToListAsync();
+            var stations = await query.OrderBy(station => station.Id).Skip(skip).Take(take).ToListAsync();
             return new StationsResult
             {
                 Stations = stations,
@@ -149,7 +149,7 @@ public class Stations : IStations
         {
             var query = db.Stations.Where(s => s.IsFavorite);
             var totalCount = await query.CountAsync();
-            var stations = await query.Skip(skip).Take(take).ToListAsync();
+            var stations = await query.OrderBy(station => station.Id).Skip(skip).Take(take).ToListAsync();
             return new StationsResult
             {
                 Stations = stations,
@@ -166,7 +166,7 @@ public class Stations : IStations
             {
                 var query = db.Stations.Where(s => s.Recomended);
                 var totalCount = await query.CountAsync();
-                var stations = await query.Skip(skip).Take(take).ToListAsync();
+                var stations = await query.OrderBy(station => station.Id).Skip(skip).Take(take).ToListAsync();
                 return new StationsResult
                 {
                     Stations = stations,
@@ -229,7 +229,7 @@ public class Stations : IStations
             }
 
             var totalCount = await query.CountAsync();
-            var stations = await query.Skip(skip).Take(take).ToListAsync();
+            var stations = await query.OrderBy(station => station.Id).Skip(skip).Take(take).ToListAsync();
             return new StationsResult
             {
                 Stations = stations,
