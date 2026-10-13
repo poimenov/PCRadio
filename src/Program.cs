@@ -60,8 +60,6 @@ public class Program
             });
 
             // Register services
-            builder.Services.AddTransient<IPlatformService, PlatformService>();
-            builder.Services.AddTransient<IProcessService, ProcessService>();
             builder.Services.AddTransient<ILinkOpeningService, LinkOpeningService>();
             builder.Services.AddTransient<IFileDownloadService, FileDownloadService>();
             builder.Services.AddTransient<IArchiveExtractService, ArchiveExtractService>();

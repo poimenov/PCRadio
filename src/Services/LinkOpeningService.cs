@@ -1,16 +1,18 @@
+using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using PCRadio.Services.Interfaces;
 
 namespace PCRadio.Services;
 
 public class LinkOpeningService : ILinkOpeningService
 {
-    private readonly IPlatformService _platformService;
-    private readonly IProcessService _processService;
-    public LinkOpeningService(IPlatformService platformService, IProcessService processService)
+    private readonly ILogger<LinkOpeningService> _logger;
+
+    public LinkOpeningService(ILogger<LinkOpeningService> logger)
     {
-        _platformService = platformService ?? throw new ArgumentNullException(nameof(platformService));
-        _processService = processService ?? throw new ArgumentNullException(nameof(processService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
+
     public void OpenUrl(string url)
     {
         if (string.IsNullOrWhiteSpace(url))
@@ -22,20 +24,21 @@ public class LinkOpeningService : ILinkOpeningService
             return;
         }
 
-        switch (_platformService.GetPlatform())
+        try
         {
-            case Platform.Windows:
-                _processService.Run("cmd", $"/c start \"\" \"{url}\"");
-                break;
-            case Platform.Linux:
-                _processService.Run("xdg-open", url);
-                break;
-            case Platform.MacOs:
-                _processService.Run("open", url);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
+            using var process = Process.Start(new ProcessStartInfo(uri.AbsoluteUri)
+            {
+                UseShellExecute = true
+            });
 
+            if (process is null)
+            {
+                throw new InvalidOperationException($"Failed to open URL '{uri}'.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error opening URL: {Url}", uri);
         }
     }
 }
