@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using PCRadio.DataAccess.Interfaces;
 
 namespace PCRadio.DataAccess;
@@ -8,48 +7,52 @@ namespace PCRadio.DataAccess;
 public class DatabaseMigrator : IDatabaseMigrator
 {
     private readonly ILogger<DatabaseMigrator> _logger;
-    private readonly AppSettings _settings;
 
-    public DatabaseMigrator(ILogger<DatabaseMigrator> logger, IOptions<AppSettings> options)
+    public DatabaseMigrator(ILogger<DatabaseMigrator> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _settings = options?.Value ?? throw new ArgumentNullException(nameof(options));
-
-        if (string.IsNullOrWhiteSpace(_settings.AppDataPath))
-        {
-            throw new InvalidOperationException("AppSettings.AppDataPath must be configured");
-        }
     }
 
     /// <summary>
     /// Asynchronously migrates the database.
     /// </summary>
-    public async Task MigrateDatabaseAsync()
+    public async Task MigrateDatabaseAsync(string databasePath)
     {
         try
         {
             _logger.LogInformation("Starting async database migration");
 
+            if (string.IsNullOrWhiteSpace(databasePath))
+            {
+                throw new ArgumentException("Database path cannot be null or whitespace.", nameof(databasePath));
+            }
+
             // Ensure app data directory exists
             try
             {
-                if (!Directory.Exists(_settings.AppDataPath))
+                var databaseDirectory = Path.GetDirectoryName(Path.GetFullPath(databasePath));
+                if (string.IsNullOrEmpty(databaseDirectory))
                 {
-                    Directory.CreateDirectory(_settings.AppDataPath);
-                    _logger.LogInformation("Created app data directory: {AppDataPath}", _settings.AppDataPath);
+                    throw new InvalidOperationException("Database directory could not be determined.");
+                }
+
+                if (!Directory.Exists(databaseDirectory))
+                {
+                    Directory.CreateDirectory(databaseDirectory);
+                    _logger.LogInformation("Created database directory: {DatabaseDirectory}", databaseDirectory);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create app data directory: {AppDataPath}", _settings.AppDataPath);
+                _logger.LogError(ex, "Failed to create database directory for: {DatabasePath}", databasePath);
                 throw;
             }
 
-            var dbPath = Database.GetDatabasePath(_settings.AppDataPath);
+            var dbPath = Path.GetFullPath(databasePath);
             var dbExists = File.Exists(dbPath);
 
             // Run migrations asynchronously
-            await using (var database = new Database(dbPath))
+            await using (var database = new Database(dbPath, pooling: false))
             {
                 try
                 {

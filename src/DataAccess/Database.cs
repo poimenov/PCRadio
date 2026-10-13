@@ -12,7 +12,7 @@ public class Database : DbContext
     {
     }
 
-    public Database(string databasePath) : base(CreateOptions(databasePath))
+    public Database(string databasePath, bool pooling = true) : base(CreateOptions(databasePath, pooling))
     {
     }
 
@@ -34,7 +34,7 @@ public class Database : DbContext
         return GetDatabasePath(appDataPath);
     }
 
-    private static DbContextOptions<Database> CreateOptions(string databasePath)
+    private static DbContextOptions<Database> CreateOptions(string databasePath, bool pooling)
     {
         if (string.IsNullOrWhiteSpace(databasePath))
         {
@@ -43,7 +43,8 @@ public class Database : DbContext
 
         var connectionString = new SqliteConnectionStringBuilder
         {
-            DataSource = Path.GetFullPath(databasePath)
+            DataSource = Path.GetFullPath(databasePath),
+            Pooling = pooling
         }.ToString();
 
         return new DbContextOptionsBuilder<Database>()

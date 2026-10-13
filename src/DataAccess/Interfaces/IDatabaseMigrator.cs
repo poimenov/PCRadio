@@ -2,5 +2,5 @@ namespace PCRadio.DataAccess.Interfaces;
 
 public interface IDatabaseMigrator
 {
-    Task MigrateDatabaseAsync();
+    Task MigrateDatabaseAsync(string databasePath);
 }
