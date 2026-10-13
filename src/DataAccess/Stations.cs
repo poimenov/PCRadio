@@ -9,15 +9,6 @@ namespace PCRadio.DataAccess;
 
 public class Stations : IStations
 {
-    private const string GET_STATION_GENRES_SQL = @"
-    SELECT g.Name FROM StationGenres sg
-    JOIN Genres g ON sg.GenreId = g.Id
-    WHERE sg.StationId = {0}
-    UNION
-    SELECT sg2.Name FROM StationSubGenres ssg
-    JOIN SubGenres sg2 ON ssg.SubGenreId = sg2.Id
-    WHERE ssg.StationId = {0}";
-
     private readonly ILogger<Stations> _logger;
     private readonly string _databasePath;
 
@@ -27,9 +18,41 @@ public class Stations : IStations
         _databasePath = Database.GetDatabasePath(options.Value.AppDataPath);
     }
 
-    private async Task<IEnumerable<string>> GetStationGenresAsync(Database db, int stationId)
+    private static async Task PopulateStationGenresAsync(Database db, List<StationInfo> stations)
     {
-        return await db.Genres.FromSqlRaw(GET_STATION_GENRES_SQL, stationId).Select(g => g.Name).ToListAsync();
+        if (stations.Count == 0)
+        {
+            return;
+        }
+
+        var stationIds = stations.Select(station => station.Id).ToArray();
+        var genres = await db.StationGenres
+            .Where(stationGenre => stationIds.Contains(stationGenre.StationId))
+            .Select(stationGenre => new
+            {
+                StationId = stationGenre.StationId,
+                Name = stationGenre.Genre!.Name
+            })
+            .Concat(db.StationSubGenres
+                .Where(stationSubGenre => stationIds.Contains(stationSubGenre.StationId))
+                .Select(stationSubGenre => new
+                {
+                    StationId = stationSubGenre.StationId,
+                    Name = stationSubGenre.SubGenre!.Name
+                }))
+            .Distinct()
+            .ToListAsync();
+
+        var genresByStation = genres
+            .GroupBy(genre => genre.StationId)
+            .ToDictionary(group => group.Key, group => group.Select(genre => genre.Name).ToArray());
+
+        foreach (var station in stations)
+        {
+            station.Genres = genresByStation.TryGetValue(station.Id, out var stationGenres)
+                ? stationGenres
+                : Enumerable.Empty<string>();
+        }
     }
 
     public async Task<IEnumerable<StationInfo>> ExportByGenreAsync(int id)
@@ -55,7 +78,7 @@ public class Stations : IStations
                 Genres = Enumerable.Empty<string>()
             }).ToListAsync();
 
-            retVal.ForEach(async s => s.Genres = await GetStationGenresAsync(db, s.Id));
+            await PopulateStationGenresAsync(db, retVal);
 
             return retVal;
         }
@@ -74,7 +97,7 @@ public class Stations : IStations
                 Genres = Enumerable.Empty<string>()
             }).ToListAsync();
 
-            retVal.ForEach(async s => s.Genres = await GetStationGenresAsync(db, s.Id));
+            await PopulateStationGenresAsync(db, retVal);
             return retVal;
         }
     }
@@ -94,7 +117,7 @@ public class Stations : IStations
                     Genres = Enumerable.Empty<string>()
                 }).ToListAsync();
 
-                retVal.ForEach(async s => s.Genres = await GetStationGenresAsync(db, s.Id));
+                await PopulateStationGenresAsync(db, retVal);
                 return retVal;
             }
         }
