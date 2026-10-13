@@ -11,8 +11,8 @@
 
     function setCurrentTrackName(value) {
         const div = document.getElementById("NowPlaying");
-        if (div && div.innerHTML !== value) {
-            div.innerHTML = value;
+        if (div && div.textContent !== value) {
+            div.textContent = value;
         }
     }
 
