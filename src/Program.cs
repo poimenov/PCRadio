@@ -152,6 +152,8 @@ public class Program
             }
             else
             {
+                var databaseMigrator = app.Services.GetRequiredService<IDatabaseMigrator>();
+                databaseMigrator.MigrateDatabaseAsync(dbPath).GetAwaiter().GetResult();
                 logger.LogInformation("Database already initialized and up to date");
             }
 
