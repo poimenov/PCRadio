@@ -5,6 +5,7 @@ namespace PCRadio.Services;
 
 public class FileDownloadService : IFileDownloadService
 {
+    private const long MAX_DOWNLOAD_SIZE_BYTES = 25L * 1024 * 1024;
     public const string USER_AGENT_HEADER_NAME = "User-Agent";
     public const string USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
@@ -31,10 +32,9 @@ public class FileDownloadService : IFileDownloadService
             return false;
         }
 
-        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
-            (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
         {
-            _logger.LogWarning("DownloadFileAsync called with unsupported URL scheme: {Url}", url);
+            _logger.LogWarning("DownloadFileAsync requires an HTTPS URL: {Url}", url);
             return false;
         }
 
@@ -58,22 +58,43 @@ public class FileDownloadService : IFileDownloadService
                         return false;
                     }
 
+                    if (response.RequestMessage?.RequestUri?.Scheme != Uri.UriSchemeHttps)
+                    {
+                        throw new InvalidDataException("The download response did not originate from an HTTPS URL.");
+                    }
+
+                    if (response.Content.Headers.ContentLength is > MAX_DOWNLOAD_SIZE_BYTES)
+                    {
+                        throw new InvalidDataException(
+                            $"Download exceeds the maximum allowed size of {MAX_DOWNLOAD_SIZE_BYTES} bytes.");
+                    }
+
                     await using (var httpStream = await response.Content.ReadAsStreamAsync())
                     {
                         using (var fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 81920, FileOptions.Asynchronous))
                         {
-                            await httpStream.CopyToAsync(fileStream);
+                            var buffer = new byte[81920];
+                            long totalBytesRead = 0;
+                            int bytesRead;
+                            while ((bytesRead = await httpStream.ReadAsync(buffer)) > 0)
+                            {
+                                totalBytesRead += bytesRead;
+                                if (totalBytesRead > MAX_DOWNLOAD_SIZE_BYTES)
+                                {
+                                    throw new InvalidDataException(
+                                        $"Download exceeds the maximum allowed size of {MAX_DOWNLOAD_SIZE_BYTES} bytes.");
+                                }
+
+                                await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead));
+                            }
+
                             await fileStream.FlushAsync();
-                            fileStream.Close();
                         }
                     }
                 }
             }
 
-            if (File.Exists(filePath))
-                File.Delete(filePath);
-
-            File.Move(tempFile, filePath);
+            File.Move(tempFile, filePath, overwrite: true);
 
             _logger.LogInformation("File downloaded successfully: {Path}", filePath);
             return true;
