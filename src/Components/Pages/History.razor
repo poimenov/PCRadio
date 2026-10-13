@@ -1,5 +1,6 @@
 @page "/history"
 @using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Logging
 @using Microsoft.Extensions.Options
 @using PCRadio.Services.Interfaces
 @using PCRadio.DataAccess.Models
@@ -11,6 +12,7 @@
 @inject IAppStateService appStateService
 @inject IHistoryRecords historyRecords
 @inject ILinkOpeningService linkOpeningService
+@inject ILogger<History> logger
 
 @if (Records == null || !Records.Any())
 {
@@ -45,10 +47,20 @@ else
         Records = await historyRecords.GetAllAsync();
     }
 
-    private void OnHistoryRecordChanged(HistoryRecord record)
+    private async void OnHistoryRecordChanged(HistoryRecord record)
     {
-        Records = historyRecords.GetAllAsync().Result;
-        StateHasChanged();
+        try
+        {
+            await InvokeAsync(async () =>
+            {
+                Records = await historyRecords.GetAllAsync();
+                StateHasChanged();
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to refresh history after a record changed");
+        }
     }
 
     private void OpenLink(string trackName)
