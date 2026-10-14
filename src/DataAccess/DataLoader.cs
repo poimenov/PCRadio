@@ -70,6 +70,8 @@ public class DataLoader : IDataLoader
             await PopulateStagingDatabaseAsync(stagingPath, result, favorites, historyRecords);
             await ValidateStagingDatabaseAsync(stagingPath, result, historyRecords.Count);
 
+            SqliteConnection.ClearAllPools();
+
             if (File.Exists(databasePath))
             {
                 File.Replace(stagingPath, databasePath, backupStagingPath);
