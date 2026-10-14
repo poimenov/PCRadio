@@ -27,7 +27,7 @@
             </FluentNavItem>
             @if (allGenres != null && allGenres.Any())
             {
-                <FluentNavItem Href="favorites" IconRest="@(new Size20.Star())" Tooltip="@Localizer["Favorites"]">
+                <FluentNavItem Href="favorites" IconRest="@(new Size20.Heart())" Tooltip="@Localizer["Favorites"]">
                     @if (expanded)
                     {
                         @Localizer["Favorites"]
