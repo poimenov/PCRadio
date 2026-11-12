@@ -1,0 +1,46 @@
+@page "/genres"
+@using Microsoft.Extensions.Localization
+@using PCRadio.DataAccess.Interfaces
+@using PCRadio.DataAccess.Models
+@using PCRadio.Services.Interfaces
+@inject IStringLocalizer<GenresPage> localizer
+@inject IGenres genres
+@inject IAppStateService appStateService
+
+<div class="genre-page">
+    <div class="genre-grid">
+        @foreach (var genre in allGenres)
+        {
+            <a class="genre-card" href="@($"genre/{genre.Id}")">
+                <img src="@GetGenreImage(genre.Id)" alt="" loading="lazy" />
+                <span>@genre.Name</span>
+            </a>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Genre> allGenres = [];
+
+    protected override void OnInitialized()
+    {
+        allGenres = genres.GetAll().ToList();
+        appStateService.Title = localizer["Header"];
+    }
+
+    private static string GetGenreImage(int genreId)
+    {
+        var imageDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", "images", "genres");
+        var imageNames = new[] { $"{genreId}.jpg", $"{genreId:D2}.jpg" };
+
+        foreach (var imageName in imageNames)
+        {
+            if (File.Exists(Path.Combine(imageDirectory, imageName)))
+            {
+                return $"/images/genres/{imageName}";
+            }
+        }
+
+        return "/images/genres/unknown.jpg";
+    }
+}

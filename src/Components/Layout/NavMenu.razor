@@ -3,7 +3,6 @@
 @using PCRadio.DataAccess.Interfaces
 @using PCRadio.Services.Interfaces
 @inject IGenres genres
-@inject NavigationManager navigationManager
 @inject IAppStateService appStateService
 @inject IStringLocalizer<NavMenu> Localizer
 @implements IDisposable
@@ -45,28 +44,12 @@
                         @Localizer["Import"]
                     }
                 </FluentNavItem>
-                <button type="button" class="fluent-navcategoryitem" aria-expanded="@genresExpanded"
-                        aria-label="@Localizer["Genres"]" @onclick="ToggleGenres">
-                    <FluentIcon Value="@(new Size20.MusicNote2())" Tooltip="@Localizer["Genres"]" />
+                <FluentNavItem Href="genres" IconRest="@(new Size20.MusicNote2())" Tooltip="@Localizer["Genres"]">
                     @if (expanded)
                     {
-                        <span>@Localizer["Genres"]</span>
+                        @Localizer["Genres"]
                     }
-                    <span class="genre-expander @(genresExpanded ? "expanded" : null)" aria-hidden="true"></span>
-                </button>
-                @if (genresExpanded)
-                {
-                    @foreach (var genre in allGenres)
-                    {
-                        <FluentNavItem Href="@($"genre/{genre.Id}")" IconRest="@(new Size20.MusicNote1())" Tooltip="@genre.Name"
-                                       Class="genre-navitem">
-                            @if (expanded)
-                            {
-                                <span class="genre-navitem-label">@genre.Name</span>
-                            }
-                        </FluentNavItem>
-                    }
-                }
+                </FluentNavItem>
                 <FluentNavItem Href="history" IconRest="@(new Size20.Clock())" Tooltip="@Localizer["History"]">
                     @if (expanded)
                     {
@@ -85,40 +68,18 @@
 </div>
 @code {
     private bool expanded = true;
-    private bool genresExpanded = false;
     private IEnumerable<DataAccess.Models.Genre>? allGenres { get; set; }
     private enum NavMenuState
     {
         Expanded = 200,
-        Collapsed = 55,
-        ExpandedWithGenres = 220,
-        CollapsedWithGenres = 75
+        Collapsed = 55
     }
 
     protected override void OnInitialized()
     {
         allGenres = genres.GetAll();
-        genresExpanded = IsGenrePage(navigationManager.Uri);
-        navigationManager.LocationChanged += OnLocationChanged;
         appStateService.GenresChanged += OnGenresChanged;
         appStateService.CultureChanged += OnCultureChanged;
-    }
-
-    private static bool IsGenrePage(string uri) =>
-        uri.Contains("/genre/", StringComparison.OrdinalIgnoreCase);
-
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
-    {
-        if (IsGenrePage(args.Location) && !genresExpanded)
-        {
-            genresExpanded = true;
-            _ = InvokeAsync(StateHasChanged);
-        }
-    }
-
-    private void ToggleGenres()
-    {
-        genresExpanded = !genresExpanded;
     }
 
     private void ToggleExpanded()
@@ -141,22 +102,7 @@
 
     private int GetNavMenuWidth()
     {
-        if (expanded && genresExpanded)
-        {
-            return (int)NavMenuState.ExpandedWithGenres;
-        }
-        else if (expanded && !genresExpanded)
-        {
-            return (int)NavMenuState.Expanded;
-        }
-        else if (!expanded && genresExpanded)
-        {
-            return (int)NavMenuState.CollapsedWithGenres;
-        }
-        else
-        {
-            return (int)NavMenuState.Collapsed;
-        }
+        return expanded ? (int)NavMenuState.Expanded : (int)NavMenuState.Collapsed;
     }
 
     private string GetNavMenuWidthStyle()
@@ -183,7 +129,6 @@
 
     public void Dispose()
     {
-        navigationManager.LocationChanged -= OnLocationChanged;
         appStateService.GenresChanged -= OnGenresChanged;
         appStateService.CultureChanged -= OnCultureChanged;
     }

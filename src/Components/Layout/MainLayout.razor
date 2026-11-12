@@ -34,7 +34,7 @@
                 <div class="page-layout">
                     <div class="localized-content" @key="cultureName">
                         <FluentStack Class="page-heading" Orientation="Orientation.Horizontal"
-                                     HorizontalAlignment="HorizontalAlignment.Left" Spacing="Spacing.Medium"
+                                     HorizontalAlignment="HorizontalAlignment.Left" Spacing="Spacing.Large"
                                      VerticalAlignment="VerticalAlignment.Center">
                             <FluentIcon Value="@TitleIcon" Color="Color.Primary" />
                             <FluentLabel Typo="Typography.H2" Style="font-size: 24px; line-height: 1.3;">@Title
@@ -97,6 +97,7 @@
         appStateService.CurrentStationIdChanged += OnCurrentStationIdChanged;
         appStateService.CultureChanged += OnCultureChanged;
         navigationManager.LocationChanged += OnLocationChanged;
+        UpdatePageNavigationState(navigationManager.Uri);
     }
 
     private void OnCultureChanged(System.Globalization.CultureInfo culture)
@@ -138,39 +139,48 @@
     {
         _ = InvokeAsync(() =>
         {
-            switch (navigationManager.Uri)
-            {
-                case var uri when uri.Contains("genre"):
-                    TitleIcon = new IconsRegular24.MusicNote2();
-                    IsExportVisible = true;
-                    break;
-                case var uri when uri.EndsWith("favorites"):
-                    TitleIcon = new IconsRegular24.Heart();
-                    IsExportVisible = true;
-                    break;
-                case var uri when uri.EndsWith("settings"):
-                    TitleIcon = new IconsRegular24.Settings();
-                    IsExportVisible = false;
-                    break;
-                case var uri when uri.EndsWith("history"):
-                    TitleIcon = new IconsRegular24.History();
-                    IsExportVisible = false;
-                    break;
-                case var uri when uri.EndsWith("search"):
-                    TitleIcon = new IconsRegular24.Search();
-                    IsExportVisible = false;
-                    break;
-                case var uri when uri.EndsWith("import"):
-                    TitleIcon = new IconsRegular24.ArrowImport();
-                    IsExportVisible = false;
-                    break;
-                default:
-                    TitleIcon = new IconsRegular24.Home();
-                    IsExportVisible = true;
-                    break;
-            }
+            UpdatePageNavigationState(navigationManager.Uri);
             StateHasChanged();
         });
+    }
+
+    private void UpdatePageNavigationState(string uri)
+    {
+        switch (uri)
+        {
+            case var currentUri when currentUri.EndsWith("/genres", StringComparison.OrdinalIgnoreCase):
+                TitleIcon = new IconsRegular24.MusicNote2();
+                IsExportVisible = false;
+                break;
+            case var currentUri when currentUri.Contains("/genre/", StringComparison.OrdinalIgnoreCase):
+                TitleIcon = new IconsRegular24.MusicNote2();
+                IsExportVisible = true;
+                break;
+            case var currentUri when currentUri.EndsWith("favorites", StringComparison.OrdinalIgnoreCase):
+                TitleIcon = new IconsRegular24.Heart();
+                IsExportVisible = true;
+                break;
+            case var currentUri when currentUri.EndsWith("settings", StringComparison.OrdinalIgnoreCase):
+                TitleIcon = new IconsRegular24.Settings();
+                IsExportVisible = false;
+                break;
+            case var currentUri when currentUri.EndsWith("history", StringComparison.OrdinalIgnoreCase):
+                TitleIcon = new IconsRegular24.History();
+                IsExportVisible = false;
+                break;
+            case var currentUri when currentUri.EndsWith("search", StringComparison.OrdinalIgnoreCase):
+                TitleIcon = new IconsRegular24.Search();
+                IsExportVisible = false;
+                break;
+            case var currentUri when currentUri.EndsWith("import", StringComparison.OrdinalIgnoreCase):
+                TitleIcon = new IconsRegular24.ArrowImport();
+                IsExportVisible = false;
+                break;
+            default:
+                TitleIcon = new IconsRegular24.Home();
+                IsExportVisible = true;
+                break;
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

@@ -285,49 +285,7 @@ fluent-drawer[fuib] fluent-drawer-body[fuib] > div[slot="footer"] > fluent-butto
     height: auto !important;
 }
 
-.navmenu .fluent-navcategoryitem {
-    gap: var(--spacingVerticalL);
-}
-
-.navmenu .fluent-navcategoryitem > fluent-icon {
-    display: flex;
-    flex: 0 0 20px;
-    width: 20px;
-    height: 20px;
-    color: var(--colorBrandForeground1);
-}
-
-.genre-expander {
-    width: 8px;
-    height: 8px;
-    margin-inline-start: auto;
-    border-right: 2px solid currentColor;
-    border-bottom: 2px solid currentColor;
-    transform: rotate(-45deg) translateY(-2px);
-    transition: transform 120ms ease;
-}
-
-.genre-expander.expanded {
-    transform: rotate(45deg) translate(-1px, -1px);
-}
-
-.navmenu .genre-navitem {
-    padding-inline-start: 28px;
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-.navmenu .genre-navitem-label {
-    display: block;
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-#main-menu[style*="width: 48px"] .fluent-navitem,
-#main-menu[style*="width: 48px"] .fluent-navcategoryitem {
+#main-menu[style*="width: 48px"] .fluent-navitem {
     width: 44px;
     min-width: 44px;
     margin-inline: 2px;
@@ -352,44 +310,6 @@ fluent-drawer[fuib] fluent-drawer-body[fuib] > div[slot="footer"] > fluent-butto
     white-space: nowrap;
 }
 
-.navmenu .fluent-navcategoryitem {
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    width: calc(100% - 8px);
-    min-width: 40px;
-    min-height: 40px;
-    margin: 3px 4px;
-    padding: 8px;
-    border: 0;
-    border-radius: 6px;
-    background: var(--colorNeutralBackground2);
-    color: var(--colorNeutralForeground1);
-    box-shadow: 0 1px 3px rgb(0 0 0 / 18%);
-    text-align: start;
-    white-space: nowrap;
-}
-
-.navmenu .fluent-navcategoryitem:hover,
-.navmenu .fluent-navcategoryitem:focus-visible {
-    background: var(--colorNeutralBackground2Hover);
-    color: var(--colorNeutralForeground1);
-}
-
-.navmenu .fluent-navcategoryitem.active,
-.navmenu .fluent-navcategoryitem[aria-expanded="true"] {
-    color: var(--colorNeutralForeground1);
-}
-
-.navmenu .fluent-navcategoryitem svg {
-    flex: 0 0 20px;
-    width: 20px;
-    height: 20px;
-    color: var(--colorBrandForeground1);
-    fill: currentColor;
-    stroke: currentColor;
-}
-
 .navmenu .fluent-navitem:hover,
 .navmenu .fluent-navitem:focus-visible {
     background: var(--colorNeutralBackground2Hover);
@@ -407,6 +327,55 @@ fluent-drawer[fuib] fluent-drawer-body[fuib] > div[slot="footer"] > fluent-butto
     color: var(--colorBrandForeground1);
     fill: currentColor;
     stroke: currentColor;
+}
+
+.genre-page {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.genre-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+    align-content: start;
+    gap: 16px;
+    padding: 8px;
+}
+
+.genre-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: 8px;
+    background: var(--colorNeutralBackground2);
+    color: var(--colorNeutralForeground1);
+    text-decoration: none;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 18%);
+}
+
+.genre-card:hover,
+.genre-card:focus-visible {
+    border-color: var(--colorBrandBackground);
+    background-color: var(--colorNeutralBackground2Hover);
+    color: var(--colorBrandForeground1);
+    text-decoration: none;
+}
+
+.genre-card img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+}
+
+.genre-card span {
+    padding: 10px 12px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
 }
 
 .search-filter {
