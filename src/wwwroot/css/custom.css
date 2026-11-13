@@ -128,15 +128,26 @@ fluent-drawer[fuib] fluent-drawer-body[fuib] > div[slot="footer"] > fluent-butto
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: var(--colorBrandForeground1);
 }
 
-.station-title fluent-link {
+.station-title fluent-link,
+.station-title .station-homepage-link {
     display: block;
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.station-title .station-homepage-link {
+    color: var(--colorBrandForeground1);
+    text-decoration: none;
+}
+
+.station-title .station-homepage-link:hover {
+    text-decoration: underline;
 }
 
 .station-title fluent-link::part(control) {

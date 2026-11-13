@@ -33,10 +33,11 @@ else
                         @context?.GetCountryIcon()
                         @if (context?.Homepage != null)
                         {
-                            <FluentLink Href="#" Appearance="LinkAppearance.Default" title="@context?.Homepage"
-                                        OnClick="@(() => OpenLink(context?.Homepage.ToString() ?? string.Empty))">
+                            <a href="#" class="station-homepage-link" title="@context.Homepage"
+                               @onclick="() => OpenLink(context.Homepage.ToString())"
+                               @onclick:preventDefault="true" @onclick:stopPropagation="true">
                                 <span class="station-name">@context?.Name</span>
-                            </FluentLink>
+                            </a>
                         }
                         else
                         {
