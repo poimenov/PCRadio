@@ -156,6 +156,10 @@
                 TitleIcon = new IconsRegular24.MusicNote2();
                 IsExportVisible = true;
                 break;
+            case var currentUri when currentUri.Contains("/subgenre/", StringComparison.OrdinalIgnoreCase):
+                TitleIcon = new IconsRegular24.MusicNote1();
+                IsExportVisible = true;
+                break;
             case var currentUri when currentUri.EndsWith("favorites", StringComparison.OrdinalIgnoreCase):
                 TitleIcon = new IconsRegular24.Heart();
                 IsExportVisible = true;
