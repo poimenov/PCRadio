@@ -366,7 +366,7 @@ fluent-drawer[fuib] fluent-drawer-body[fuib] > div[slot="footer"] > fluent-butto
     box-shadow: 0 1px 3px rgb(0 0 0 / 18%);
 }
 
-.genre-card > img {
+.genre-card > a > img {
     display: block;
     width: 100%;
     aspect-ratio: 4 / 3;

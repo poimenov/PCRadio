@@ -13,19 +13,19 @@
         @foreach (var genre in allGenres)
         {
             <article class="genre-card">
-                <img src="@GetGenreImage(genre.Id)" alt="" loading="lazy" />
+                <a href="@($"genre/{genre.Id}")">
+                    <img src="@GetGenreImage(genre.Id)" alt="@genre.Name" title="@genre.Name" loading="lazy" />
+                </a>
                 <div class="genre-title-row">
                     <a class="genre-title-link" href="@($"genre/{genre.Id}")">@genre.Name</a>
                     @if (genre.SubGenres is { Count: > 0 } subGenres)
                     {
                         <FluentButton Id="@($"genre-subgenres-{genre.Id}")" Class="genre-subgenres-button"
-                                      Appearance="ButtonAppearance.Transparent"
-                                      IconStart="@(new _regular.Size20.TagMultiple())"
+                                      Appearance="ButtonAppearance.Transparent" IconStart="@(new _regular.Size20.TagMultiple())"
                                       Title="@($"{localizer["SubGenres"]} ({subGenres.Count})")"
                                       aria-label="@($"{localizer["SubGenres"]} ({subGenres.Count})")"
                                       OnClick="@(() => ToggleSubGenrePopover(genre.Id))" />
-                        <FluentPopover AnchorId="@($"genre-subgenres-{genre.Id}")"
-                                       Opened="@(openSubGenreGenreId == genre.Id)"
+                        <FluentPopover AnchorId="@($"genre-subgenres-{genre.Id}")" Opened="@(openSubGenreGenreId == genre.Id)"
                                        OpenedChanged="@(opened => OnSubGenrePopoverOpenedChanged(genre.Id, opened))">
                             <nav class="genre-subgenre-menu" aria-label="@localizer["SubGenres"]">
                                 @foreach (var subGenre in subGenres)
