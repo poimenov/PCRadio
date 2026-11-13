@@ -3,6 +3,7 @@
 @using PCRadio.DataAccess.Interfaces
 @using PCRadio.DataAccess.Models
 @using PCRadio.Services.Interfaces
+@using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @inject IStringLocalizer<GenresPage> localizer
 @inject IGenres genres
 @inject IAppStateService appStateService
@@ -11,21 +12,60 @@
     <div class="genre-grid">
         @foreach (var genre in allGenres)
         {
-            <a class="genre-card" href="@($"genre/{genre.Id}")">
+            <article class="genre-card">
                 <img src="@GetGenreImage(genre.Id)" alt="" loading="lazy" />
-                <span>@genre.Name</span>
-            </a>
+                <div class="genre-title-row">
+                    <a class="genre-title-link" href="@($"genre/{genre.Id}")">@genre.Name</a>
+                    @if (genre.SubGenres is { Count: > 0 } subGenres)
+                    {
+                        <FluentButton Id="@($"genre-subgenres-{genre.Id}")" Class="genre-subgenres-button"
+                                      Appearance="ButtonAppearance.Transparent"
+                                      IconStart="@(new _regular.Size20.TagMultiple())"
+                                      Title="@($"{localizer["SubGenres"]} ({subGenres.Count})")"
+                                      aria-label="@($"{localizer["SubGenres"]} ({subGenres.Count})")"
+                                      OnClick="@(() => ToggleSubGenrePopover(genre.Id))" />
+                        <FluentPopover AnchorId="@($"genre-subgenres-{genre.Id}")"
+                                       Opened="@(openSubGenreGenreId == genre.Id)"
+                                       OpenedChanged="@(opened => OnSubGenrePopoverOpenedChanged(genre.Id, opened))">
+                            <nav class="genre-subgenre-menu" aria-label="@localizer["SubGenres"]">
+                                @foreach (var subGenre in subGenres)
+                                {
+                                    <a href="@($"subgenre/{subGenre.Id}")">@subGenre.Name</a>
+                                }
+                            </nav>
+                        </FluentPopover>
+                    }
+                </div>
+            </article>
         }
     </div>
 </div>
 
 @code {
     private List<Genre> allGenres = [];
+    private int? openSubGenreGenreId;
 
     protected override void OnInitialized()
     {
         allGenres = genres.GetAll().ToList();
         appStateService.Title = localizer["Header"];
+    }
+
+    private void ToggleSubGenrePopover(int genreId)
+    {
+        openSubGenreGenreId = openSubGenreGenreId == genreId ? null : genreId;
+    }
+
+    private void OnSubGenrePopoverOpenedChanged(int genreId, bool opened)
+    {
+        if (opened)
+        {
+            openSubGenreGenreId = genreId;
+        }
+        else if (openSubGenreGenreId == genreId)
+        {
+            openSubGenreGenreId = null;
+        }
     }
 
     private static string GetGenreImage(int genreId)

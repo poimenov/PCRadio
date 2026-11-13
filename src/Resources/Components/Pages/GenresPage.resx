@@ -3,4 +3,7 @@
     <data name="Header" xml:space="preserve">
         <value>Genres</value>
     </data>
+    <data name="SubGenres" xml:space="preserve">
+        <value>Subgenres</value>
+    </data>
 </root>
