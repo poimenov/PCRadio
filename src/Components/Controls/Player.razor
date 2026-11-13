@@ -40,7 +40,20 @@
             <FluentButton IconStart="@(new _regular.Size20.EditLineHorizontal3())" Color="var(--colorBrandForeground1)"
                           OnClick="@EditStationInfo" Title="@localizer["EditStationInfo"]"
                           Appearance="ButtonAppearance.Transparent" />
-            <i>@_genres @_subgenres</i>
+            <i>
+                @if (Station?.StationGenres is { } genres)
+                {
+                    foreach (var (index, stationGenre) in genres.Index())
+                    {
+                        <a href="@($"genre/{stationGenre.GenreId}")">@stationGenre.Genre.Name</a>
+                        if (index < genres.Count - 1 || _subgenres.Length > 0)
+                        {
+                            <span> • </span>
+                        }
+                    }
+                }
+                @_subgenres
+            </i>
         </FluentStack>
         <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
                      HorizontalGap="8">
@@ -90,7 +103,6 @@
     private bool _isPlaying;
     private string? _country;
     private string? _cities;
-    private string? _genres;
     private string? _subgenres;
     private string? _searchText = string.Empty;
     private string? SearchText
@@ -208,9 +220,7 @@
                 _country = Station.Country?.Name ?? string.Empty;
                 _cities = string.Join(", ", Station.StationCities?.Select(x => x.City?.Name)
                 .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
-                _genres = string.Join(", ", Station.StationGenres?.Select(x => x.Genre?.Name)
-                .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
-                _subgenres = string.Join(", ", Station.StationSubGenres?.Select(x => x.SubGenre?.Name)
+                _subgenres = string.Join(" • ", Station.StationSubGenres?.Select(x => x.SubGenre?.Name)
                 .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
                 StateHasChanged();
             }
