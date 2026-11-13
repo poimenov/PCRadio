@@ -11,7 +11,7 @@ It provides a simple and modern desktop interface for listening to online radio 
 
 ## ✨ Features
 - Play online radio streams
-- Cross-platform support (Windows, Linux)
+- Cross-platform support (Windows, Linux, and macOS; macOS support is untested)
 - Lightweight UI powered by Photino and Blazor
 - Manage favorites station list
 - Automatically keeps a history of all stations you've played.
@@ -45,6 +45,22 @@ cd PCRadio/src
 Run:
 ```bash
 dotnet run
+```
+
+## 📦 Build and publish
+
+From the repository root, run the build script without arguments to publish the default project (`./src/PCRadio.csproj`):
+
+```bash
+dotnet fsi build.fsx
+```
+
+By default, the script publishes for `win-x64` and `linux-x64` and places the archives in `./artifacts`. Linux builds are packaged as `.tar.gz`; Windows and macOS builds as `.zip`.
+
+You can optionally specify a project path, artifacts directory, and runtime identifiers:
+
+```bash
+dotnet fsi build.fsx ./src/PCRadio.csproj ./artifacts "win-x64,linux-x64,osx-x64"
 ```
 
 ## 📄 License
