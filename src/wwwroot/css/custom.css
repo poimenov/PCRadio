@@ -442,7 +442,45 @@ fluent-drawer[fuib] fluent-drawer-body[fuib] > div[slot="footer"] > fluent-butto
     gap: 12px;
 }
 
+.search-page-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+}
+
+.search-page-toolbar .search-toolbar-row {
+    display: grid;
+    align-items: end;
+    justify-content: start;
+    width: fit-content;
+    max-width: 100%;
+    column-gap: 6px;
+}
+
+.search-page-toolbar .search-toolbar-primary {
+    grid-template-columns: minmax(0, 250px) minmax(0, 250px) 34px;
+}
+
+.search-page-toolbar .search-toolbar-genres {
+    grid-template-columns: repeat(2, minmax(0, 250px));
+    margin-top: -8px;
+}
+
 .search-toolbar-field {
+    min-width: 0;
+}
+
+.search-page-toolbar .search-filter {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 250px;
+    height: 60px;
+}
+
+.search-page-toolbar .search-toolbar-row .search-toolbar-field > fluent-select {
+    display: block;
+    width: 100%;
     min-width: 0;
 }
 
@@ -450,6 +488,12 @@ fluent-drawer[fuib] fluent-drawer-body[fuib] > div[slot="footer"] > fluent-butto
     display: block;
     align-self: end;
     margin-bottom: 15px;
+}
+
+.search-page-toolbar .search-toolbar-button {
+    align-self: center;
+    margin-bottom: 0;
+    transform: translateY(10px);
 }
 
 .search-toolbar-button fluent-button {
@@ -481,6 +525,28 @@ fluent-drawer[fuib] fluent-drawer-body[fuib] > div[slot="footer"] > fluent-butto
     display: block;
     width: 20px;
     height: 20px;
+}
+
+@media (max-width: 600px) {
+    .search-page-toolbar .search-toolbar-primary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px 6px;
+    }
+
+    .search-page-toolbar .search-toolbar-primary .search-toolbar-field {
+        flex: 0 1 250px;
+    }
+
+    .search-page-toolbar .search-toolbar-button {
+        transform: none;
+    }
+}
+
+@media (max-width: 420px) {
+    .search-page-toolbar .search-toolbar-genres {
+        grid-template-columns: minmax(0, 250px);
+    }
 }
 
 .dropdown-with-icon {

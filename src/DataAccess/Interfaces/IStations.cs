@@ -7,6 +7,7 @@ public class SearchParams
 {
     public string? Name { get; set; }
     public int GenreId { get; set; }
+    public int SubGenreId { get; set; }
     public int CountryId { get; set; }
 }
 public class StationsResult

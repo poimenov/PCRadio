@@ -18,4 +18,7 @@
     <data name="Genres" xml:space="preserve">
         <value>Жанры</value>
     </data>                  
+    <data name="SubGenres" xml:space="preserve">
+        <value>Поджанры</value>
+    </data>
 </root>

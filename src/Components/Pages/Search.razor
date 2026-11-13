@@ -14,50 +14,68 @@
 @inject ICountries countries
 @inject IAppStateService appStateService
 
-<div class="search-toolbar">
-    <div class="search-toolbar-field">
-        <FluentTextInput Label="@localizer["SearchLabel"]" @bind-Value="@SearchName" Class="search-filter"
-                         Placeholder="@localizer["SearchPlaceholder"]" />
+<div class="search-toolbar search-page-toolbar">
+    <div class="search-toolbar-row search-toolbar-primary">
+        <div class="search-toolbar-field">
+            <FluentTextInput Label="@localizer["SearchLabel"]" @bind-Value="@SearchName" Class="search-filter"
+                             Placeholder="@localizer["SearchPlaceholder"]" />
+        </div>
+        <div class="search-toolbar-field">
+            <div class="dropdown-with-icon">
+                <span class="selected-country-icon">
+                    @if (SearchCountry != null)
+                    {
+                        @SearchCountry.GetCountryIcon(false)
+                    }
+                </span>
+                <FluentSelect TOption="_models.Country" TValue="_models.Country" Label="@localizer["Countries"]"
+                              OptionValue="@(x => x)" OptionText="@(x => x.Name)" Items="@Countries"
+                              Height="200px" Class="search-filter"
+                              ControlStyle="padding-inline-start: 30px;" @bind-Value="@SearchCountry">
+                    <OptionTemplate>
+                        <span slot="checked-indicator" style="display: none"></span>
+                        <span class="dropdown-option-content">
+                            @context?.GetCountryIcon(false)
+                            @context?.Name
+                        </span>
+                    </OptionTemplate>
+                </FluentSelect>
+            </div>
+        </div>
+        <div class="search-toolbar-button">
+            <FluentButton OnClick="PerformSearch" Title="@localizer["SearchButton"]" AriaLabel="@localizer["SearchButton"]"
+                          IconOnly="true" Disabled="@(!_searchEnabled)">
+                <FluentIcon Value="@(new _regular.Size20.Search())" Color="Color.Primary" />
+            </FluentButton>
+        </div>
     </div>
 
-    <div class="search-toolbar-field">
-        <FluentSelect TOption="_models.Genre" TValue="_models.Genre" Label="@localizer["Genres"]"
-                      OptionValue="@(x => x)" OptionText="@(x => x.Name)" Items="@Genres"
-                      Height="200px" @bind-Value="@SearchGenre">
-            <OptionTemplate>
-                <span slot="checked-indicator" style="display: none"></span>
-                @context?.Name
-            </OptionTemplate>
-        </FluentSelect>
-    </div>
-
-    <div class="search-toolbar-field">
-        <div class="dropdown-with-icon">
-            <span class="selected-country-icon">
-                @if (SearchCountry != null)
-                {
-                    @SearchCountry.GetCountryIcon(false)
-                }
-            </span>
-            <FluentSelect TOption="_models.Country" TValue="_models.Country" Label="@localizer["Countries"]"
-                          OptionValue="@(x => x)" OptionText="@(x => x.Name)" Items="@Countries"
-                          Height="200px"
-                          ControlStyle="padding-inline-start: 30px;" @bind-Value="@SearchCountry">
+    <div class="search-toolbar-row search-toolbar-genres">
+        <div class="search-toolbar-field">
+            <FluentSelect TOption="_models.Genre" TValue="_models.Genre" Label="@localizer["Genres"]"
+                          OptionValue="@(x => x)" OptionText="@(x => x.Name)" Items="@Genres"
+                          Height="200px" Class="search-filter"
+                          @bind-Value="@SearchGenre" @bind-Value:after="OnGenreChanged">
                 <OptionTemplate>
                     <span slot="checked-indicator" style="display: none"></span>
-                    <span class="dropdown-option-content">
-                        @context?.GetCountryIcon(false)
-                        @context?.Name
-                    </span>
+                    @context?.Name
                 </OptionTemplate>
             </FluentSelect>
         </div>
-    </div>
-    <div class="search-toolbar-button">
-        <FluentButton OnClick="PerformSearch" Title="@localizer["SearchButton"]" AriaLabel="@localizer["SearchButton"]"
-                      IconOnly="true" Disabled="@(!_searchEnabled)">
-            <FluentIcon Value="@(new _regular.Size20.Search())" Color="Color.Primary" />
-        </FluentButton>
+
+        @if (SearchGenre?.SubGenres is { Count: > 0 })
+        {
+            <div class="search-toolbar-field">
+                <FluentSelect TOption="_models.SubGenre" TValue="_models.SubGenre" Label="@localizer["SubGenres"]"
+                              OptionValue="@(x => x)" OptionText="@(x => x.Name)" Items="@SubGenres"
+                              Height="200px" Class="search-filter" @bind-Value="@SearchSubGenre">
+                    <OptionTemplate>
+                        <span slot="checked-indicator" style="display: none"></span>
+                        @context?.Name
+                    </OptionTemplate>
+                </FluentSelect>
+            </div>
+        }
     </div>
 </div>
 
@@ -99,6 +117,17 @@
     }
     private _models.Country? SearchCountry { get; set; }
     private _models.Genre? SearchGenre { get; set; }
+    private _models.SubGenre? SearchSubGenre { get; set; }
+    private List<_models.SubGenre> SubGenres =>
+        SearchGenre?.SubGenres is { Count: > 0 } subGenres
+            ? [new _models.SubGenre
+            {
+                Id = 0,
+                Name = string.Empty,
+                GenreId = SearchGenre.Id,
+                Genre = SearchGenre
+            }, .. subGenres]
+            : [];
     private StationsResult? _result = default!;
     private SearchParams? _params = default!;
     private bool _searchEnabled { get; set; } = true;
@@ -110,10 +139,21 @@
         appStateService.Title = localizer["Header"];
     }
 
+    private void OnGenreChanged()
+    {
+        SearchSubGenre = null;
+    }
+
     private async Task PerformSearch()
     {
         _searchEnabled = false;
-        _params = new SearchParams { Name = SearchName, CountryId = SearchCountry?.Id ?? 0, GenreId = SearchGenre?.Id ?? 0 };
+        _params = new SearchParams
+        {
+            Name = SearchName,
+            CountryId = SearchCountry?.Id ?? 0,
+            GenreId = SearchGenre?.Id ?? 0,
+            SubGenreId = SearchSubGenre?.Id ?? 0
+        };
         _result = await stations.SearchAsync(_params, 0, PageSize);
         var title = _result.TotalCount > 0 ? $"{localizer["Header"]} ({_result.TotalCount})" : localizer["Header"];
         appStateService.Title = title;

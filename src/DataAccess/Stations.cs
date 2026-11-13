@@ -233,7 +233,11 @@ public class Stations : IStations
                 query = query.Where(s => EF.Functions.Like(s.Name, $"%{searchParams.Name.Trim()}%"));
             }
 
-            if (searchParams.GenreId > 0)
+            if (searchParams.SubGenreId > 0)
+            {
+                query = query.Where(s => s.StationSubGenres!.Select(sg => sg.SubGenreId).Contains(searchParams.SubGenreId));
+            }
+            else if (searchParams.GenreId > 0)
             {
                 query = query.Where(s => s.StationGenres!.Select(sg => sg.GenreId).Contains(searchParams.GenreId));
             }
