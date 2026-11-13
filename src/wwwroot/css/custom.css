@@ -171,9 +171,9 @@ fluent-drawer[fuib] fluent-drawer-body[fuib] > div[slot="footer"] > fluent-butto
 }
 
 .player > img.logo {
-    flex: 0 0 76px;
-    width: 76px;
-    height: 76px;
+    flex: 0 0 90px;
+    width: 90px;
+    height: 90px;
 }
 
 .player-info {
