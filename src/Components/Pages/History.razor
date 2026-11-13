@@ -6,6 +6,7 @@
 @using PCRadio.DataAccess.Models
 @using PCRadio.DataAccess.Interfaces
 @using Microsoft.FluentUI.AspNetCore.Components
+@using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @using System.Linq
 @inject IStringLocalizer<History> localizer
 @inject IOptions<AppSettings> options
@@ -24,13 +25,35 @@ else
         <FluentDataGrid Items="@RecordsQuery" StripedRows="true" HoveredRows="true"
                         SelectionMode="DataGridSelectionMode.None" GenerateHeader="DataGridGeneratedHeaderType.Sticky">
             <PropertyColumn Property="@(p => p.StartTime)" Title="@localizer["StartTime"]" width="180px"
-                            Format="yyyy-MM-dd HH:mm:ss" />
-            <PropertyColumn Property="@(p => p.StationName)" Title="@localizer["Station"]" width="180px" />
+                            Format="yyyy-MM-dd HH:mm:ss">
+                <HeaderCellTitleTemplate>
+                    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                        <FluentIcon Icon="_regular.Size16.Clock" />
+                        @context.Title
+                    </FluentStack>
+                </HeaderCellTitleTemplate>
+            </PropertyColumn>
+            <PropertyColumn Property="@(p => p.StationName)" Title="@localizer["Station"]" width="180px">
+                <HeaderCellTitleTemplate>
+                    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                        <FluentIcon Icon="_regular.Size16.Location" />
+                        @context.Title
+                    </FluentStack>
+                </HeaderCellTitleTemplate>
+            </PropertyColumn>
             <TemplateColumn Title="@localizer["Track"]">
-                <a href="#" @onclick="() => OpenLink(context.TrackName)" @onclick:preventDefault="true"
-                   @onclick:stopPropagation="true" title="@context.TrackName" class="historyLink">
-                    @context.TrackName
-                </a>
+                <HeaderCellTitleTemplate>
+                    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                        <FluentIcon Icon="_regular.Size16.Video" />
+                        @context.Title
+                    </FluentStack>
+                </HeaderCellTitleTemplate>
+                <ChildContent Context="context">
+                    <a href="#" @onclick="() => OpenLink(context.TrackName)" @onclick:preventDefault="true"
+                       @onclick:stopPropagation="true" title="@context.TrackName" class="historyLink">
+                        @context.TrackName
+                    </a>
+                </ChildContent>
             </TemplateColumn>
         </FluentDataGrid>
     </div>

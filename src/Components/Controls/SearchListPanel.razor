@@ -1,6 +1,7 @@
 @using Microsoft.Extensions.Localization
 @using Microsoft.Extensions.Options
 @using PCRadio.Services.Interfaces;
+@using _regular = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 @inject ISearchService SearchService
 @inject IStringLocalizer<SearchListPanel> localizer
 @inject IOptions<AppSettings> options
@@ -61,10 +62,31 @@
                                 OnRowClick="@HandleRowClick" RowClass="@GetRowClass">
 
                     <PropertyColumn Property="@(p => p.Artist)" Tooltip="true" TooltipText="@(p => p.Artist)"
-                                    Title="@localizer["Artist"]" Sortable="true" />
+                                    Title="@localizer["Artist"]" Sortable="true">
+                        <HeaderCellTitleTemplate>
+                            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                                <FluentIcon Icon="_regular.Size16.Person" />
+                                @context.Title
+                            </FluentStack>
+                        </HeaderCellTitleTemplate>
+                    </PropertyColumn>
                     <PropertyColumn Property="@(p => p.Title)" Tooltip="true" TooltipText="@(p => p.Title)"
-                                    Title="@localizer["Title"]" Sortable="true" />
-                    <PropertyColumn Property="@(p => p.DisplayDuration)" Title="@localizer["Duration"]" Sortable="true" />
+                                    Title="@localizer["Title"]" Sortable="true">
+                        <HeaderCellTitleTemplate>
+                            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                                <FluentIcon Icon="_regular.Size16.MusicNote2" />
+                                @context.Title
+                            </FluentStack>
+                        </HeaderCellTitleTemplate>
+                    </PropertyColumn>
+                    <PropertyColumn Property="@(p => p.DisplayDuration)" Title="@localizer["Duration"]" Sortable="true">
+                        <HeaderCellTitleTemplate>
+                            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+                                <FluentIcon Icon="_regular.Size16.Clock" />
+                                @context.Title
+                            </FluentStack>
+                        </HeaderCellTitleTemplate>
+                    </PropertyColumn>
                 </FluentDataGrid>
             }
         }
