@@ -46,13 +46,23 @@
                     foreach (var (index, stationGenre) in genres.Index())
                     {
                         <a href="@($"genre/{stationGenre.GenreId}")">@stationGenre.Genre.Name</a>
-                        if (index < genres.Count - 1 || _subgenres.Length > 0)
+                        if (index < genres.Count - 1 || Station?.StationSubGenres?.Count > 0)
                         {
                             <span> • </span>
                         }
                     }
                 }
-                @_subgenres
+                @if (Station?.StationSubGenres is { } subgenres)
+                {
+                    foreach (var (index, stationSubGenre) in subgenres.Index())
+                    {
+                        <a href="@($"subgenre/{stationSubGenre.SubGenreId}")">@stationSubGenre.SubGenre.Name</a>
+                        if (index < subgenres.Count - 1)
+                        {
+                            <span> • </span>
+                        }
+                    }
+                }
             </i>
         </FluentStack>
         <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
@@ -103,7 +113,6 @@
     private bool _isPlaying;
     private string? _country;
     private string? _cities;
-    private string? _subgenres;
     private string? _searchText = string.Empty;
     private string? SearchText
     {
@@ -219,8 +228,6 @@
             {
                 _country = Station.Country?.Name ?? string.Empty;
                 _cities = string.Join(", ", Station.StationCities?.Select(x => x.City?.Name)
-                .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
-                _subgenres = string.Join(" • ", Station.StationSubGenres?.Select(x => x.SubGenre?.Name)
                 .Where(x => !string.IsNullOrEmpty(x)) ?? Array.Empty<string>());
                 StateHasChanged();
             }

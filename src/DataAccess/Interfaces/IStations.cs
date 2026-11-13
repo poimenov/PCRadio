@@ -27,6 +27,7 @@ public interface IStations
     Task<StationsResult> GetFavoritesAsync(int skip, int take);
     Task<StationsResult> GetRecommendedAsync(int skip, int take);
     Task<StationsResult> GetByGenreAsync(int id, int skip, int take);
+    Task<StationsResult> GetBySubGenreAsync(int id, int skip, int take);
     Task<StationsResult> SearchAsync(SearchParams? searchParams, int skip, int take);
     Task SetFavoriteAsync(int stationId, bool isFavorite);
     Task<Station?> GetStationAsync(int id);

@@ -1,0 +1,29 @@
+@page "/subgenre/{Id:int}"
+@attribute [StreamRendering]
+@using Microsoft.Extensions.Options
+@using PCRadio.DataAccess.Interfaces
+@using PCRadio.DataAccess.Models
+@using PCRadio.Services.Interfaces
+@inject IStations stations
+@inject IOptions<AppSettings> options
+@inject IGenres genres
+@inject IAppStateService appStateService
+
+<PCRadio.Components.Controls.StationsList Count="@_result?.TotalCount" PageSize="@PageSize"
+    Stations="@_result?.Stations.ToList()"
+    GetStations="@(async (skip, take) => await stations.GetBySubGenreAsync(Id, skip, take))" />
+
+@code
+{
+    private int PageSize => options.Value.PageSize;
+    [Parameter]
+    public int Id { get; set; }
+    private StationsResult? _result = default!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _result = await stations.GetBySubGenreAsync(Id, 0, PageSize);
+        appStateService.Title = $"{genres.GetAllSubGenres().FirstOrDefault(subGenre => subGenre.Id == Id)?.Name} ({_result?.TotalCount ?? 0})";
+        await base.OnParametersSetAsync();
+    }
+}

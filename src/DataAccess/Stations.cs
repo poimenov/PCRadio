@@ -143,6 +143,21 @@ public class Stations : IStations
         }
     }
 
+    public async Task<StationsResult> GetBySubGenreAsync(int id, int skip, int take)
+    {
+        await using (var db = new Database(_databasePath))
+        {
+            var query = db.Stations.Where(s => s.StationSubGenres!.Select(sg => sg.SubGenreId).Contains(id));
+            var totalCount = await query.CountAsync();
+            var stations = await query.OrderBy(station => station.Id).Skip(skip).Take(take).ToListAsync();
+            return new StationsResult
+            {
+                Stations = stations,
+                TotalCount = totalCount
+            };
+        }
+    }
+
     public async Task<StationsResult> GetFavoritesAsync(int skip, int take)
     {
         await using (var db = new Database(_databasePath))
