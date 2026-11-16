@@ -1,0 +1,80 @@
+@page "/topic/{Slug}"
+@attribute [StreamRendering]
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Logging
+@using Microsoft.Extensions.Options
+@using PCRadio.DataAccess.Interfaces
+@using PCRadio.Services.Interfaces
+@using PCRadio.Services.Models
+@inject IStringLocalizer<ByStationTopic> Localizer
+@inject IStationTopicsService StationTopics
+@inject IOptions<AppSettings> Options
+@inject IAppStateService AppState
+@inject ILogger<ByStationTopic> Logger
+@implements IDisposable
+
+@if (_error is not null)
+{
+    <div class="empty-message">@Localizer["LoadError"]</div>
+}
+else if (_result is not null)
+{
+    <PCRadio.Components.Controls.StationsList Count="@_result.TotalCount" PageSize="@PageSize"
+        Stations="@_result.Stations.ToList()"
+        GetStations="@(async (skip, take) => await StationTopics.GetByTopicAsync(Slug, skip, take))" />
+}
+
+@code
+{
+    private int PageSize => Options.Value.PageSize;
+
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private StationTopicStationsResult? _result;
+    private Exception? _error;
+
+    protected override void OnInitialized()
+    {
+        AppState.CultureChanged += OnCultureChanged;
+        base.OnInitialized();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadStationsAsync();
+    }
+
+    private async Task LoadStationsAsync()
+    {
+        _error = null;
+        AppState.Title = Slug;
+        try
+        {
+            var topic = await StationTopics.GetTopicBySlugAsync(Slug);
+            AppState.Title = topic?.Name ?? Slug;
+            _result = await StationTopics.GetByTopicAsync(Slug, 0, PageSize);
+            AppState.Title = $"{_result.TopicName} ({_result.TotalCount})";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load stations for topic {TopicSlug}.", Slug);
+            _error = ex;
+            _result = null;
+        }
+    }
+
+    private void OnCultureChanged(System.Globalization.CultureInfo culture)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            await LoadStationsAsync();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        AppState.CultureChanged -= OnCultureChanged;
+    }
+}

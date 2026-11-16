@@ -18,6 +18,7 @@ public class AppSettings
     public string? DefaultLanguage { get; set; }
     public string? ArchiveUrl { get; set; }
     public string? ArchivePassword { get; set; }
+    public string StationTopicsApiBaseUrl { get; set; } = "https://pcradio.app/api/site/v2/";
     public string TrackSearchUrl { get; set; } = "https://www.youtube.com/results?search_query={0}";
     public string TrackDownloadBaseUrl { get; set; } = "https://m.z3.fm";
     public int TitleDelayMilliseconds { get; set; } = 5000;

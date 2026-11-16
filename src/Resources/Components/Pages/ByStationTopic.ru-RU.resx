@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="LoadError" xml:space="preserve">
+        <value>Не удалось загрузить станции. Проверьте подключение к интернету и попробуйте снова.</value>
+    </data>
+</root>

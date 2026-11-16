@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="LoadError" xml:space="preserve">
+        <value>Failed to load stations. Check your internet connection and try again.</value>
+    </data>
+</root>

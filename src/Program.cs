@@ -75,6 +75,7 @@ public class Program
             builder.Services.AddScoped<ISearchService, SearchService>();
             builder.Services.AddTransient<IMetadataService, MetadataService>();
             builder.Services.AddTransient<IRadioBrowserService, RadioBrowserService>();
+            builder.Services.AddTransient<IStationTopicsService, StationTopicsService>();
             builder.Services.AddSingleton<IRadioBrowserClient, RadioBrowserClient>();
             builder.Services.AddSingleton<IAppStateService, AppStateService>();
 

@@ -32,9 +32,11 @@ public interface IStations
     Task<StationsResult> SearchAsync(SearchParams? searchParams, int skip, int take);
     Task SetFavoriteAsync(int stationId, bool isFavorite);
     Task<Station?> GetStationAsync(int id);
+    Task<Station?> GetByStreamAsync(string stream);
     Task<OperationResult<Station>> AddStationAsync(Station station);
     Task<OperationResult> UpdateStationAsync(Station station);
     Task<IEnumerable<StationInfo>> ExportByGenreAsync(int id);
+    Task<IEnumerable<StationInfo>> ExportByIdsAsync(IEnumerable<int> stationIds);
     Task<IEnumerable<StationInfo>> ExportFavoritesAsync();
     Task<IEnumerable<StationInfo>> ExportRecommendedAsync();
 }

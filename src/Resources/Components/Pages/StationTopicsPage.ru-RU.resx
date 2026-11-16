@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <data name="Header" xml:space="preserve">
+        <value>Подборки</value>
+    </data>
+    <data name="LoadError" xml:space="preserve">
+        <value>Не удалось загрузить подборки. Проверьте подключение к интернету и попробуйте снова.</value>
+    </data>
+</root>

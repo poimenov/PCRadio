@@ -1,4 +1,5 @@
 ﻿@using IconsRegular24 = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular.Size24
+@using IconsRegular20 = Microsoft.FluentUI.AspNetCore.Components.Icons.Regular.Size20
 @using Microsoft.Extensions.Localization
 @using Microsoft.Extensions.Options
 @using PCRadio.DataAccess.Interfaces
@@ -14,6 +15,7 @@
 @inject IOpenDialogService openDialogService
 @inject NavigationManager navigationManager
 @inject IStations stations
+@inject IStationTopicsService stationTopics
 @inject IJSRuntime JSRuntime
 <div class="application-layout">
     <header class="application-header">
@@ -152,6 +154,14 @@
                 TitleIcon = new IconsRegular24.MusicNote2();
                 IsExportVisible = false;
                 break;
+            case var currentUri when currentUri.EndsWith("/topics", StringComparison.OrdinalIgnoreCase):
+                TitleIcon = new IconsRegular24.Collections();
+                IsExportVisible = false;
+                break;
+            case var currentUri when currentUri.Contains("/topic/", StringComparison.OrdinalIgnoreCase):
+                TitleIcon = new IconsRegular20.MusicNote2Play();
+                IsExportVisible = true;
+                break;
             case var currentUri when currentUri.Contains("/genre/", StringComparison.OrdinalIgnoreCase):
                 TitleIcon = new IconsRegular24.MusicNote2();
                 IsExportVisible = true;
@@ -213,7 +223,9 @@
     private async Task ExportStationsAsync()
     {
         var currentUri = navigationManager.Uri;
-        if (!(currentUri.Contains("genre") || currentUri.EndsWith("favorites") || currentUri.EndsWith("/")))
+        var isTopicExport = currentUri.Contains("/topic/", StringComparison.OrdinalIgnoreCase);
+        if (!(currentUri.Contains("genre") || isTopicExport
+              || currentUri.EndsWith("favorites") || currentUri.EndsWith("/")))
         {
             return;
         }
@@ -227,23 +239,33 @@
 
         IsExportProcessing = true;
 
-        (IEnumerable<StationInfo>?, string) stationsToExport = currentUri switch
+        try
         {
-            var uri when uri.Contains("genre") => (await stations.ExportByGenreAsync(GetIdFromUri(uri)), Title.Replace(" ", "_")),
-            var uri when uri.EndsWith("favorites") => (await stations.ExportFavoritesAsync(), "favorites"),
-            var uri when uri.EndsWith("/") => (await stations.ExportRecommendedAsync(), "recommended"),
-            _ => (null, string.Empty)
-        };
+            var topicSlug = isTopicExport ? GetTopicSlugFromUri(currentUri) : string.Empty;
+            (IEnumerable<StationInfo>?, string, bool) stationsToExport = currentUri switch
+            {
+                var uri when uri.Contains("/topic/", StringComparison.OrdinalIgnoreCase) =>
+                    (await stationTopics.ExportByTopicAsync(topicSlug), topicSlug, false),
+                var uri when uri.Contains("genre") =>
+                    (await stations.ExportByGenreAsync(GetIdFromUri(uri)), Title.Replace(" ", "_"), true),
+                var uri when uri.EndsWith("favorites") => (await stations.ExportFavoritesAsync(), "favorites", true),
+                var uri when uri.EndsWith("/") => (await stations.ExportRecommendedAsync(), "recommended", true),
+                _ => (null, string.Empty, true)
+            };
 
-        if (stationsToExport.Item1 != null && stationsToExport.Item1.Any())
-        {
-            var m3uContent = ConvertToM3U(stationsToExport.Item1);
-            var filePath = Path.Combine(folderPath.First(), $"PCRadio_{stationsToExport.Item2}.m3u");
-            await File.WriteAllTextAsync(filePath, m3uContent);
+            if (stationsToExport.Item1 != null && stationsToExport.Item1.Any())
+            {
+                var m3uContent = ConvertToM3U(stationsToExport.Item1, stationsToExport.Item3);
+                var filePath = Path.Combine(folderPath.First(), $"PCRadio_{stationsToExport.Item2}.m3u");
+                await File.WriteAllTextAsync(filePath, m3uContent);
+            }
         }
-
-        IsExportProcessing = false;
+        finally
+        {
+            IsExportProcessing = false;
+        }
     }
+
     private int GetIdFromUri(string uri)
     {
         var segments = new Uri(uri).Segments;
@@ -254,7 +276,20 @@
 
         return 0;
     }
-    private string ConvertToM3U(IEnumerable<StationInfo> stations)
+
+    private static string GetTopicSlugFromUri(string uri)
+    {
+        var segments = new Uri(uri).Segments;
+        var topicIndex = Array.FindIndex(
+            segments,
+            segment => string.Equals(segment.Trim('/'), "topic", StringComparison.OrdinalIgnoreCase));
+
+        return topicIndex >= 0 && topicIndex + 1 < segments.Length
+            ? Uri.UnescapeDataString(segments[topicIndex + 1].Trim('/'))
+            : string.Empty;
+    }
+
+    private string ConvertToM3U(IEnumerable<StationInfo> stations, bool appendQuality = true)
     {
         var quality = options?.Value?.GetQuality() ?? "med";
         var sBuilder = new System.Text.StringBuilder();
@@ -263,7 +298,7 @@
         {
             sBuilder.AppendLine($"#EXTINF:-1, tvg-logo=\"{station.LogoUrl}\" group-title=\"{string.Join(";",
 station.Genres)}\" radio=\"true\", {station.Name}");
-            sBuilder.AppendLine($"{station.Url}-{quality}");
+            sBuilder.AppendLine(appendQuality ? $"{station.Url}-{quality}" : station.Url);
         }
 
         return sBuilder.ToString();

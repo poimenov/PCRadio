@@ -374,6 +374,15 @@ fluent-drawer[fuib] fluent-drawer-body[fuib] > div[slot="footer"] > fluent-butto
     object-fit: cover;
 }
 
+.topic-info {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 12px 12px;
+}
+
 .genre-title-row {
     display: flex;
     align-items: center;

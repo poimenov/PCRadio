@@ -50,6 +50,12 @@
                         @Localizer["Genres"]
                     }
                 </FluentNavItem>
+                <FluentNavItem Href="topics" IconRest="@(new Size20.Collections())" Tooltip="@Localizer["Topics"]">
+                    @if (expanded)
+                    {
+                        @Localizer["Topics"]
+                    }
+                </FluentNavItem>
                 <FluentNavItem Href="history" IconRest="@(new Size20.History())" Tooltip="@Localizer["History"]">
                     @if (expanded)
                     {

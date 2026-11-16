@@ -1,0 +1,78 @@
+@page "/topics"
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Logging
+@using PCRadio.Services.Interfaces
+@using PCRadio.Services.Models
+@inject IStringLocalizer<StationTopicsPage> Localizer
+@inject IStationTopicsService StationTopics
+@inject IAppStateService AppState
+@inject ILogger<StationTopicsPage> Logger
+@implements IDisposable
+
+<div class="genre-page">
+    @if (_error is not null)
+    {
+        <div class="empty-message">@Localizer["LoadError"]</div>
+    }
+    else if (_topics is not null)
+    {
+        <div class="genre-grid">
+            @foreach (var topic in _topics)
+            {
+                <article class="genre-card topic-card">
+                    <a href="@($"topic/{Uri.EscapeDataString(topic.Slug)}")" title="@topic.ShortDescription">
+                        <img src="@topic.ImageUrl" alt="@topic.Name" title="@topic.ShortDescription"
+                             onerror="this.src='/images/genres/unknown.jpg'" loading="lazy" />
+                    </a>
+                    <div class="topic-info">
+                        <a class="genre-title-link" href="@($"topic/{Uri.EscapeDataString(topic.Slug)}")"
+                           title="@topic.ShortDescription">
+                            @topic.Name
+                        </a>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private IReadOnlyList<StationTopic>? _topics;
+    private Exception? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.CultureChanged += OnCultureChanged;
+        AppState.Title = Localizer["Header"];
+        await LoadTopicsAsync();
+    }
+
+    private async Task LoadTopicsAsync()
+    {
+        _error = null;
+        try
+        {
+            _topics = await StationTopics.GetTopicsAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load station topics.");
+            _error = ex;
+        }
+    }
+
+    private void OnCultureChanged(System.Globalization.CultureInfo culture)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            AppState.Title = Localizer["Header"];
+            await LoadTopicsAsync();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        AppState.CultureChanged -= OnCultureChanged;
+    }
+}

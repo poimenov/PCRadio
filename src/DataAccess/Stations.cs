@@ -12,6 +12,33 @@ public class Stations : IStations
     private readonly ILogger<Stations> _logger;
     private readonly string _databasePath;
 
+    private static IQueryable<Station> FindByStream(Database db, string stream)
+    {
+        var equivalentStreams = GetEquivalentStreamUrls(stream);
+        return db.Stations.Where(station => equivalentStreams.Contains(station.Stream.ToLower()));
+    }
+
+    private static string[] GetEquivalentStreamUrls(string stream)
+    {
+        const string HttpPrefix = "http://";
+        const string HttpsPrefix = "https://";
+
+        var equivalentStreams = new List<string> { stream };
+        if (stream.StartsWith(HttpPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            equivalentStreams.Add(HttpsPrefix + stream[HttpPrefix.Length..]);
+        }
+        else if (stream.StartsWith(HttpsPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            equivalentStreams.Add(HttpPrefix + stream[HttpsPrefix.Length..]);
+        }
+
+        return equivalentStreams
+            .Select(url => url.ToLowerInvariant())
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+    }
+
     public Stations(ILogger<Stations> logger, IOptions<AppSettings> options)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -82,6 +109,41 @@ public class Stations : IStations
 
             return retVal;
         }
+    }
+
+    public async Task<IEnumerable<StationInfo>> ExportByIdsAsync(IEnumerable<int> stationIds)
+    {
+        ArgumentNullException.ThrowIfNull(stationIds);
+
+        var seenStationIds = new HashSet<int>();
+        var orderedStationIds = stationIds.Where(seenStationIds.Add).ToArray();
+        if (orderedStationIds.Length == 0)
+        {
+            return Enumerable.Empty<StationInfo>();
+        }
+
+        await using var db = new Database(_databasePath);
+        var stations = await db.Stations
+            .Where(station => orderedStationIds.Contains(station.Id))
+            .Select(station => new StationInfo
+            {
+                Id = station.Id,
+                Name = station.Name,
+                Url = station.Stream,
+                LogoUrl = station.Logo,
+                Genres = Enumerable.Empty<string>()
+            })
+            .ToListAsync();
+
+        await PopulateStationGenresAsync(db, stations);
+
+        var stationsById = stations.ToDictionary(station => station.Id);
+        if (orderedStationIds.Any(stationId => !stationsById.ContainsKey(stationId)))
+        {
+            throw new InvalidOperationException("One or more stations selected for export no longer exist.");
+        }
+
+        return orderedStationIds.Select(stationId => stationsById[stationId]).ToList();
     }
 
     public async Task<IEnumerable<StationInfo>> ExportFavoritesAsync()
@@ -215,6 +277,14 @@ public class Stations : IStations
         }
     }
 
+    public async Task<Station?> GetByStreamAsync(string stream)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(stream);
+
+        await using var db = new Database(_databasePath);
+        return await FindByStream(db, stream).FirstOrDefaultAsync();
+    }
+
     public async Task<StationsResult> SearchAsync(SearchParams? searchParams, int skip, int take)
     {
         if (searchParams == null)
@@ -285,7 +355,8 @@ public class Stations : IStations
 
         await using (var db = new Database(_databasePath))
         {
-            if (!await db.Stations.AnyAsync(s => s.Stream.ToLower() == station.Stream.ToLower()))
+            var existingStation = await FindByStream(db, station.Stream).FirstOrDefaultAsync();
+            if (existingStation is null)
             {
                 await using (var transaction = await db.Database.BeginTransactionAsync())
                 {
@@ -329,7 +400,7 @@ public class Stations : IStations
                         {
                             foreach (var sg in station.StationSubGenres)
                             {
-                                var subgenre = await db.SubGenres.FirstOrDefaultAsync(g => g.Id == sg.Id);
+                                var subgenre = await db.SubGenres.FirstOrDefaultAsync(g => g.Id == sg.SubGenreId);
                                 if (subgenre is not null)
                                 {
                                     var stationSubgenreToAdd = new StationSubGenre()
@@ -339,7 +410,7 @@ public class Stations : IStations
                                         Station = stationToAdd,
                                         StationId = stationId
                                     };
-                                    await db.StationSubGenres.AddAsync(sg);
+                                    await db.StationSubGenres.AddAsync(stationSubgenreToAdd);
                                 }
 
                             }
@@ -366,7 +437,8 @@ public class Stations : IStations
             }
             else
             {
-                retVal.Message = "A station with the same stream already exists";
+                retVal.Result = existingStation;
+                retVal.Success = true;
             }
         }
 
