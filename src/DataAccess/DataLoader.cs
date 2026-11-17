@@ -70,7 +70,8 @@ public class DataLoader : IDataLoader
             await PopulateStagingDatabaseAsync(stagingPath, result, favorites, historyRecords);
             await ValidateStagingDatabaseAsync(stagingPath, result, historyRecords.Count);
 
-            SqliteConnection.ClearAllPools();
+            await CheckpointAndRemoveSidecarsAsync(stagingPath);
+            await CheckpointAndRemoveSidecarsAsync(databasePath);
 
             if (File.Exists(databasePath))
             {
@@ -127,6 +128,55 @@ public class DataLoader : IDataLoader
             {
                 DeleteIfExists(backupStagingPath);
             }
+        }
+    }
+
+    private static async Task CheckpointAndRemoveSidecarsAsync(string databasePath)
+    {
+        if (!File.Exists(databasePath))
+        {
+            return;
+        }
+
+        SqliteConnection.ClearAllPools();
+        var connectionString = new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Pooling = false
+        }.ToString();
+
+        await using (var connection = new SqliteConnection(connectionString))
+        {
+            await connection.OpenAsync();
+
+            await using var command = connection.CreateCommand();
+            command.CommandText = "PRAGMA wal_checkpoint(TRUNCATE);";
+            await using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+            {
+                throw new InvalidDataException($"SQLite did not return a checkpoint result for '{databasePath}'.");
+            }
+
+            var busy = reader.GetInt32(0);
+            var walFrames = reader.GetInt32(1);
+            var checkpointedFrames = reader.GetInt32(2);
+            if (busy != 0 || (walFrames >= 0 && checkpointedFrames < walFrames))
+            {
+                throw new IOException(
+                    $"Could not fully checkpoint database '{databasePath}' before replacing it.");
+            }
+        }
+
+        SqliteConnection.ClearAllPools();
+        DeleteSidecarIfExists(databasePath + "-wal");
+        DeleteSidecarIfExists(databasePath + "-shm");
+    }
+
+    private static void DeleteSidecarIfExists(string path)
+    {
+        if (File.Exists(path))
+        {
+            File.Delete(path);
         }
     }
 
