@@ -187,6 +187,20 @@
     {
         if (Content != null && Content.Id > 0)
         {
+            if (SelectedGenre is not null && (Content.StationGenres == null || !Content.StationGenres.Any()))
+            {
+                Content.StationGenres =
+                [
+                    new DataAccess.Models.StationGenre
+                    {
+                        Genre = SelectedGenre,
+                        GenreId = SelectedGenre.Id,
+                        Station = Content,
+                        StationId = Content.Id
+                    }
+                ];
+            }
+
             var oResult = await stations.UpdateStationAsync(Content);
             if (oResult.Success)
             {

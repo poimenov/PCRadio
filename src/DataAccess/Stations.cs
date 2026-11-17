@@ -465,6 +465,24 @@ public class Stations : IStations
                         existedStation.IsFavorite = station.IsFavorite;
                         existedStation.Stream = station.Stream;
 
+                        if (station.StationGenres is { Count: > 0 }
+                            && !await db.StationGenres.AnyAsync(sg => sg.StationId == station.Id))
+                        {
+                            foreach (var stationGenre in station.StationGenres)
+                            {
+                                var genre = await db.Genres.FirstOrDefaultAsync(g => g.Id == stationGenre.GenreId)
+                                    ?? throw new InvalidOperationException($"Genre {stationGenre.GenreId} was not found.");
+
+                                db.StationGenres.Add(new StationGenre
+                                {
+                                    Genre = genre,
+                                    GenreId = genre.Id,
+                                    Station = existedStation,
+                                    StationId = existedStation.Id
+                                });
+                            }
+                        }
+
                         await db.SaveChangesAsync();
                         await transaction.CommitAsync();
                         retVal.Success = true;
