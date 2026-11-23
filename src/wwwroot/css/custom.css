@@ -776,6 +776,10 @@ fluent-slider[orientation="vertical"]::part(track-start) {
     overflow: hidden; 
     display: block; 
     max-width: 100%;
+    text-decoration: none;
+}
+
+.historyLink:hover {
     text-decoration: underline;
 }
 

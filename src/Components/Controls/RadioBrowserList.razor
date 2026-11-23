@@ -33,9 +33,9 @@ else
                         @context?.GetCountryIcon()
                         @if (context?.Homepage != null)
                         {
-                            <a href="#" class="station-homepage-link" title="@context.Homepage"
-                               @onclick="() => OpenLink(context.Homepage.ToString())"
-                               @onclick:preventDefault="true" @onclick:stopPropagation="true">
+                            <a class="station-homepage-link" title="@context.Homepage"
+                               @onclick="() => OpenLink(context.Homepage.ToString())" @onclick:preventDefault="true"
+                               @onclick:stopPropagation="true">
                                 <span class="station-name">@context?.Name</span>
                             </a>
                         }

@@ -49,7 +49,7 @@ else
                     </FluentStack>
                 </HeaderCellTitleTemplate>
                 <ChildContent Context="context">
-                    <a href="#" @onclick="() => OpenLink(context.TrackName)" @onclick:preventDefault="true"
+                    <a @onclick="() => OpenLink(context.TrackName)" @onclick:preventDefault="true"
                        @onclick:stopPropagation="true" title="@context.TrackName" class="historyLink">
                         @context.TrackName
                     </a>
